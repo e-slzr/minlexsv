@@ -2,10 +2,11 @@ body {
     margin-top: 36px;
     display: flex;
 }
+
 /* menu lateral */
 nav {
     background-color: #f3f4f6;
-    width: 275px;
+    width: 325px;
     height: 100vh;
     padding-top: 10px;
 }
@@ -24,22 +25,20 @@ li:hover {
 }
 li img {
     margin-bottom: 4px;
+    margin-right: 10px;
 }
 a {
     text-decoration: none;
     color: black;
 }
-.list-group-item {
-    border: none;
-    margin: 0px;
-    padding: 0;
-}
 .dropdown-toggle {
     cursor: pointer;
 }
 .collapse {
-    margin-left: 20px;
     transition: 0.2s;
+}
+.collapse li {
+    padding-left: 80px;
 }
 .barra_superior {
     height: 36px;
@@ -62,19 +61,6 @@ a {
 }
 
 /* dashboard */
-main {
-    /* flex: 1; */
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: start;
-    align-items: stretch;
-    align-content: start;
-    gap: 20px;
-    width: 100%;
-    height: 100vh;
-    padding: 35px;
-}
 .tarjeta_dashboard {
     width: 320px;
     height: 200px;
@@ -109,4 +95,31 @@ footer {
 /* purchase orders */
 .btn-light {
     border: 1px solid #dadada;
+}
+
+/* en comun */
+main {
+    /* flex: 1; */
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: start;
+    align-items: stretch;
+    align-content: start;
+    gap: 20px;
+    width: 100%;
+    height: 100vh;
+    padding: 35px;
+}
+.titulo-vista {
+    display: flex;
+    flex-direction: row;
+    padding-bottom: 20px;
+}
+.titulo-vista h1 {
+    flex: 1;
+}
+.titulo-vista button {
+    height: 38px;
+    width: 175px;
 }

@@ -11,8 +11,9 @@
     <?php include 'menu_lateral.php'; ?>
     
     <main>
-        <div style="width: 100%;" class="border-bottom border-secondary">
+        <div style="width: 100%;" class="border-bottom border-secondary titulo-vista">
             <h1><strong>PO (Purchase Orders)</strong></h1><br>
+            <button type="button" class="btn btn-dark">Crear nueva PO</button>
         </div>
         
         <div class="filtrar">
