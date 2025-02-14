@@ -1,0 +1,112 @@
+body {
+    margin-top: 36px;
+    display: flex;
+}
+/* menu lateral */
+nav {
+    background-color: #f3f4f6;
+    width: 275px;
+    height: 100vh;
+    padding-top: 10px;
+}
+nav h2 {
+    padding-left: 20px;
+}
+li {
+    padding: 10px 0px 10px 40px;
+    font-weight: 500;
+    list-style-type: none;
+    transition: 0.2s;
+}
+li:hover {
+    background-color: #dadada;
+    transition: 0.2s;
+}
+li img {
+    margin-bottom: 4px;
+}
+a {
+    text-decoration: none;
+    color: black;
+}
+.list-group-item {
+    border: none;
+    margin: 0px;
+    padding: 0;
+}
+.dropdown-toggle {
+    cursor: pointer;
+}
+.collapse {
+    margin-left: 20px;
+    transition: 0.2s;
+}
+.barra_superior {
+    height: 36px;
+    width: 100%;
+    background-color: black;
+    display: flex;
+    align-items: center;
+    padding-left: 20px;
+    position: fixed;
+    top: 0;
+    color: white;
+    font-size: 9pt;
+}
+.link_login, .link_login a {
+    color: white;
+    text-decoration: no;
+    flex: 1;
+    text-align: right;
+    padding-right: 10px;
+}
+
+/* dashboard */
+main {
+    /* flex: 1; */
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: start;
+    align-items: stretch;
+    align-content: start;
+    gap: 20px;
+    width: 100%;
+    height: 100vh;
+    padding: 35px;
+}
+.tarjeta_dashboard {
+    width: 320px;
+    height: 200px;
+    padding: 25px;
+    flex-grow: 1;
+    /* margin: 20px; */
+    border: 1px solid #dadada;
+    border-radius: 10px;
+    box-shadow: 2px 2px 2px 2px rgba(0, 0, 0, 0.03);
+    font-size: 18pt;
+    font-weight: bold;
+}
+
+/* footer */
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: right;
+    font-size: 9pt;
+    color: #bebebe;
+    padding: 5px 10px;
+}
+
+/* filtrar */
+.filtrar {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+}
+
+/* purchase orders */
+.btn-light {
+    border: 1px solid #dadada;
+}

@@ -19,24 +19,24 @@ $error = isset($_GET['error']) ? "Invalid credentials" : "";
 </head>
 <body>
     <div class="container d-flex justify-content-center align-items-center vh-100">
-        <div class="card p-4 shadow-sm">
-            <h2 class="text-center fw-bold">Minlex El Salvador</h2>
+        <div class="card p-4 shadow-lg">
+            <h2 class="text-center fw-bold">Minlex El Salvador Production System</h2>
             <hr>
-            <h4 class="text-center">Inicio de sesion</h4>
-            <!-- <p class="text-center text-muted">Ingresa tus credenciales para acceder al sistema</p> -->
+            <h4 class="text-center">Login</h4>
+            <p class="text-center text-muted">Enter your credentials to access the system</p>
             <?php if ($error): ?>
                 <p class="text-danger text-center"><?php echo $error; ?></p>
             <?php endif; ?>
-            <form action="views/home.php" method="POST">
+            <form action="auth.php" method="POST">
                 <div class="mb-3">
-                    <label for="email" class="form-label">Usuario</label>
-                    <input type="text" class="form-control" name="email" placeholder="">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" name="email" placeholder="Enter your email" required>
                 </div>
                 <div class="mb-3">
-                    <label for="password" class="form-label">Contraseña</label>
-                    <input type="password" class="form-control" name="password" placeholder="">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" name="password" placeholder="Enter your password" required>
                 </div>
-                <button type="submit" class="btn btn-dark w-100">Iniciar Sesión</button>
+                <button type="submit" class="btn btn-dark w-100">Login</button>
             </form>
         </div>
     </div>

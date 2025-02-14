@@ -1,0 +1,55 @@
+<div class="barra_superior">
+    <div>
+        Minlex El Salvador S.A. de C.V. | Sistema de producción y almacén
+    </div>
+    <div class="link_login">
+        Administrador
+        <span> | </span>
+        <a href="../index.php">Salir</a>
+    </div>
+</div>
+<nav>
+        <h2><strong>Menu</strong></h2>
+        <ul class="list-group">
+            <li>
+                <img src="../resources/img/menu/10132075_home_line_icon.svg" alt="">
+                <a href="home.php" class="">Dashboard</a></li>
+            <li>
+                <img src="../resources/img/menu//10132197_box_package_icon.svg" alt="">
+                <a href="" class="dropdown-toggle" data-toggle="collapse" data-target="#subMenuProduccion">Producción</a></li>
+                <ul id="subMenuProduccion" class="collapse list-group">
+                    <li><a href="po.php" class="">PO (Purchase Orders)</a></li>
+                    <li><a href="#" class="">Ordenes de producción</a></li>
+                </ul>
+            <li>
+                <img src="../resources/img/menu/10132108_clipboard_check_line_icon.svg" alt="">
+                <a href="" class="dropdown-toggle" data-toggle="collapse" data-target="#subMenuAlmacen">Almacén</a></li>
+                <ul id="subMenuAlmacen" class="collapse list-group">
+                    <li><a href="" class="">Bodegas</a></li>
+                </ul>
+            <li>
+                <img src="../resources/img/menu/10132156_presentation_chart_line_icon.svg" alt="">
+                <a href="" class="dropdown-toggle" data-toggle="collapse" data-target="#subMenuReportes">Reportes</a></li>
+                <ul id="subMenuReportes" class="collapse list-group">
+                    <li><a href="" class="">Reporte de Calidad</a></li>
+                    <li><a href="" class="">Reporte de Corte</a></li>
+                    <li><a href="" class="">Reporte de Costura</a></li>
+                    <li><a href="" class="">Reporte de Produccion</a></li>
+                </ul>                
+            <li>
+                <img src="../resources/img/menu/10131851_settings_cog_line_icon.svg" alt="">
+                <a href="" class="dropdown-toggle" data-toggle="collapse" data-target="#subMenuAdmin">Administración</a></li>
+                <ul id="subMenuAdmin" class="collapse list-group">
+                    <li><a href="" class="">Usuarios</a></li>
+                    <li><a href="" class="">Roles</a></li>
+                </ul>                
+            <li>
+                <img src="../resources/img/menu/10131911_megaphone_line_icon.svg" alt="">
+                <a href="" class="dropdown-toggle" data-toggle="collapse" data-target="#subMenuAyuda">Ayuda</a></li>
+                <ul id="subMenuAyuda" class="collapse list-group">
+                    <li><a href="" class="">Acerca de</a></li>
+                    <li><a href="" class="">Manual de usuario</a></li>
+                    <li><a href="" class="">Recursos</a></li>
+                </ul>
+        </ul>
+    </nav>
