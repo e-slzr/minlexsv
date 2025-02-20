@@ -1,6 +1,6 @@
 <div class="barra_superior">
     <div>
-        Minlex El Salvador S.A. de C.V. | Sistema de producción y almacén
+    MPC System | Minlex El Salvador S.A. de C.V.
     </div>
     <div class="link_login">
         Administrador
