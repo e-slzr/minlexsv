@@ -35,6 +35,7 @@
                 <th>Fecha completada estimada</th>
                 <th>Estado</th>
                 <th>Cliente</th>
+                <th>Usuario de ingreso</th>
                 <th>Proceso actual</th>
                 <th>Completado</th>
                 <th>Opciones</th>
@@ -47,6 +48,7 @@
                 <td>31-03-2025</td>
                 <td>En proceso</td>
                 <td>Cliente A</td>
+                <td>Paola Mezquita</td>
                 <td>Costura</td>
                 <td>75%</td>
                 <td>
@@ -63,6 +65,7 @@
             <td>30-04-2025</td>
             <td>En espera</td>
             <td>Cliente B</td>
+            <td>Joan Olivar</td>
             <td>Corte</td>
             <td>25%</td>
             <td>
@@ -79,6 +82,7 @@
             <td>20-05-2025</td>
             <td>Cancelada</td>
             <td>Cliente C</td>
+            <td>Usuario 1</td>
             <td>Estampado</td>
             <td>0%</td>
             <td>
@@ -95,6 +99,7 @@
             <td>15-06-2025</td>
             <td>Completada</td>
             <td>Cliente D</td>
+            <td>Paola Mezquita</td>
             <td>Teñido</td>
             <td>100%</td>
             <td>
@@ -111,6 +116,7 @@
             <td>10-07-2025</td>
             <td>En proceso</td>
             <td>Cliente E</td>
+            <td>Joan Olivar</td>
             <td>Bordado</td>
             <td>50%</td>
             <td>
@@ -127,6 +133,7 @@
             <td>30-08-2025</td>
             <td>En espera</td>
             <td>Cliente F</td>
+            <td>Usuario 2</td>
             <td>Planchado</td>
             <td>10%</td>
             <td>
