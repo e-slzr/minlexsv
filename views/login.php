@@ -13,30 +13,30 @@ $error = isset($_GET['error']) ? "Invalid credentials" : "";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minlex El Salvador - Login</title>
+    <title>MPC System | Login</title> <!--MINLEX Production Control -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container d-flex justify-content-center align-items-center vh-100">
-        <div class="card p-4 shadow-lg">
-            <h2 class="text-center fw-bold">Minlex El Salvador Production System</h2>
+        <div class="card p-4 shadow-sm">
+            <h2 class="text-center fw-bold">MPC System | MINLEX SV</h2>
             <hr>
-            <h4 class="text-center">Login</h4>
-            <p class="text-center text-muted">Enter your credentials to access the system</p>
+            <h4 class="text-center">Inicio de sesion</h4>
+            <!-- <p class="text-center text-muted">Ingresa tus credenciales para acceder al sistema</p> -->
             <?php if ($error): ?>
                 <p class="text-danger text-center"><?php echo $error; ?></p>
             <?php endif; ?>
-            <form action="auth.php" method="POST">
+            <form action="views/home.php" method="POST">
                 <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" name="email" placeholder="Enter your email" required>
+                    <label for="email" class="form-label">Usuario</label>
+                    <input type="text" class="form-control" name="email" placeholder="">
                 </div>
                 <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" name="password" placeholder="Enter your password" required>
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" name="password" placeholder="">
                 </div>
-                <button type="submit" class="btn btn-dark w-100">Login</button>
+                <button type="submit" class="btn btn-dark w-100">Iniciar Sesión</button>
             </form>
         </div>
     </div>
