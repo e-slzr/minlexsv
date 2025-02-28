@@ -27,7 +27,7 @@ $error = isset($_GET['error']) ? "Invalid credentials" : "";
             <?php if ($error): ?>
                 <p class="text-danger text-center"><?php echo $error; ?></p>
             <?php endif; ?>
-            <form action="views/home.php" method="POST">
+            <form action="home.php" method="POST">
                 <div class="mb-3">
                     <label for="email" class="form-label">Usuario</label>
                     <input type="text" class="form-control" name="email" placeholder="">
