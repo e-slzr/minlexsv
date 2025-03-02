@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Manejador de click
+        // Click handler
         item.addEventListener('click', function(e) {
             const link = this.querySelector('a');
             if (!link) return;

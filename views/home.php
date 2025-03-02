@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minlex El Salvador - Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style_menu.css">
+    <link rel="stylesheet" href="../css/style_main.css">
 </head>
 <body>
     <?php include 'menu_lateral.php'; ?>
@@ -18,6 +18,12 @@
         <div class="tarjeta_dashboard">PO's en producción <br><span style="font-size: 26pt;">17</span></div>
         <div class="tarjeta_dashboard">Ordenes completadas <br><span style="font-size: 26pt;">780</span></div>
         <div class="tarjeta_dashboard">Totales <br><span style="font-size: 26pt;">1,557</span></div>
+        <div style="width: 100%;" class="border-bottom border-secondary">
+            <br>
+        </div>
+        <div class="tarjeta_dashboard">Clientes <br><span style="font-size: 26pt;">20</span></div>
+        <div class="tarjeta_dashboard">Proveedores <br><span style="font-size: 26pt;">45</span></div>
+        <div class="tarjeta_dashboard">Empleados <br><span style="font-size: 26pt;">135</span></div>
     </main>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>

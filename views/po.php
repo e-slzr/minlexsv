@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MINLEX | Purchase Orders</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style_menu.css">
+    <link rel="stylesheet" href="../css/style_main.css">
 </head>
 <body>
     <?php include 'menu_lateral.php'; ?>
@@ -48,7 +48,7 @@
                 <td>31-03-2025</td>
                 <td>En proceso</td>
                 <td>Cliente A</td>
-                <td>Paola Mezquita</td>
+                <td>Gerente de Produccion</td>
                 <td>Costura</td>
                 <td>75%</td>
                 <td>
@@ -65,7 +65,7 @@
             <td>30-04-2025</td>
             <td>En espera</td>
             <td>Cliente B</td>
-            <td>Joan Olivar</td>
+            <td>Usuario 2</td>
             <td>Corte</td>
             <td>25%</td>
             <td>
@@ -99,7 +99,7 @@
             <td>15-06-2025</td>
             <td>Completada</td>
             <td>Cliente D</td>
-            <td>Paola Mezquita</td>
+            <td>Gerente de Produccion</td>
             <td>Teñido</td>
             <td>100%</td>
             <td>
@@ -116,7 +116,7 @@
             <td>10-07-2025</td>
             <td>En proceso</td>
             <td>Cliente E</td>
-            <td>Joan Olivar</td>
+            <td>Gerente General</td>
             <td>Bordado</td>
             <td>50%</td>
             <td>
@@ -147,7 +147,7 @@
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="script.js"></script>
+    <script src="../js/main.js"></script>
 </body>
 <?php include 'footer.php'; ?>
 </html>

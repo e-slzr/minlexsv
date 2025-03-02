@@ -1,8 +1,3 @@
-body {
-    margin-top: 36px;
-    display: flex;
-}
-
 /* menu lateral */
 nav {
     background-color: #f3f4f6;
@@ -41,16 +36,18 @@ a {
     padding-left: 80px;
 }
 .barra_superior {
-    height: 36px;
-    width: 100%;
-    background-color: black;
-    display: flex;
-    align-items: center;
-    padding-left: 20px;
     position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    z-index: 1002;
+    background: #212529;
     color: white;
-    font-size: 9pt;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 .link_login, .link_login a {
     color: white;
@@ -60,21 +57,8 @@ a {
     padding-right: 10px;
 }
 
-/* dashboard */
-.tarjeta_dashboard {
-    width: 320px;
-    height: 200px;
-    padding: 25px;
-    flex-grow: 1;
-    /* margin: 20px; */
-    border: 1px solid #dadada;
-    border-radius: 10px;
-    box-shadow: 2px 2px 2px 2px rgba(0, 0, 0, 0.03);
-    font-size: 18pt;
-    font-weight: bold;
-}
 
-/* footer */
+/* footer */ 
 footer {
     position: fixed;
     bottom: 0;
@@ -85,17 +69,6 @@ footer {
     padding: 5px 10px;
 }
 
-/* filtrar */
-.filtrar {
-    width: 100%;
-    display: flex;
-    gap: 10px;
-}
-
-/* purchase orders */
-.btn-light {
-    border: 1px solid #dadada;
-}
 
 /* en comun */
 main {
@@ -122,4 +95,105 @@ main {
 .titulo-vista button {
     height: 38px;
     width: 175px;
+}
+
+/* Estilos específicos del menú lateral */
+.menu-toggle-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1001;
+    background: #212529;
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.menu-toggle-btn svg {
+    color: white;
+}
+
+.menu-lateral {
+    position: fixed;
+    top: 36px;
+    left: 0;
+    height: calc(150vh - 36px);
+    width: 250px;
+    background: #f8f9fa;
+    transition: width 0.3s ease-in-out;
+    z-index: 1000;
+    overflow-x: hidden;
+}
+
+/* Estilos de los elementos del menú */
+.menu-lateral .list-group li {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    padding-left: 1rem;
+    cursor: pointer;
+}
+
+.menu-lateral .list-group li img {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    pointer-events: none;
+}
+
+.menu-lateral .list-group li a {
+    margin-left: 1rem;
+    white-space: nowrap;
+    transition: opacity 0.2s ease-in-out;
+    pointer-events: none;
+    text-decoration: none;
+    color: #212529;
+}
+
+/* Estados del menú */
+.menu-lateral.hidden {
+    width: 85px;
+}
+
+.menu-lateral.hidden .list-group li a,
+.menu-lateral.hidden .collapse {
+    display: none;
+}
+
+.menu-lateral.hidden .list-group li {
+    justify-content: center;
+    padding: 0.5rem 0;
+}
+
+.menu-lateral.expanded {
+    width: 250px;
+}
+
+.menu-lateral.expanded .list-group li {
+    justify-content: flex-start;
+    padding: 0.5rem;
+    padding-left: 1rem;
+}
+
+.menu-lateral.expanded .list-group li a {
+    display: block;
+}
+
+/* Submenús */
+.menu-lateral .collapse {
+    padding-left: 2rem;
+}
+
+.menu-lateral.expanded .collapse {
+    display: none;
+}
+
+.menu-lateral.expanded .collapse.show {
+    display: block;
 }
