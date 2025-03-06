@@ -21,7 +21,7 @@ $error = isset($_GET['error']) ? "Invalid credentials" : "";
     <div class="container d-flex justify-content-center align-items-center vh-100">
         <div class="card p-4 shadow-sm">
             <h2 class="text-center fw-bold">MPC System | by ECODE</h2>
-            <hr>
+            <hr> 
             <h4 class="text-center">Inicio de sesion</h4>
             <!-- <p class="text-center text-muted">Ingresa tus credenciales para acceder al sistema</p> -->
             <?php if ($error): ?>
