@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (isset($_SESSION['user'])) {
-    header("Location: dashboard.php"); // Redirigir si ya está logueado
+    header("Location: home.php"); // Redirigir si ya está logueado
     exit();
 }
 
