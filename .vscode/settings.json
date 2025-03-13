@@ -1,3 +1,17 @@
 {
-    "liveServer.settings.port": 8081
+    "liveServer.settings.port": 8081,
+    "sql-formatter.dialect": "mysql",
+    "sqltools.connections": [
+        {
+            "name": "MySQL Local",
+            "driver": "MySQL",
+            "server": "localhost",
+            "port": 3306,
+            "database": "minlex_elsalvador",
+            "username": "root",
+            "password": ""
+        }
+    ],
+    "sql.format.dialect": "mysql",
+    "sql.linter.dialect": "mysql"
 }
