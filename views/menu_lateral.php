@@ -1,13 +1,19 @@
+<?php
+session_start();
+if (!isset($_SESSION['user'])) {
+    header("Location: ../index.php");
+    exit();
+}
+?>
 <link rel="stylesheet" href="../css/style_menu.css">
 <div class="barra_superior">
     <div>
-    <!-- MPC System | Minlex El Salvador S.A. de C.V. -->
      MPC System | by ECODE
     </div>
     <div class="link_login">
-        Administrador
+        <?php echo htmlspecialchars($_SESSION['user']['usuario_nombre'] . ' ' . $_SESSION['user']['usuario_apellido']); ?>
         <span> | </span>
-        <a href="../index.php">Salir</a>
+        <a href="../controllers/UsuarioController.php?action=logout">Salir</a>
     </div>
 </div>
 

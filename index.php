@@ -1,11 +1,12 @@
 <?php
 session_start();
 if (isset($_SESSION['user'])) {
-    header("Location: dashboard.php"); // Redirigir si ya está logueado
+    header("Location: views/home.php");
     exit();
 }
 
-$error = isset($_GET['error']) ? "Invalid credentials" : "";
+header("Location: views/login.php");
+exit();
 ?>
 
 <!DOCTYPE html>

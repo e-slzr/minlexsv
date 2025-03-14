@@ -6,6 +6,7 @@ class Usuario {
     private $table_name = "usuarios";
 
     public $id;
+    public $usuario_alias;
     public $usuario_nombre;
     public $usuario_apellido;
     public $usuario_password;
@@ -21,16 +22,15 @@ class Usuario {
         $query = "SELECT u.*, r.rol_nombre 
                  FROM " . $this->table_name . " u 
                  JOIN roles r ON u.usuario_rol_id = r.id 
-                 WHERE CONCAT(u.usuario_nombre, ' ', u.usuario_apellido) = :username";
+                 WHERE u.usuario_alias = :username AND u.usuario_password = :password";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":username", $username);
+        $stmt->bindParam(":password", $password);
         $stmt->execute();
 
         if($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            if(password_verify($password, $row['usuario_password'])) {
-                return $row;
-            }
+            return $row;
         }
         return false;
     }
@@ -38,6 +38,7 @@ class Usuario {
     public function create() {
         $query = "INSERT INTO " . $this->table_name . "
                 SET
+                    usuario_alias = :alias,
                     usuario_nombre = :nombre,
                     usuario_apellido = :apellido,
                     usuario_password = :password,
@@ -47,12 +48,14 @@ class Usuario {
         $stmt = $this->conn->prepare($query);
 
         // Sanitize and hash
+        $this->usuario_alias = htmlspecialchars(strip_tags($this->usuario_alias));
         $this->usuario_nombre = htmlspecialchars(strip_tags($this->usuario_nombre));
         $this->usuario_apellido = htmlspecialchars(strip_tags($this->usuario_apellido));
         $this->usuario_password = password_hash($this->usuario_password, PASSWORD_DEFAULT);
         $this->usuario_departamento = htmlspecialchars(strip_tags($this->usuario_departamento));
 
         // Bind
+        $stmt->bindParam(":alias", $this->usuario_alias);
         $stmt->bindParam(":nombre", $this->usuario_nombre);
         $stmt->bindParam(":apellido", $this->usuario_apellido);
         $stmt->bindParam(":password", $this->usuario_password);
@@ -85,6 +88,7 @@ class Usuario {
         
         $query = "UPDATE " . $this->table_name . "
                 SET
+                    usuario_alias = :alias,
                     usuario_nombre = :nombre,
                     usuario_apellido = :apellido,
                     usuario_rol_id = :rol_id,
@@ -96,12 +100,14 @@ class Usuario {
         $stmt = $this->conn->prepare($query);
 
         // Sanitize
+        $this->usuario_alias = htmlspecialchars(strip_tags($this->usuario_alias));
         $this->usuario_nombre = htmlspecialchars(strip_tags($this->usuario_nombre));
         $this->usuario_apellido = htmlspecialchars(strip_tags($this->usuario_apellido));
         $this->usuario_departamento = htmlspecialchars(strip_tags($this->usuario_departamento));
         $this->id = htmlspecialchars(strip_tags($this->id));
 
         // Bind
+        $stmt->bindParam(":alias", $this->usuario_alias);
         $stmt->bindParam(":nombre", $this->usuario_nombre);
         $stmt->bindParam(":apellido", $this->usuario_apellido);
         $stmt->bindParam(":rol_id", $this->usuario_rol_id);

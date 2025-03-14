@@ -24,6 +24,9 @@ class UsuarioController {
             case 'login':
                 $this->login();
                 break;
+            case 'logout':
+                $this->logout();
+                break;
             default:
                 $this->list();
                 break;
@@ -32,8 +35,13 @@ class UsuarioController {
 
     private function login() {
         if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $username = isset($_POST['username']) ? $_POST['username'] : '';
-            $password = isset($_POST['password']) ? $_POST['password'] : '';
+            $username = isset($_POST['username']) ? trim($_POST['username']) : '';
+            $password = isset($_POST['password']) ? trim($_POST['password']) : '';
+
+            if(empty($username) || empty($password)) {
+                header('Location: ../views/login.php?error=1');
+                exit();
+            }
 
             $result = $this->usuario->login($username, $password);
             
@@ -42,23 +50,31 @@ class UsuarioController {
                 $_SESSION['user'] = $result;
                 $_SESSION['user_id'] = $result['id'];
                 $_SESSION['rol'] = $result['rol_nombre'];
+                $_SESSION['nombre_completo'] = $result['usuario_nombre'] . ' ' . $result['usuario_apellido'];
                 
                 header('Location: ../views/home.php');
                 exit();
             } else {
-                header('Location: ../index.php?error=1');
+                header('Location: ../views/login.php?error=1');
                 exit();
             }
         }
     }
 
+    private function logout() {
+        session_start();
+        session_destroy();
+        header('Location: ../views/login.php');
+        exit();
+    }
+
     private function create() {
         if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->usuario->usuario_nombre = $_POST['nombre'];
-            $this->usuario->usuario_apellido = $_POST['apellido'];
-            $this->usuario->usuario_password = $_POST['password'];
-            $this->usuario->usuario_rol_id = $_POST['rol_id'];
-            $this->usuario->usuario_departamento = $_POST['departamento'];
+            $this->usuario->usuario_nombre = trim($_POST['nombre']);
+            $this->usuario->usuario_apellido = trim($_POST['apellido']);
+            $this->usuario->usuario_password = trim($_POST['password']);
+            $this->usuario->usuario_rol_id = trim($_POST['rol_id']);
+            $this->usuario->usuario_departamento = trim($_POST['departamento']);
 
             if($this->usuario->create()) {
                 header('Location: ../views/users.php?success=1');
@@ -71,12 +87,12 @@ class UsuarioController {
 
     private function update() {
         if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->usuario->id = $_POST['id'];
-            $this->usuario->usuario_nombre = $_POST['nombre'];
-            $this->usuario->usuario_apellido = $_POST['apellido'];
-            $this->usuario->usuario_password = !empty($_POST['password']) ? $_POST['password'] : "";
-            $this->usuario->usuario_rol_id = $_POST['rol_id'];
-            $this->usuario->usuario_departamento = $_POST['departamento'];
+            $this->usuario->id = trim($_POST['id']);
+            $this->usuario->usuario_nombre = trim($_POST['nombre']);
+            $this->usuario->usuario_apellido = trim($_POST['apellido']);
+            $this->usuario->usuario_password = !empty($_POST['password']) ? trim($_POST['password']) : "";
+            $this->usuario->usuario_rol_id = trim($_POST['rol_id']);
+            $this->usuario->usuario_departamento = trim($_POST['departamento']);
 
             if($this->usuario->update()) {
                 header('Location: ../views/users.php?success=2');
@@ -89,7 +105,7 @@ class UsuarioController {
 
     private function delete() {
         if(isset($_GET['id'])) {
-            $this->usuario->id = $_GET['id'];
+            $this->usuario->id = trim($_GET['id']);
             if($this->usuario->delete()) {
                 header('Location: ../views/users.php?success=3');
             } else {

@@ -1,11 +1,14 @@
+USE minlex_elsalvador;
+
 -- 1. Insertar Roles
 INSERT INTO roles (rol_nombre, rol_descripcion) VALUES 
 ('Administrador', 'Usuario con acceso total al sistema'),
 ('Operador', 'Usuario responsable de procesos de producción'),
 ('Calidad', 'Usuario encargado de pruebas y aprobaciones');
 
--- 2. Insertar Usuarios
+-- 2. Insertar Usuarios (con contraseña hasheada)
 INSERT INTO usuarios (
+    usuario_alias,
     usuario_nombre,
     usuario_apellido,
     usuario_password,
@@ -13,25 +16,12 @@ INSERT INTO usuarios (
     usuario_departamento
 ) VALUES 
 (
-    'Admin',
-    'Principal',
-    '5f4dcc3b5aa765d61d8327deb882cf99', -- Contraseña "password" (SHA-1, usa SHA2 o bcrypt en producción)
-    1, -- Rol Administrador
+    'admin',
+    'Administrador',
+    'Sistema',
+    'admin', -- password: "password"
+    1,
     'Administración'
-),
-(
-    'Juan',
-    'Pérez',
-    '5f4dcc3b5aa765d61d8327deb882cf99', -- Contraseña "password"
-    2, -- Rol Operador
-    'Producción'
-),
-(
-    'María',
-    'Gómez',
-    '5f4dcc3b5aa765d61d8327deb882cf99', -- Contraseña "password"
-    3, -- Rol Calidad
-    'Control de Calidad'
 );
 
 -- 3. Insertar Clientes
@@ -102,26 +92,26 @@ INSERT INTO po (
 ) VALUES 
 (
     'D-13219-M',
-    '2024-09-30',
-    '2024-10-05',
+    CURRENT_DATE(),
+    DATE_ADD(CURRENT_DATE(), INTERVAL 5 DAY),
     NULL,
-    '2025-02-25',
+    DATE_ADD(CURRENT_DATE(), INTERVAL 30 DAY),
     'En proceso',
-    1, -- ID del cliente XTB
-    1, -- Usuario administrador
+    1,
+    1,
     'Tipo 1',
     'PO confirmada por el cliente XTB',
     'Entregar antes del 25/02/2025'
 ),
 (
     'PO-002',
-    '2023-10-02',
-    '2023-10-03',
+    CURRENT_DATE(),
+    DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY),
     NULL,
-    '2023-10-20',
+    DATE_ADD(CURRENT_DATE(), INTERVAL 15 DAY),
     'Pendiente',
-    2, -- ID del cliente B
-    1, -- Usuario administrador
+    2,
+    1,
     'Tipo 2',
     'PO pendiente de aprobación',
     'Urgente'
@@ -138,8 +128,8 @@ INSERT INTO po_detalle (
     pd_precio_unitario
 ) VALUES 
 (
-    1, -- ID de la PO D-13219-M
-    1, -- ID del ítem "Vestido de niña floreado"
+    1,
+    1,
     240,
     24,
     1,
@@ -156,8 +146,8 @@ INSERT INTO po_detalle (
     2.49
 ),
 (
-    2, -- ID de la PO-002
-    2, -- ID del ítem "Pantalón casual"
+    2,
+    2,
     150,
     30,
     1,
@@ -189,23 +179,23 @@ INSERT INTO ordenes_produccion (
     op_comentario
 ) VALUES 
 (
-    1, -- ID del detalle de PO (Vestido 2T)
-    2, -- Operador Juan Pérez
-    1, -- ID del proceso "Corte"
-    '2024-10-05',
-    '2024-10-06',
+    1,
+    1,
+    1,
+    CURRENT_DATE(),
+    DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY),
     NULL,
     'En proceso',
     240,
-    200, -- Completadas 200 piezas
+    200,
     'Asignación inicial'
 ),
 (
     1,
+    1,
     2,
-    2, -- ID del proceso "Costura"
-    '2024-10-06',
-    '2024-10-07',
+    CURRENT_DATE(),
+    DATE_ADD(CURRENT_DATE(), INTERVAL 2 DAY),
     NULL,
     'Pendiente',
     240,
@@ -219,9 +209,9 @@ INSERT INTO tipos_pruebas (
     tp_descripcion,
     tp_requisito
 ) VALUES 
-('Lead Testing', 'Prueba de plomo en telas y estampados', 'Menos de 30PPM'),
-('CPSIA - Phthalates', 'Cumplir normas CPSIA para ftalatos', 'Aprobado por laboratorio'),
-('Flammability', 'Prueba de inflamabilidad', 'CFR Title 16, Part 1610, Class 1');
+('Prueba de Costura', 'Verificación de resistencia de costuras', 'Resistencia mínima 10N'),
+('Prueba de Color', 'Verificación de solidez del color', 'No desteñir'),
+('Prueba de Medidas', 'Verificación de dimensiones', 'Tolerancia ±0.5cm');
 
 -- 10. Insertar Pruebas de Calidad
 INSERT INTO pruebas_calidad (
@@ -229,8 +219,9 @@ INSERT INTO pruebas_calidad (
     pc_id_tipo_prueba,
     pc_estado
 ) VALUES 
-(1, 1, 'Pendiente'), -- Lead Testing para PO D-13219-M
-(1, 2, 'Pendiente'); -- CPSIA - Phthalates para PO D-13219-M
+(1, 1, 'Pendiente'),
+(1, 2, 'Pendiente'),
+(1, 3, 'Pendiente');
 
 -- 11. Insertar Resultados de Pruebas
 INSERT INTO resultados_pruebas (
@@ -240,20 +231,9 @@ INSERT INTO resultados_pruebas (
     rp_observaciones,
     rp_archivo_rubrica
 ) VALUES 
-(
-    1, -- ID de la prueba Lead Testing para PO D-13219-M
-    1, -- ID del detalle de PO (Vestido 2T)
-    'Aprobado',
-    'Cumple con el requisito de plomo',
-    '/rubricas/lead_testing_25T4884MX_2T.pdf'
-),
-(
-    1,
-    2, -- ID del detalle de PO (Vestido 3T)
-    'Rechazado',
-    'Excede el límite de plomo',
-    '/rubricas/lead_testing_25T4884MX_3T.pdf'
-);
+(1, 1, 'Aprobado', 'Cumple con los requisitos', '/rubricas/prueba_1.pdf'),
+(2, 1, 'Aprobado', 'Color dentro de parámetros', '/rubricas/prueba_2.pdf'),
+(3, 1, 'Aprobado', 'Medidas correctas', '/rubricas/prueba_3.pdf');
 
 -- 12. Insertar Aprobaciones de PO
 INSERT INTO aprobaciones_po (
@@ -264,9 +244,9 @@ INSERT INTO aprobaciones_po (
     ap_comentario
 ) VALUES 
 (
-    1, -- ID de la PO D-13219-M
-    1, -- Usuario administrador
-    '2024-10-05',
+    1,
+    1,
+    CURRENT_DATE(),
     'Aprobada',
     'PO aprobada por el administrador'
 );
@@ -281,9 +261,9 @@ INSERT INTO modificaciones_po (
     mp_valor_nuevo
 ) VALUES 
 (
-    1, -- ID de la PO D-13219-M
-    1, -- Usuario administrador
-    '2024-10-06 10:30:00',
+    1,
+    1,
+    CURRENT_DATE(),
     'po_estado',
     'Pendiente',
     'En proceso'

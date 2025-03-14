@@ -12,6 +12,7 @@ CREATE TABLE roles (
 -- Tabla: usuarios
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_alias VARCHAR(25) NOT NULL UNIQUE,
     usuario_nombre VARCHAR(25) NOT NULL,
     usuario_apellido VARCHAR(25) NOT NULL,
     usuario_password VARCHAR(255) NOT NULL,
