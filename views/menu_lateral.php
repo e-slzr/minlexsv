@@ -13,7 +13,7 @@ if (!isset($_SESSION['user'])) {
     <div class="link_login">
         <?php echo htmlspecialchars($_SESSION['user']['usuario_nombre'] . ' ' . $_SESSION['user']['usuario_apellido']); ?>
         <span> | </span>
-        <a href="../controllers/UsuarioController.php?action=logout">Salir</a>
+        <a href="#" data-toggle="modal" data-target="#logoutModal">Salir</a>
     </div>
 </div>
 
@@ -25,7 +25,6 @@ if (!isset($_SESSION['user'])) {
 </button>
 
 <nav id="menuLateral" class="menu-lateral">
-        <!-- <h2><strong>Menu</strong></h2> -->
         <ul class="list-group">
             <li>
                 <img src="../resources/img/menu/10132075_home_line_icon.svg" alt="">
@@ -56,7 +55,7 @@ if (!isset($_SESSION['user'])) {
                 <img src="../resources/img/menu/10131851_settings_cog_line_icon.svg" alt="">
                 <a href="" class="dropdown-toggle" data-toggle="collapse" data-target="#subMenuAdmin">Administración</a></li>
                 <ul id="subMenuAdmin" class="collapse list-group">
-                    <li><a href="" class="">Usuarios</a></li>
+                    <li><a href="./usuarios.php" class="">Usuarios</a></li>
                     <li><a href="" class="">Roles</a></li>
                 </ul>                
             <li>
@@ -70,4 +69,46 @@ if (!isset($_SESSION['user'])) {
         </ul>
     </nav>
 
+<div id="loader" style="display: none;">
+    <div class="spinner"></div>
+</div>
+
+<!-- Modal de confirmación de cierre de sesión -->
+<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logoutModalLabel">Cerrar sesión</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas cerrar sesión?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="logout()">Cerrar sesión</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function logout() {
+    $('#loader').show();
+    $.ajax({
+        url: '../controllers/UsuarioController.php',
+        type: 'GET',
+        data: { action: 'logout' },
+        success: function() {
+            window.location.href = '../views/login.php';
+        },
+        error: function() {
+            alert('Error al cerrar sesión');
+            $('#loader').hide();
+        }
+    });
+}
+</script>
 <script src="../js/menu_lateral.js"></script>

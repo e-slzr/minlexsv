@@ -19,7 +19,7 @@ INSERT INTO usuarios (
     'admin',
     'Administrador',
     'Sistema',
-    'admin', -- password: "password"
+    'admin',
     1,
     'Administración'
 );

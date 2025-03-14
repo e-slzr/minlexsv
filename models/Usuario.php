@@ -19,123 +19,152 @@ class Usuario {
     }
 
     public function login($username, $password) {
-        $query = "SELECT u.*, r.rol_nombre 
-                 FROM " . $this->table_name . " u 
-                 JOIN roles r ON u.usuario_rol_id = r.id 
-                 WHERE u.usuario_alias = :username AND u.usuario_password = :password";
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":username", $username);
-        $stmt->bindParam(":password", $password);
-        $stmt->execute();
-
-        if($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            return $row;
+        try {
+            error_log("=== Inicio de intento de login en modelo ===");
+            error_log("Buscando usuario: " . $username);
+            
+            $query = "SELECT u.*, r.rol_nombre 
+                     FROM " . $this->table_name . " u 
+                     JOIN roles r ON u.usuario_rol_id = r.id 
+                     WHERE u.usuario_alias = :username";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":username", $username);
+            $stmt->execute();
+            
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($row) {
+                error_log("Usuario encontrado en la base de datos");
+                error_log("Hash almacenado (primeros 13 caracteres): " . substr($row['usuario_password'], 0, 13) . "...");
+                error_log("Longitud del hash almacenado: " . strlen($row['usuario_password']));
+                
+                if (password_verify($password, $row['usuario_password'])) {
+                    error_log("Contraseña verificada correctamente");
+                    return $row;
+                } else {
+                    error_log("Contraseña incorrecta");
+                }
+            } else {
+                error_log("Usuario no encontrado en la base de datos");
+            }
+            
+            error_log("=== Fin de intento de login en modelo ===");
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error en login: " . $e->getMessage());
+            throw new Exception("Error al intentar iniciar sesión");
         }
-        return false;
     }
 
-    public function create() {
-        $query = "INSERT INTO " . $this->table_name . "
-                SET
-                    usuario_alias = :alias,
-                    usuario_nombre = :nombre,
-                    usuario_apellido = :apellido,
-                    usuario_password = :password,
-                    usuario_rol_id = :rol_id,
-                    usuario_departamento = :departamento";
+    public function create($hashedPassword = null) {
+        try {
+            $query = "INSERT INTO " . $this->table_name . "
+                    SET
+                        usuario_alias = :alias,
+                        usuario_nombre = :nombre,
+                        usuario_apellido = :apellido,
+                        usuario_password = :password,
+                        usuario_rol_id = :rol_id,
+                        usuario_departamento = :departamento";
 
-        $stmt = $this->conn->prepare($query);
+            $stmt = $this->conn->prepare($query);
 
-        // Sanitize and hash
-        $this->usuario_alias = htmlspecialchars(strip_tags($this->usuario_alias));
-        $this->usuario_nombre = htmlspecialchars(strip_tags($this->usuario_nombre));
-        $this->usuario_apellido = htmlspecialchars(strip_tags($this->usuario_apellido));
-        $this->usuario_password = password_hash($this->usuario_password, PASSWORD_DEFAULT);
-        $this->usuario_departamento = htmlspecialchars(strip_tags($this->usuario_departamento));
+            $stmt->bindParam(":alias", $this->usuario_alias);
+            $stmt->bindParam(":nombre", $this->usuario_nombre);
+            $stmt->bindParam(":apellido", $this->usuario_apellido);
+            $stmt->bindParam(":password", $hashedPassword);
+            $stmt->bindParam(":rol_id", $this->usuario_rol_id);
+            $stmt->bindParam(":departamento", $this->usuario_departamento);
 
-        // Bind
-        $stmt->bindParam(":alias", $this->usuario_alias);
-        $stmt->bindParam(":nombre", $this->usuario_nombre);
-        $stmt->bindParam(":apellido", $this->usuario_apellido);
-        $stmt->bindParam(":password", $this->usuario_password);
-        $stmt->bindParam(":rol_id", $this->usuario_rol_id);
-        $stmt->bindParam(":departamento", $this->usuario_departamento);
-
-        if($stmt->execute()) {
-            return true;
+            if ($stmt->execute()) {
+                error_log("Usuario creado exitosamente en la base de datos");
+                error_log("Hash almacenado (primeros 13 caracteres): " . substr($hashedPassword, 0, 13) . "...");
+                return true;
+            }
+            
+            error_log("Error al ejecutar la consulta de creación");
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error en create: " . $e->getMessage());
+            return false;
         }
-        return false;
     }
 
     public function read() {
-        $query = "SELECT 
-                    u.*, 
-                    r.rol_nombre
-                FROM 
-                    " . $this->table_name . " u
-                    LEFT JOIN roles r ON u.usuario_rol_id = r.id
-                ORDER BY 
-                    u.usuario_nombre ASC";
+        try {
+            $query = "SELECT u.*, r.rol_nombre 
+                    FROM " . $this->table_name . " u
+                    JOIN roles r ON u.usuario_rol_id = r.id
+                    ORDER BY u.id DESC";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt;
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt;
+        } catch (PDOException $e) {
+            error_log("Error en read: " . $e->getMessage());
+            throw new Exception("Error al leer usuarios");
+        }
     }
 
-    public function update() {
-        $password_set = !empty($this->usuario_password) ? ", usuario_password = :password" : "";
-        
-        $query = "UPDATE " . $this->table_name . "
-                SET
-                    usuario_alias = :alias,
-                    usuario_nombre = :nombre,
-                    usuario_apellido = :apellido,
-                    usuario_rol_id = :rol_id,
-                    usuario_departamento = :departamento
-                    " . $password_set . "
-                WHERE 
-                    id = :id";
+    public function update($hashedPassword = null) {
+        try {
+            $password_set = "";
+            $params = array();
+            
+            if($hashedPassword !== null) {
+                $password_set = ", usuario_password = :password";
+                $params[":password"] = $hashedPassword;
+            }
 
-        $stmt = $this->conn->prepare($query);
+            $query = "UPDATE " . $this->table_name . "
+                    SET
+                        usuario_alias = :alias,
+                        usuario_nombre = :nombre,
+                        usuario_apellido = :apellido,
+                        usuario_rol_id = :rol_id,
+                        usuario_departamento = :departamento" . $password_set . "
+                    WHERE 
+                        id = :id";
 
-        // Sanitize
-        $this->usuario_alias = htmlspecialchars(strip_tags($this->usuario_alias));
-        $this->usuario_nombre = htmlspecialchars(strip_tags($this->usuario_nombre));
-        $this->usuario_apellido = htmlspecialchars(strip_tags($this->usuario_apellido));
-        $this->usuario_departamento = htmlspecialchars(strip_tags($this->usuario_departamento));
-        $this->id = htmlspecialchars(strip_tags($this->id));
+            $stmt = $this->conn->prepare($query);
 
-        // Bind
-        $stmt->bindParam(":alias", $this->usuario_alias);
-        $stmt->bindParam(":nombre", $this->usuario_nombre);
-        $stmt->bindParam(":apellido", $this->usuario_apellido);
-        $stmt->bindParam(":rol_id", $this->usuario_rol_id);
-        $stmt->bindParam(":departamento", $this->usuario_departamento);
-        $stmt->bindParam(":id", $this->id);
+            $params[":alias"] = $this->usuario_alias;
+            $params[":nombre"] = $this->usuario_nombre;
+            $params[":apellido"] = $this->usuario_apellido;
+            $params[":rol_id"] = $this->usuario_rol_id;
+            $params[":departamento"] = $this->usuario_departamento;
+            $params[":id"] = $this->id;
 
-        if(!empty($this->usuario_password)){
-            $this->usuario_password = password_hash($this->usuario_password, PASSWORD_DEFAULT);
-            $stmt->bindParam(":password", $this->usuario_password);
+            foreach($params as $param => $value) {
+                $stmt->bindValue($param, $value);
+            }
+
+            if ($stmt->execute()) {
+                error_log("Usuario actualizado exitosamente en la base de datos");
+                if ($hashedPassword !== null) {
+                    error_log("Hash actualizado (primeros 13 caracteres): " . substr($hashedPassword, 0, 13) . "...");
+                }
+                return true;
+            }
+            
+            error_log("Error al ejecutar la consulta de actualización");
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error en update: " . $e->getMessage());
+            return false;
         }
-
-        if($stmt->execute()) {
-            return true;
-        }
-        return false;
     }
 
     public function delete() {
-        $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        
-        $this->id = htmlspecialchars(strip_tags($this->id));
-        $stmt->bindParam(1, $this->id);
-
-        if($stmt->execute()) {
-            return true;
+        try {
+            $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":id", $this->id);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error en delete: " . $e->getMessage());
+            return false;
         }
-        return false;
     }
 }
-?>
