@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../css/style_main.css">
 </head>
 <body>
-    <?php include 'menu_lateral.php'; ?>
+    <?php include '../components/menu_lateral.php'; ?>
     
     <main>
         <div style="width: 100%;" class="border-bottom border-secondary titulo-vista">
@@ -149,5 +149,5 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="../js/main.js"></script>
 </body>
-<?php include 'footer.php'; ?>
+<?php include '../components/footer.php'; ?>
 </html>
