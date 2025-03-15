@@ -56,7 +56,7 @@ if (!isset($_SESSION['user'])) {
                 <a href="" class="dropdown-toggle" data-toggle="collapse" data-target="#subMenuAdmin">Administración</a></li>
                 <ul id="subMenuAdmin" class="collapse list-group">
                     <li><a href="./usuarios.php" class="">Usuarios</a></li>
-                    <li><a href="" class="">Roles</a></li>
+                    <li><a href="./roles.php" class="">Roles</a></li>
                 </ul>                
             <li>
                 <img src="../resources/img/menu/10131911_megaphone_line_icon.svg" alt="">

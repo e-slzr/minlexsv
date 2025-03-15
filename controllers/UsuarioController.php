@@ -8,11 +8,6 @@ class UsuarioController {
         $this->usuario = new Usuario();
     }
 
-    public function getUsuarios() {
-        $result = $this->usuario->read();
-        return $result->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     public function handleRequest() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action = $_POST['action'] ?? '';
@@ -56,6 +51,7 @@ class UsuarioController {
                         $this->usuario->usuario_apellido = $_POST['apellido'];
                         $this->usuario->usuario_rol_id = $_POST['rol_id'];
                         $this->usuario->usuario_departamento = $_POST['departamento'];
+                        $this->usuario->usuario_estado = $_POST['estado'];
                         
                         if (!empty($_POST['password'])) {
                             error_log("Actualizando contraseña");
@@ -79,6 +75,26 @@ class UsuarioController {
                     } catch (Exception $e) {
                         error_log("Error al actualizar usuario: " . $e->getMessage());
                         $response = ['success' => false, 'message' => 'Error al actualizar el usuario'];
+                    }
+                    break;
+
+                case 'toggleStatus':
+                    try {
+                        error_log("=== Cambiando estado de usuario ===");
+                        error_log("ID: " . $_POST['id']);
+                        
+                        $this->usuario->id = $_POST['id'];
+                        
+                        if ($this->usuario->toggleStatus()) {
+                            error_log("Estado de usuario actualizado exitosamente");
+                            $response = ['success' => true, 'message' => 'Estado de usuario actualizado exitosamente'];
+                        } else {
+                            error_log("Error al actualizar estado de usuario");
+                            $response = ['success' => false, 'message' => 'Error al actualizar el estado del usuario'];
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error al actualizar estado de usuario: " . $e->getMessage());
+                        $response = ['success' => false, 'message' => 'Error al actualizar el estado del usuario'];
                     }
                     break;
 
@@ -106,18 +122,16 @@ class UsuarioController {
                                 exit();
                             }
                         } catch (Exception $e) {
-                            error_log("Error en login: " . $e->getMessage());
-                            header("Location: ../views/login.php?error=2");
+                            error_log("Error en la autenticación: " . $e->getMessage());
+                            header("Location: ../views/login.php?error=3");
                             exit();
                         }
                     }
                     break;
             }
             
-            if (!headers_sent()) {
-                header('Content-Type: application/json');
-                echo json_encode($response);
-            }
+            header('Content-Type: application/json');
+            echo json_encode($response);
             exit;
         } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             if ($_GET['action'] === 'delete' && isset($_GET['id'])) {
@@ -157,45 +171,33 @@ class UsuarioController {
         }
     }
 
-    private function login() {
+    public function getUsuarios() {
+        $result = $this->usuario->read();
+        return $result->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function login() {
         if($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = isset($_POST['username']) ? trim($_POST['username']) : '';
-            $password = isset($_POST['password']) ? trim($_POST['password']) : '';
+            $password = isset($_POST['password']) ? $_POST['password'] : '';
 
-            if(empty($username) || empty($password)) {
-                header('Location: ../views/login.php?error=1');
-                exit();
-            }
-
-            $result = $this->usuario->login($username, $password);
-            
-            if($result) {
-                session_start();
-                $_SESSION['user'] = $result;
-                $_SESSION['user_id'] = $result['id'];
-                $_SESSION['rol'] = $result['rol_nombre'];
-                $_SESSION['nombre_completo'] = $result['usuario_nombre'] . ' ' . $result['usuario_apellido'];
+            try {
+                $result = $this->usuario->authenticate($username, $password);
                 
-                header('Location: ../views/home.php');
-                exit();
-            } else {
-                header('Location: ../views/login.php?error=1');
+                if ($result['success']) {
+                    $_SESSION['user'] = $result['user_id'];
+                    header("Location: main.php");
+                    exit();
+                } else {
+                    return $result['message'];
+                }
+            } catch (Exception $e) {
+                error_log("Error en la autenticación: " . $e->getMessage());
+                header("Location: ../views/login.php?error=3");
                 exit();
             }
         }
-    }
-
-    private function logout() {
-        session_start();
-        session_destroy();
-        header('Location: ../views/login.php');
-        exit();
-    }
-
-    private function list() {
-        $result = $this->usuario->read();
-        $usuarios = $result->fetchAll(PDO::FETCH_ASSOC);
-        return $usuarios;
+        return null;
     }
 }
 

@@ -9,73 +9,117 @@ class RolController {
     }
 
     public function handleRequest() {
-        $action = isset($_GET['action']) ? $_GET['action'] : 'list';
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $action = $_POST['action'] ?? '';
+            $response = ['success' => false, 'message' => ''];
 
-        switch($action) {
-            case 'create':
-                $this->create();
-                break;
-            case 'update':
-                $this->update();
-                break;
-            case 'delete':
-                $this->delete();
-                break;
-            default:
-                $this->list();
-                break;
-        }
-    }
+            switch ($action) {
+                case 'create':
+                    try {
+                        error_log("=== Creando nuevo rol ===");
+                        error_log("Nombre: " . $_POST['nombre']);
+                        
+                        $this->rol->rol_nombre = $_POST['nombre'];
+                        $this->rol->rol_descripcion = $_POST['descripcion'];
 
-    private function create() {
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->rol->rol_nombre = $_POST['nombre'];
-            $this->rol->rol_descripcion = $_POST['descripcion'];
+                        if ($this->rol->create()) {
+                            error_log("Rol creado exitosamente");
+                            $response = ['success' => true, 'message' => 'Rol creado exitosamente'];
+                        } else {
+                            error_log("Error al crear rol");
+                            $response = ['success' => false, 'message' => 'Error al crear el rol'];
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error al crear rol: " . $e->getMessage());
+                        $response = ['success' => false, 'message' => 'Error al crear el rol'];
+                    }
+                    break;
 
-            if($this->rol->create()) {
-                header('Location: ../views/roles.php?success=1');
-            } else {
-                header('Location: ../views/roles.php?error=1');
+                case 'update':
+                    try {
+                        error_log("=== Actualizando rol ===");
+                        error_log("ID: " . $_POST['id']);
+                        error_log("Nombre: " . $_POST['nombre']);
+                        
+                        $this->rol->id = $_POST['id'];
+                        $this->rol->rol_nombre = $_POST['nombre'];
+                        $this->rol->rol_descripcion = $_POST['descripcion'];
+                        $this->rol->estado = $_POST['estado'];
+                        
+                        if ($this->rol->update()) {
+                            error_log("Rol actualizado exitosamente");
+                            $response = ['success' => true, 'message' => 'Rol actualizado exitosamente'];
+                        } else {
+                            error_log("Error al actualizar rol");
+                            $response = ['success' => false, 'message' => 'Error al actualizar el rol'];
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error al actualizar rol: " . $e->getMessage());
+                        $response = ['success' => false, 'message' => 'Error al actualizar el rol'];
+                    }
+                    break;
+
+                case 'toggleStatus':
+                    try {
+                        error_log("=== Cambiando estado de rol ===");
+                        error_log("ID: " . $_POST['id']);
+                        
+                        $this->rol->id = $_POST['id'];
+                        
+                        // Verificar si el rol está en uso antes de deshabilitarlo
+                        if ($this->rol->isInUse($_POST['id'])) {
+                            error_log("No se puede deshabilitar el rol porque está en uso");
+                            $response = ['success' => false, 'message' => 'No se puede deshabilitar el rol porque está siendo utilizado por uno o más usuarios'];
+                        } else if ($this->rol->toggleStatus()) {
+                            error_log("Estado de rol actualizado exitosamente");
+                            $response = ['success' => true, 'message' => 'Estado de rol actualizado exitosamente'];
+                        } else {
+                            error_log("Error al actualizar estado de rol");
+                            $response = ['success' => false, 'message' => 'Error al actualizar el estado del rol'];
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error al actualizar estado de rol: " . $e->getMessage());
+                        $response = ['success' => false, 'message' => 'Error al actualizar el estado del rol'];
+                    }
+                    break;
             }
-            exit();
-        }
-    }
-
-    private function update() {
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->rol->id = $_POST['id'];
-            $this->rol->rol_nombre = $_POST['nombre'];
-            $this->rol->rol_descripcion = $_POST['descripcion'];
-
-            if($this->rol->update()) {
-                header('Location: ../views/roles.php?success=2');
-            } else {
-                header('Location: ../views/roles.php?error=2');
+            
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit;
+        } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
+            if ($_GET['action'] === 'delete' && isset($_GET['id'])) {
+                try {
+                    error_log("=== Eliminando rol ===");
+                    error_log("ID: " . $_GET['id']);
+                    
+                    $response = ['success' => false, 'message' => ''];
+                    $this->rol->id = $_GET['id'];
+                    
+                    if ($this->rol->delete()) {
+                        error_log("Rol eliminado exitosamente");
+                        header('Location: ../views/roles.php?success=3');
+                    } else {
+                        error_log("Error al eliminar rol");
+                        header('Location: ../views/roles.php?error=3');
+                    }
+                } catch (Exception $e) {
+                    error_log("Error al eliminar rol: " . $e->getMessage());
+                    header('Location: ../views/roles.php?error=3');
+                }
+                exit;
             }
-            exit();
         }
-    }
-
-    private function delete() {
-        if(isset($_GET['id'])) {
-            $this->rol->id = $_GET['id'];
-            if($this->rol->delete()) {
-                header('Location: ../views/roles.php?success=3');
-            } else {
-                header('Location: ../views/roles.php?error=3');
-            }
-            exit();
-        }
-    }
-
-    private function list() {
-        $result = $this->rol->read();
-        $roles = $result->fetchAll(PDO::FETCH_ASSOC);
-        return $roles;
     }
 
     public function getRoles() {
-        return $this->list();
+        $result = $this->rol->read();
+        return $result->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getActiveRoles() {
+        $result = $this->rol->getActiveRoles();
+        return $result->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 
