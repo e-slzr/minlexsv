@@ -46,7 +46,7 @@ $departamentos = [
     </style>
 </head>
 <body>
-    <?php include 'menu_lateral.php'; ?>
+    <?php include '../components/menu_lateral.php'; ?>
     
     <main>
         <div style="width: 100%;" class="border-bottom border-secondary titulo-vista">
@@ -67,11 +67,11 @@ $departamentos = [
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Alias</th>
+                        <th>Usuario</th>
                         <th>Nombre</th>
                         <th>Apellido</th>
-                        <th>Email</th>
                         <th>Rol</th>
+                        <th>Departamento</th>
                         <th>Estado</th>
                         <th>Opciones</th>
                     </tr>
@@ -80,12 +80,12 @@ $departamentos = [
                     <?php foreach ($usuarios as $usuario): ?>
                     <tr>
                         <td><?php echo htmlspecialchars($usuario['id']); ?></td>
-                        <td><?php echo htmlspecialchars($usuario['alias']); ?></td>
-                        <td><?php echo htmlspecialchars($usuario['nombre']); ?></td>
-                        <td><?php echo htmlspecialchars($usuario['apellido']); ?></td>
-                        <td><?php echo htmlspecialchars($usuario['email']); ?></td>
+                        <td><?php echo htmlspecialchars($usuario['usuario_alias']); ?></td>
+                        <td><?php echo htmlspecialchars($usuario['usuario_nombre']); ?></td>
+                        <td><?php echo htmlspecialchars($usuario['usuario_apellido']); ?></td>
                         <td><?php echo htmlspecialchars($usuario['rol_nombre']); ?></td>
-                        <td>
+                        <td><?php echo htmlspecialchars($usuario['usuario_departamento']); ?></td>
+                        <td style="color: black;">
                             <span class="badge <?php echo $usuario['estado'] === 'Activo' ? 'badge-success' : 'badge-danger'; ?>">
                                 <?php echo htmlspecialchars($usuario['estado']); ?>
                             </span>
@@ -93,12 +93,12 @@ $departamentos = [
                         <td>
                             <button type="button" class="btn btn-success edit-user" 
                                     data-id="<?php echo $usuario['id']; ?>"
-                                    data-alias="<?php echo htmlspecialchars($usuario['alias']); ?>"
-                                    data-nombre="<?php echo htmlspecialchars($usuario['nombre']); ?>"
-                                    data-apellido="<?php echo htmlspecialchars($usuario['apellido']); ?>"
-                                    data-email="<?php echo htmlspecialchars($usuario['email']); ?>"
-                                    data-rol="<?php echo htmlspecialchars($usuario['rol_id']); ?>"
+                                    data-alias="<?php echo htmlspecialchars($usuario['usuario_alias']); ?>"
+                                    data-nombre="<?php echo htmlspecialchars($usuario['usuario_nombre']); ?>"
+                                    data-apellido="<?php echo htmlspecialchars($usuario['usuario_apellido']); ?>"
+                                    data-rol="<?php echo htmlspecialchars($usuario['usuario_rol_id']); ?>"
                                     data-estado="<?php echo htmlspecialchars($usuario['estado']); ?>"
+                                    data-departamento="<?php echo htmlspecialchars($usuario['usuario_departamento']); ?>"
                                     data-toggle="modal" data-target="#userModal">
                                 <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M14 6L16.2929 3.70711C16.6834 3.31658 17.3166 3.31658 17.7071 3.70711L20.2929 6.29289C20.6834 6.68342 20.6834 7.31658 20.2929 7.70711L18 10M14 6L4.29289 15.7071C4.10536 15.8946 4 16.149 4 16.4142V19C4 19.5523 4.44772 20 5 20H7.58579C7.851 20 8.10536 19.8946 8.29289 19.7071L18 10M14 6L18 10" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
@@ -106,8 +106,9 @@ $departamentos = [
                             </button>
                             <button type="button" class="btn <?php echo $usuario['estado'] === 'Activo' ? 'btn-warning' : 'btn-info'; ?> toggle-status" 
                                     data-id="<?php echo $usuario['id']; ?>"
-                                    data-nombre="<?php echo htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellido']); ?>"
-                                    data-estado="<?php echo htmlspecialchars($usuario['estado']); ?>">
+                                    data-nombre="<?php echo htmlspecialchars($usuario['usuario_nombre'] . ' ' . $usuario['usuario_apellido']); ?>"
+                                    data-estado="<?php echo htmlspecialchars($usuario['estado']); ?>"
+                                    data-departamento="<?php echo htmlspecialchars($usuario['usuario_departamento']); ?>">
                                 <?php if ($usuario['estado'] === 'Activo'): ?>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-slash" viewBox="0 0 16 16">
                                         <path d="M13.879 10.414a2.501 2.501 0 0 0-3.465 3.465l3.465-3.465Zm.707.707-3.465 3.465a2.501 2.501 0 0 0 3.465-3.465Zm-4.56-1.096a3.5 3.5 0 1 1 4.949 4.95 3.5 3.5 0 0 1-4.95-4.95ZM11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-9 8c0 1 1 1 1 1h5.256A4.493 4.493 0 0 1 8 12.5a4.49 4.49 0 0 1 1.544-3.393C9.077 9.038 8.564 9 8 9c-5 0-6 3-6 4Z"/>
@@ -142,7 +143,7 @@ $departamentos = [
                             <input type="hidden" name="action" id="formAction" value="create">
                             
                             <div class="form-group mb-3">
-                                <label for="alias">Alias</label>
+                                <label for="alias">Usuario</label>
                                 <input type="text" class="form-control" id="alias" name="alias" required>
                             </div>
                             
@@ -155,15 +156,9 @@ $departamentos = [
                                 <label for="apellido">Apellido</label>
                                 <input type="text" class="form-control" id="apellido" name="apellido" required>
                             </div>
-                            
-                            <div class="form-group mb-3">
-                                <label for="email">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                            </div>
-                            
                             <div class="form-group mb-3">
                                 <label for="rol">Rol</label>
-                                <select class="form-control" id="rol" name="rol" required>
+                                <select class="form-control" id="rol" name="rol_id" required>
                                     <?php 
                                     require_once '../controllers/RolController.php';
                                     $rolController = new RolController();
@@ -194,7 +189,16 @@ $departamentos = [
                                         </button>
                                     </div>
                                 </div>
-                                <small class="form-text text-muted">La contraseña debe tener al menos 8 caracteres.</small>
+                                <small class="form-text text-muted">Dejar el campo vacio para conservar la contraseña actual*</small>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="departamento">Departamento</label>
+                                <select class="form-control" id="departamento" name="departamento" required>
+                                    <?php foreach ($departamentos as $departamento): ?>
+                                        <option value="<?php echo htmlspecialchars($departamento); ?>"><?php echo htmlspecialchars($departamento); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
 
                             <div class="form-group mb-3" id="estadoGroup">
@@ -233,27 +237,6 @@ $departamentos = [
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
                         <button type="button" class="btn btn-dark" id="confirmToggleStatus">Confirmar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para Confirmar Eliminación -->
-        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        ¿Está seguro que desea eliminar el usuario <span id="userToDelete"></span>?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
-                        <a href="#" id="confirmDelete" class="btn btn-danger">Eliminar</a>
                     </div>
                 </div>
             </div>
@@ -313,9 +296,44 @@ $departamentos = [
     </main>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
         $(document).ready(function() {
+            function generatePassword() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let password = chars.charAt(Math.floor(Math.random() * 26)).toUpperCase();
+                const length = Math.floor(Math.random() * 5) + 4;
+                for (let i = 1; i < length; i++) {
+                    password += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return password;
+            }
+
+            $('#generatePassword, #generateNewPassword').click(function() {
+                const password = generatePassword();
+                const inputId = $(this).attr('id') === 'generatePassword' ? '#password' : '#newPassword';
+                $(inputId).val(password);
+                if (inputId === '#newPassword') {
+                    $('#confirmPassword').val(password);
+                }
+            });
+
+            $('#togglePassword, #toggleNewPassword, #toggleConfirmPassword').click(function() {
+                const inputId = $(this).prev('button').attr('id') === 'generatePassword' ? '#password' :
+                               $(this).attr('id') === 'toggleNewPassword' ? '#newPassword' : '#confirmPassword';
+                const input = $(inputId);
+                input.attr('type', input.attr('type') === 'password' ? 'text' : 'password');
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Incluir el modal de reseteo de contraseña
+            $.get('../components/reset_password_modal.php', function(data) {
+                $('body').append(data);
+            });
+
             // Búsqueda en tiempo real
             $("#searchInput").on("keyup", function() {
                 var value = $(this).val().toLowerCase();
@@ -326,11 +344,12 @@ $departamentos = [
 
             // Generar contraseña aleatoria
             $('#generatePassword').click(function() {
-                var length = 12,
-                    charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*",
-                    password = "";
-                for (var i = 0, n = charset.length; i < length; ++i) {
-                    password += charset.charAt(Math.floor(Math.random() * n));
+                var length = Math.floor(Math.random() * 5) + 4; // Random length between 4 and 8
+                var firstChar = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z
+                var charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                var password = firstChar;
+                for (var i = 1; i < length; i++) {
+                    password += charset.charAt(Math.floor(Math.random() * charset.length));
                 }
                 $('#password').val(password);
             });
@@ -356,12 +375,11 @@ $departamentos = [
                 $('#alias').val($(this).data('alias'));
                 $('#nombre').val($(this).data('nombre'));
                 $('#apellido').val($(this).data('apellido'));
-                $('#email').val($(this).data('email'));
                 $('#rol').val($(this).data('rol'));
                 $('#estado').val($(this).data('estado'));
                 $('#formAction').val('update');
                 $('#password').val('').attr('required', false);
-                $('#passwordGroup').hide();
+                $('#passwordGroup').show();
                 $('#estadoGroup').show();
             });
 
@@ -477,8 +495,85 @@ $departamentos = [
                     $('#estadoGroup').show();
                 }
             });
+
+            // Manejo del reseteo de contraseña
+            $('.reset-password').click(function() {
+                var id = $(this).data('id');
+                var nombre = $(this).data('nombre');
+                $('#resetUserId').val(id);
+                $('#resetPasswordForm')[0].reset();
+            });
+
+            // Generar nueva contraseña aleatoria
+            $('#generateNewPassword').click(function() {
+                var length = 8;
+                var charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                var password = "";
+                for (var i = 0; i < length; i++) {
+                    password += charset.charAt(Math.floor(Math.random() * charset.length));
+                }
+                $('#newPassword').val(password);
+                $('#confirmPassword').val(password);
+            });
+
+            // Toggle visibilidad de nueva contraseña
+            $('#toggleNewPassword, #toggleConfirmPassword').click(function() {
+                var inputId = $(this).attr('id') === 'toggleNewPassword' ? 'newPassword' : 'confirmPassword';
+                var passwordInput = $('#' + inputId);
+                var icon = $(this).find('svg');
+                
+                if (passwordInput.attr('type') === 'password') {
+                    passwordInput.attr('type', 'text');
+                    icon.removeClass('bi-eye').addClass('bi-eye-slash');
+                } else {
+                    passwordInput.attr('type', 'password');
+                    icon.removeClass('bi-eye-slash').addClass('bi-eye');
+                }
+            });
+
+            // Validación y envío del formulario de reseteo de contraseña
+            $('#resetPasswordForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                var newPassword = $('#newPassword').val();
+                var confirmPassword = $('#confirmPassword').val();
+
+                if (newPassword.length < 8) {
+                    $('#errorMessage').text('La contraseña debe tener al menos 8 caracteres');
+                    $('#errorModal').modal('show');
+                    return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                    $('#errorMessage').text('Las contraseñas no coinciden');
+                    $('#errorModal').modal('show');
+                    return;
+                }
+
+                $.ajax({
+                    url: '../controllers/UsuarioController.php',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    dataType: 'json',
+                    success: function(response) {
+                        $('#resetPasswordModal').modal('hide');
+                        if (response.success) {
+                            $('#confirmationMessage').text(response.message);
+                            $('#confirmationModal').modal('show');
+                        } else {
+                            $('#errorMessage').text(response.message);
+                            $('#errorModal').modal('show');
+                        }
+                    },
+                    error: function() {
+                        $('#resetPasswordModal').modal('hide');
+                        $('#errorMessage').text('Error al procesar la solicitud');
+                        $('#errorModal').modal('show');
+                    }
+                });
+            });
         });
     </script>
 </body>
-<?php include 'footer.php'; ?>
+<?php include '../components/footer.php'; ?>
 </html>

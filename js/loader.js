@@ -2,5 +2,5 @@
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         window.location.href = 'views/login.php';
-    }, 2000);
+    }, 5000);
 });

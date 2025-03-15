@@ -16,7 +16,7 @@ if (isset($_SESSION['user'])) {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 </head>
 <body>
-    <?php include 'loader.php'; ?>
+    <?php include '../components/loader.php'; ?>
     <div class="container d-flex justify-content-center align-items-center vh-100">
         <div class="card p-4 shadow-sm">
             <h2 class="text-center fw-bold">MPC System | by ECODE</h2>

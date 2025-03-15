@@ -36,7 +36,7 @@ $roles = $rolController->getRoles();
     </style>
 </head>
 <body>
-    <?php include 'menu_lateral.php'; ?>
+    <?php include '../components/menu_lateral.php'; ?>
     
     <main>
         <div style="width: 100%;" class="border-bottom border-secondary titulo-vista">
@@ -354,5 +354,5 @@ $roles = $rolController->getRoles();
         });
     </script>
 </body>
-<?php include 'footer.php'; ?>
+<?php include '../components/footer.php'; ?>
 </html>

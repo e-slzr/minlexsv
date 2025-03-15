@@ -6,7 +6,8 @@ USE minlex_elsalvador;
 CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     rol_nombre VARCHAR(25) NOT NULL UNIQUE,
-    rol_descripcion TEXT
+    rol_descripcion TEXT,
+    estado ENUM('Activo', 'Deshabilitado') DEFAULT 'Activo'
 );
 
 -- Tabla: usuarios
@@ -17,7 +18,8 @@ CREATE TABLE usuarios (
     usuario_apellido VARCHAR(25) NOT NULL,
     usuario_password VARCHAR(255) NOT NULL,
     usuario_rol_id INT NOT NULL,
-    usuario_departamento VARCHAR(25),
+    usuario_departamento VARCHAR(25),  -- Columna correcta
+    estado ENUM('Activo', 'Deshabilitado') DEFAULT 'Activo',
     usuario_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     usuario_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_rol_id) REFERENCES roles(id)

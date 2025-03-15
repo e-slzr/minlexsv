@@ -4,12 +4,12 @@ class Usuario {
     private $table_name = "usuarios";
 
     public $id;
-    public $alias;
-    public $nombre;
-    public $apellido;
-    public $email;
-    public $password;
+    public $usuario_alias;
+    public $usuario_nombre;
+    public $usuario_apellido;
+    public $usuario_password;
     public $usuario_rol_id;
+    public $usuario_departamento;
     public $estado;
 
     public function __construct() {
@@ -21,22 +21,21 @@ class Usuario {
     public function create() {
         $query = "INSERT INTO " . $this->table_name . "
                 SET
-                    alias = :alias,
-                    nombre = :nombre,
-                    apellido = :apellido,
-                    email = :email,
-                    password = :password,
+                    usuario_alias = :usuario_alias,
+                    usuario_nombre = :usuario_nombre,
+                    usuario_apellido = :usuario_apellido,
+                    usuario_password = :usuario_password,
                     usuario_rol_id = :usuario_rol_id,
-                    estado = 'Activo'";
+                    usuario_departamento = :usuario_departamento";
 
         $stmt = $this->conn->prepare($query);
 
-        $stmt->bindParam(":alias", $this->alias);
-        $stmt->bindParam(":nombre", $this->nombre);
-        $stmt->bindParam(":apellido", $this->apellido);
-        $stmt->bindParam(":email", $this->email);
-        $stmt->bindParam(":password", $this->password);
+        $stmt->bindParam(":usuario_alias", $this->usuario_alias);
+        $stmt->bindParam(":usuario_nombre", $this->usuario_nombre);
+        $stmt->bindParam(":usuario_apellido", $this->usuario_apellido);
+        $stmt->bindParam(":usuario_password", $this->usuario_password);
         $stmt->bindParam(":usuario_rol_id", $this->usuario_rol_id);
+        $stmt->bindParam(":usuario_departamento", $this->usuario_departamento);
 
         return $stmt->execute();
     }
@@ -52,33 +51,45 @@ class Usuario {
         return $stmt;
     }
 
-    public function update() {
-        $passwordSet = !empty($this->password) ? ", password = :password" : "";
+    public function update($password = null) {
+        // If only updating password
+        if ($password !== null) {
+            $query = "UPDATE " . $this->table_name . "
+                    SET usuario_password = :password
+                    WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":password", $password);
+            $stmt->bindParam(":id", $this->id);
+            
+            return $stmt->execute();
+        }
         
+        // Regular update with all fields
         $query = "UPDATE " . $this->table_name . "
                 SET
-                    alias = :alias,
-                    nombre = :nombre,
-                    apellido = :apellido,
-                    email = :email,
+                    usuario_alias = :usuario_alias,
+                    usuario_nombre = :usuario_nombre,
+                    usuario_apellido = :usuario_apellido,
                     usuario_rol_id = :usuario_rol_id,
+                    usuario_departamento = :usuario_departamento,
                     estado = :estado" . 
-                    $passwordSet . "
+                    ($password ? ", usuario_password = :usuario_password" : "") . "
                 WHERE 
                     id = :id";
 
         $stmt = $this->conn->prepare($query);
 
-        $stmt->bindParam(":alias", $this->alias);
-        $stmt->bindParam(":nombre", $this->nombre);
-        $stmt->bindParam(":apellido", $this->apellido);
-        $stmt->bindParam(":email", $this->email);
+        $stmt->bindParam(":usuario_alias", $this->usuario_alias);
+        $stmt->bindParam(":usuario_nombre", $this->usuario_nombre);
+        $stmt->bindParam(":usuario_apellido", $this->usuario_apellido);
         $stmt->bindParam(":usuario_rol_id", $this->usuario_rol_id);
+        $stmt->bindParam(":usuario_departamento", $this->usuario_departamento);
         $stmt->bindParam(":estado", $this->estado);
         $stmt->bindParam(":id", $this->id);
 
-        if (!empty($this->password)) {
-            $stmt->bindParam(":password", $this->password);
+        if ($password) {
+            $stmt->bindParam(":usuario_password", $password);
         }
 
         return $stmt->execute();
@@ -99,9 +110,9 @@ class Usuario {
     }
 
     public function authenticate($username, $password) {
-        $query = "SELECT id, usuario_alias, usuario_password, estado FROM " . $this->table_name . " 
+        $query = "SELECT * FROM " . $this->table_name . " 
                 WHERE usuario_alias = :username";
-    
+        
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":username", $username);
         $stmt->execute();
@@ -114,7 +125,12 @@ class Usuario {
     
             if (password_verify($password, $row['usuario_password'])) {
                 error_log("Login exitoso: " . $username);
-                return ['success' => true, 'user_id' => $row['id']];
+                return [
+                    'success' => true, 
+                    'user_id' => $row['id'], 
+                    'user_nombre' => $row['usuario_nombre'], 
+                    'user_apellido' => $row['usuario_apellido']
+                ];
             }
         }
     

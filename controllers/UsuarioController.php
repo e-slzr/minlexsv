@@ -25,8 +25,8 @@ class UsuarioController {
                         $this->usuario->usuario_rol_id = $_POST['rol_id'];
                         $this->usuario->usuario_departamento = $_POST['departamento'];
 
-                        $hashedPassword = password_hash($_POST['password'], PASSWORD_DEFAULT);
-                        if ($this->usuario->create($hashedPassword)) {
+                        $this->usuario->usuario_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+                        if ($this->usuario->create()) {
                             error_log("Usuario creado exitosamente");
                             $response = ['success' => true, 'message' => 'Usuario creado exitosamente'];
                         } else {
@@ -51,7 +51,7 @@ class UsuarioController {
                         $this->usuario->usuario_apellido = $_POST['apellido'];
                         $this->usuario->usuario_rol_id = $_POST['rol_id'];
                         $this->usuario->usuario_departamento = $_POST['departamento'];
-                        $this->usuario->usuario_estado = $_POST['estado'];
+                        $this->usuario->estado = $_POST['estado'];
                         
                         if (!empty($_POST['password'])) {
                             error_log("Actualizando contraseña");
@@ -62,6 +62,20 @@ class UsuarioController {
                             } else {
                                 error_log("Error al actualizar usuario");
                                 $response = ['success' => false, 'message' => 'Error al actualizar el usuario'];
+                            }
+                        } else if ($_POST['action'] === 'resetPassword') {
+                            if (empty($_POST['password']) || strlen($_POST['password']) < 8) {
+                                $response = ['success' => false, 'message' => 'La contraseña debe tener al menos 8 caracteres'];
+                            } else {
+                                error_log("Reseteando contraseña para usuario ID: " . $_POST['id']);
+                                $hashedPassword = password_hash($_POST['password'], PASSWORD_DEFAULT);
+                                if ($this->usuario->update($hashedPassword)) {
+                                    error_log("Contraseña actualizada exitosamente");
+                                    $response = ['success' => true, 'message' => 'Contraseña actualizada exitosamente'];
+                                } else {
+                                    error_log("Error al actualizar la contraseña");
+                                    $response = ['success' => false, 'message' => 'Error al actualizar la contraseña'];
+                                }
                             }
                         } else {
                             if ($this->usuario->update()) {
@@ -101,18 +115,19 @@ class UsuarioController {
                 case 'login':
                     if (isset($_POST['username']) && isset($_POST['password'])) {
                         try {
-                            error_log("=== Inicio de intento de login ===");
-                            error_log("Usuario: " . $_POST['username']);
-                            error_log("Contraseña recibida (longitud): " . strlen($_POST['password']));
+                            $user = $this->usuario->authenticate($_POST['username'], $_POST['password']);
                             
-                            $user = $this->usuario->login($_POST['username'], $_POST['password']);
-                            
-                            if ($user) {
+                            if ($user['success']) {
                                 session_start();
-                                $_SESSION['user'] = $user;
+                                // Estructurar correctamente la sesión
+                                $_SESSION['user'] = [
+                                    'id' => $user['user_id'],
+                                    'usuario_nombre' => $user['user_nombre'],
+                                    'usuario_apellido' => $user['user_apellido']
+                                ];
                                 $_SESSION['user_id'] = $user['id'];
                                 $_SESSION['rol'] = $user['rol_nombre'];
-                                $_SESSION['nombre_completo'] = $user['usuario_nombre'] . ' ' . $user['usuario_apellido'];
+                                $_SESSION['nombre_completo'] = $user['user_nombre'] . ' ' . $user['user_apellido'];
                                 error_log("Login exitoso para usuario: " . $_POST['username']);
                                 header("Location: ../views/home.php");
                                 exit();

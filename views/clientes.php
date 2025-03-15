@@ -35,7 +35,7 @@ $messages = [
     <link rel="stylesheet" href="../css/style_main.css">
 </head>
 <body>
-    <?php include 'menu_lateral.php'; ?>
+    <?php include '../components/menu_lateral.php'; ?>
 
     <div class="content-wrapper">
         <div class="container-fluid">

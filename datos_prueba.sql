@@ -19,7 +19,7 @@ INSERT INTO usuarios (
     'admin',
     'Administrador',
     'Sistema',
-    'admin',
+    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- Contraseña: admin
     1,
     'Administración'
 );
@@ -166,6 +166,40 @@ INSERT INTO procesos_produccion (
 ('Control de Calidad', 'Inspección final de prendas', 0.30);
 
 -- 8. Insertar Órdenes de Producción
+-- 1. Modificar orden de inserts
+-- Primero crear items antes de po_detalle
+INSERT INTO items (
+    item_numero,
+    item_nombre,
+    item_descripcion,
+    item_talla,
+    item_img,
+    item_dir_specs
+) VALUES (
+    '25T4884MX',
+    'Vestido de niña floreado',
+    'Vestido infantil estampado',
+    '2T',
+    '/imagenes/25T4884MX.jpg',
+    '/specs/25T4884MX.pdf'
+),
+(
+    '35T4884MX',
+    'Pantalón casual',
+    'Pantalón de tela ligera',
+    'L',
+    '/imagenes/35T4884MX.jpg',
+    '/specs/35T4884MX.pdf'
+);
+
+-- 2. Corregir password hasheada
+UPDATE INSERT de usuarios SET usuario_password = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+
+-- 3. Añadir campos faltantes en ordenes_produccion
+INSERT INTO ordenes_produccion (
+    op_fecha_creacion,  -- No está en INSERT actual
+    op_fecha_modificacion  -- No está en INSERT actual
+) VALUES (DEFAULT, DEFAULT, ...);
 INSERT INTO ordenes_produccion (
     op_id_pd,
     op_operador_asignado,
