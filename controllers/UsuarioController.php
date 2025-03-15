@@ -214,7 +214,6 @@ class UsuarioController {
         }
         return null;
     }
-}
 
 // Si se hace una llamada directa al controlador
 if(basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
