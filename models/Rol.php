@@ -63,17 +63,50 @@ class Rol {
     }
 
     public function toggleStatus() {
-        $query = "UPDATE " . $this->table_name . "
-                SET estado = CASE 
-                    WHEN estado = 'Activo' THEN 'Deshabilitado'
-                    ELSE 'Activo'
-                END
-                WHERE id = :id";
+        // Log the table structure
+        try {
+            $describeQuery = "DESCRIBE " . $this->table_name;
+            $describeStmt = $this->conn->prepare($describeQuery);
+            $describeStmt->execute();
+            $tableStructure = $describeStmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Table structure: " . print_r($tableStructure, true));
+        } catch (Exception $e) {
+            error_log("Error getting table structure: " . $e->getMessage());
+        }
 
+        // First get the current state
+        $queryGet = "SELECT id, estado FROM " . $this->table_name . " WHERE id = :id";
+        $stmtGet = $this->conn->prepare($queryGet);
+        $stmtGet->bindParam(":id", $this->id);
+        $stmtGet->execute();
+        $currentState = $stmtGet->fetch(PDO::FETCH_ASSOC);
+        
+        error_log("Current state for role ID " . $this->id . ": " . print_r($currentState, true));
+        
+        // Determine the new state
+        $newState = $currentState['estado'] === 'Activo' ? 'Inactivo' : 'Activo';
+        error_log("New state will be: " . $newState);
+        
+        $query = "UPDATE " . $this->table_name . " SET estado = :estado WHERE id = :id";
         $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":estado", $newState);
         $stmt->bindParam(":id", $this->id);
-
-        return $stmt->execute();
+        $result = $stmt->execute();
+        
+        error_log("Toggle status result: " . ($result ? "true" : "false"));
+        if (!$result) {
+            error_log("SQL Error: " . print_r($stmt->errorInfo(), true));
+        } else {
+            // Verify the update
+            $verifyQuery = "SELECT id, estado FROM " . $this->table_name . " WHERE id = :id";
+            $verifyStmt = $this->conn->prepare($verifyQuery);
+            $verifyStmt->bindParam(":id", $this->id);
+            $verifyStmt->execute();
+            $verifyState = $verifyStmt->fetch(PDO::FETCH_ASSOC);
+            error_log("Verified state after update: " . print_r($verifyState, true));
+        }
+        
+        return $result;
     }
 
     public function isInUse($id) {

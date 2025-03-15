@@ -4,9 +4,9 @@ if (!isset($_SESSION['user'])) {
     header("Location: login.php");
     exit();
 }
-require_once '../controllers/DashboardController.php';
-$dashboardController = new DashboardController();
-$counts = $dashboardController->getCounts();
+require_once '../models/Usuario.php';
+$usuarios = new Usuario();
+$counts = $usuarios->countUsers();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -27,16 +27,16 @@ $counts = $dashboardController->getCounts();
         <div style="width: 100%;" class="border-bottom border-secondary">
             <h1><strong>Dashboard</strong></h1><br>
         </div>
-        <div class="tarjeta_dashboard">Total de PO's <br><span style="font-size: 26pt;"><?php echo $counts['pos']; ?></span></div>
+        <div class="tarjeta_dashboard">Total de PO's <br><span style="font-size: 26pt;">100</span></div>
         <div class="tarjeta_dashboard">PO's en producción <br><span style="font-size: 26pt;">17</span></div>
         <div class="tarjeta_dashboard">Ordenes completadas <br><span style="font-size: 26pt;">780</span></div>
         <div class="tarjeta_dashboard">Totales <br><span style="font-size: 26pt;">1,557</span></div>
         <div style="width: 100%;" class="border-bottom border-secondary">
             <br>
         </div>
-        <div class="tarjeta_dashboard">Clientes <br><span style="font-size: 26pt;"><?php echo $counts['clientes']; ?></span></div>
+        <div class="tarjeta_dashboard">Clientes <br><span style="font-size: 26pt;">100</span></div>
         <div class="tarjeta_dashboard">Proveedores <br><span style="font-size: 26pt;">45</span></div>
-        <div class="tarjeta_dashboard">Empleados <br><span style="font-size: 26pt;"><?php echo $counts['usuarios']; ?></span></div>
+        <div class="tarjeta_dashboard">Usuarios del sistema <br><span style="font-size: 26pt;"><?php echo $counts; ?></span></div>
     </main>
 
     <!-- Modal de Confirmación de Cierre de Sesión -->

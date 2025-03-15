@@ -51,6 +51,13 @@ class Usuario {
         return $stmt;
     }
 
+    public function countUsers() {
+        $query = "SELECT COUNT(*) FROM " . $this->table_name;
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchColumn(); // Retorna el número total de usuarios
+    }    
+
     public function update($password = null) {
         // If only updating password
         if ($password !== null) {
@@ -98,7 +105,7 @@ class Usuario {
     public function toggleStatus() {
         $query = "UPDATE " . $this->table_name . "
                 SET estado = CASE 
-                    WHEN estado = 'Activo' THEN 'Deshabilitado'
+                    WHEN estado = 'Activo' THEN 'Inactivo'
                     ELSE 'Activo'
                 END
                 WHERE id = :id";
@@ -109,6 +116,15 @@ class Usuario {
         return $stmt->execute();
     }
 
+    /* public function delete() {
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id);
+        
+        return $stmt->execute();
+    } */
+
     public function authenticate($username, $password) {
         $query = "SELECT * FROM " . $this->table_name . " 
                 WHERE usuario_alias = :username";
@@ -118,7 +134,7 @@ class Usuario {
         $stmt->execute();
     
         if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            if ($row['estado'] === 'Deshabilitado') {
+            if ($row['estado'] === 'Inactivo') {
                 error_log("Intento de login fallido: Usuario deshabilitado - " . $username);
                 return ['success' => false, 'message' => 'Usuario deshabilitado. Contacte al administrador.'];
             }
@@ -147,7 +163,7 @@ class Usuario {
         $stmt->execute();
 
         if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            if ($row['estado'] === 'Deshabilitado') {
+            if ($row['estado'] === 'Inactivo') {
                 error_log("Intento de login fallido: Usuario deshabilitado - " . $username);
                 return ['success' => false, 'message' => 'Usuario deshabilitado. Contacte al administrador.'];
             }

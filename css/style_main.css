@@ -133,3 +133,24 @@ body.loading .loader-container {
 }
 
 /* ... otros estilos generales ... */
+
+/* Estilos de estado */
+.color-activo {
+    background-color: #157347;
+    color: white;
+    display: inline-block;
+    width: 100px;
+    text-align: center;
+    padding: 6px;
+    border-radius: 4px;
+}
+
+.color-inactivo {
+    background-color: #BF3131;
+    color: white;
+    display: inline-block;
+    width: 100px;
+    text-align: center;
+    padding: 6px;
+    border-radius: 4px;
+}

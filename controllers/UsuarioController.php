@@ -149,7 +149,7 @@ class UsuarioController {
             echo json_encode($response);
             exit;
         } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
-            if ($_GET['action'] === 'delete' && isset($_GET['id'])) {
+            /* if ($_GET['action'] === 'delete' && isset($_GET['id'])) {
                 try {
                     error_log("=== Eliminando usuario ===");
                     error_log("ID: " . $_GET['id']);
@@ -172,7 +172,7 @@ class UsuarioController {
                     header('Content-Type: application/json');
                     echo json_encode($response);
                 }
-                exit;
+                exit; */
             } else if ($_GET['action'] === 'logout') {
                 session_start();
                 $_SESSION = array();
@@ -184,7 +184,6 @@ class UsuarioController {
                 exit();
             }
         }
-    }
 
     public function getUsuarios() {
         $result = $this->usuario->read();
@@ -214,6 +213,7 @@ class UsuarioController {
         }
         return null;
     }
+}
 
 // Si se hace una llamada directa al controlador
 if(basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {

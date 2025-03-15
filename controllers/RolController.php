@@ -87,29 +87,30 @@ class RolController {
             header('Content-Type: application/json');
             echo json_encode($response);
             exit;
-        } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
-            if ($_GET['action'] === 'delete' && isset($_GET['id'])) {
-                try {
-                    error_log("=== Eliminando rol ===");
-                    error_log("ID: " . $_GET['id']);
+        } 
+        // else if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
+        //     if ($_GET['action'] === 'delete' && isset($_GET['id'])) {
+        //         try {
+        //             error_log("=== Eliminando rol ===");
+        //             error_log("ID: " . $_GET['id']);
                     
-                    $response = ['success' => false, 'message' => ''];
-                    $this->rol->id = $_GET['id'];
+        //             $response = ['success' => false, 'message' => ''];
+        //             $this->rol->id = $_GET['id'];
                     
-                    if ($this->rol->delete()) {
-                        error_log("Rol eliminado exitosamente");
-                        header('Location: ../views/roles.php?success=3');
-                    } else {
-                        error_log("Error al eliminar rol");
-                        header('Location: ../views/roles.php?error=3');
-                    }
-                } catch (Exception $e) {
-                    error_log("Error al eliminar rol: " . $e->getMessage());
-                    header('Location: ../views/roles.php?error=3');
-                }
-                exit;
-            }
-        }
+        //             if ($this->rol->delete()) {
+        //                 error_log("Rol eliminado exitosamente");
+        //                 header('Location: ../views/roles.php?success=3');
+        //             } else {
+        //                 error_log("Error al eliminar rol");
+        //                 header('Location: ../views/roles.php?error=3');
+        //             }
+        //         } catch (Exception $e) {
+        //             error_log("Error al eliminar rol: " . $e->getMessage());
+        //             header('Location: ../views/roles.php?error=3');
+        //         }
+        //         exit;
+        //     }
+        // }
     }
 
     public function getRoles() {

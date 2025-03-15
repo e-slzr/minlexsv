@@ -85,13 +85,13 @@ $departamentos = [
                         <td><?php echo htmlspecialchars($usuario['usuario_apellido']); ?></td>
                         <td><?php echo htmlspecialchars($usuario['rol_nombre']); ?></td>
                         <td><?php echo htmlspecialchars($usuario['usuario_departamento']); ?></td>
-                        <td style="color: black;">
-                            <span class="badge <?php echo $usuario['estado'] === 'Activo' ? 'badge-success' : 'badge-danger'; ?>">
+                        <td>
+                            <span class="<?php echo $usuario['estado'] === 'Activo' ? 'color-activo' : 'color-inactivo'; ?>">
                                 <?php echo htmlspecialchars($usuario['estado']); ?>
                             </span>
                         </td>
                         <td>
-                            <button type="button" class="btn btn-success edit-user" 
+                            <button type="button" class="btn btn-dark edit-user" 
                                     data-id="<?php echo $usuario['id']; ?>"
                                     data-alias="<?php echo htmlspecialchars($usuario['usuario_alias']); ?>"
                                     data-nombre="<?php echo htmlspecialchars($usuario['usuario_nombre']); ?>"
@@ -104,7 +104,7 @@ $departamentos = [
                                     <path d="M14 6L16.2929 3.70711C16.6834 3.31658 17.3166 3.31658 17.7071 3.70711L20.2929 6.29289C20.6834 6.68342 20.6834 7.31658 20.2929 7.70711L18 10M14 6L4.29289 15.7071C4.10536 15.8946 4 16.149 4 16.4142V19C4 19.5523 4.44772 20 5 20H7.58579C7.851 20 8.10536 19.8946 8.29289 19.7071L18 10M14 6L18 10" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
                                 </svg>
                             </button>
-                            <button type="button" class="btn <?php echo $usuario['estado'] === 'Activo' ? 'btn-warning' : 'btn-info'; ?> toggle-status" 
+                            <button type="button" class="btn <?php echo $usuario['estado'] === 'Activo' ? 'btn-warning' : 'btn-warning'; ?> toggle-status" 
                                     data-id="<?php echo $usuario['id']; ?>"
                                     data-nombre="<?php echo htmlspecialchars($usuario['usuario_nombre'] . ' ' . $usuario['usuario_apellido']); ?>"
                                     data-estado="<?php echo htmlspecialchars($usuario['estado']); ?>"
@@ -202,10 +202,10 @@ $departamentos = [
                             </div>
 
                             <div class="form-group mb-3" id="estadoGroup">
-                                <label for="estado">Estado</label>
-                                <select class="form-control" id="estado" name="estado">
+                                <label for="estado">Estado</label> 
+                                <select class="form-control" id="estado" name="estado" disabled>
                                     <option value="Activo">Activo</option>
-                                    <option value="Deshabilitado">Deshabilitado</option>
+                                    <option value="Inactivo">Inactivo</option>
                                 </select>
                             </div>
                         </div>

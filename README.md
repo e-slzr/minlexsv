@@ -79,3 +79,87 @@ Para más información técnica, consultar los documentos en la carpeta `documen
 
 ## Desarrollado por
 ECODE | Software Development
+
+---
+
+# MINLEX - Production Management System
+
+## Project Description
+MINLEX is a production management system designed to optimize and control production processes. The system includes user management, role control, customer administration, and production order tracking.
+
+## Main Features
+- Authentication and authorization system
+- User and role management
+- Customer administration
+- Production order control
+- Production process tracking
+- Report generation
+
+## Project Structure
+```
+├── components/         # Reusable components
+├── config/            # Database configuration
+├── controllers/       # MVC Controllers
+├── css/               # CSS Styles
+├── documents/         # Technical documentation
+├── js/                # JavaScript Scripts
+├── models/            # Data models
+├── resources/         # Static resources
+└── views/             # Application views
+```
+
+## Technologies Used
+- PHP
+- MySQL
+- Bootstrap 5.3
+- JavaScript
+
+## System Modules
+
+### 1. User Management
+- User creation and administration
+- Role and permission assignment
+- Available departments:
+  - Cutting
+  - Quality
+  - Production
+  - Purchasing
+  - Warehouse
+  - Sewing
+  - Administration
+
+### 2. Customer Management
+- Customer information registration
+- Contact and address data
+- Customer order tracking
+
+### 3. Production Process
+- Production order control
+- Production status tracking
+- Production reports
+
+## Installation
+
+1. Clone the repository
+2. Configure the web server (XAMPP recommended)
+3. Import the database from `bd.sql`
+4. Configure the connection in `config/database.php`
+5. Access the system through the browser
+
+## System Requirements
+- PHP 7.4 or higher
+- MySQL 5.7 or higher
+- Web server (Apache/XAMPP)
+
+## Security
+- Required user authentication
+- Role-based access control
+- Secure sessions
+
+## Additional Documentation
+For more technical information, check the documents in the `documents/` folder:
+- Production process flow and technical description
+- Database relational diagram
+
+## Developed by
+ECODE | Software Development
