@@ -79,7 +79,7 @@ class RolController {
                         }
                     } catch (Exception $e) {
                         error_log("Error al actualizar estado de rol: " . $e->getMessage());
-                        $response = ['success' => false, 'message' => 'Error al actualizar el estado del rol'];
+                        $response = ['success' => false, 'message' => 'Error al actualizar el estado del rol: ' . $e->getMessage()];
                     }
                     break;
             }
