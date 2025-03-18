@@ -148,34 +148,8 @@ class UsuarioController {
             header('Content-Type: application/json');
             echo json_encode($response);
             exit;
-        } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
-            /* if ($_GET['action'] === 'delete' && isset($_GET['id'])) {
-                try {
-                    error_log("=== Eliminando usuario ===");
-                    error_log("ID: " . $_GET['id']);
-                    
-                    $response = ['success' => false, 'message' => ''];
-                    $this->usuario->id = $_GET['id'];
-                    
-                    if ($this->usuario->delete()) {
-                        error_log("Usuario eliminado exitosamente");
-                        $response = ['success' => true, 'message' => 'Usuario eliminado exitosamente'];
-                    } else {
-                        error_log("Error al eliminar usuario");
-                        $response = ['success' => false, 'message' => 'Error al eliminar el usuario'];
-                    }
-                    header('Content-Type: application/json');
-                    echo json_encode($response);
-                } catch (Exception $e) {
-                    error_log("Error al eliminar usuario: " . $e->getMessage());
-                    $response = ['success' => false, 'message' => 'Error al eliminar el usuario'];
-                    header('Content-Type: application/json');
-                    echo json_encode($response);
-                }
-                exit; */
-            } else if ($_GET['action'] === 'logout') {
+        } else if ($_GET['action'] === 'logout') {
                 session_start();
-                $_SESSION = array();
                 session_destroy();
                 session_write_close();
                 setcookie(session_name(),'',0,'/');
@@ -183,7 +157,7 @@ class UsuarioController {
                 header("Location: ../views/login.php");
                 exit();
             }
-        }
+        } 
 
     public function getUsuarios() {
         $result = $this->usuario->read();
