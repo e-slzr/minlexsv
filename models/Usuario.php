@@ -154,6 +154,25 @@ class Usuario {
         return ['success' => false, 'message' => 'Usuario o contraseña incorrectos'];
     }
 
+    public function verifyPassword($userId, $password) {
+        $query = "SELECT usuario_password FROM " . $this->table_name . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $userId);
+        
+        try {
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($row) {
+                return password_verify($password, $row['usuario_password']);
+            }
+            return false;
+        } catch(PDOException $e) {
+            error_log("Error en Usuario::verifyPassword(): " . $e->getMessage());
+            throw $e;
+        }
+    }
+
     /* public function authenticate($username, $password) {
         $query = "SELECT id, alias, password, estado FROM " . $this->table_name . " 
                 WHERE alias = :username";
