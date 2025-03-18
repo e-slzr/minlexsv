@@ -263,23 +263,22 @@ $roles = $rolController->getRoles();
                         id: id
                     },
                     dataType: 'json',
-                    success: function(response) {
+                    beforeSend: function() {
                         $('#toggleStatusModal').modal('hide');
+                    },
+                    success: function(response) {
                         if (response.success) {
                             $('#confirmationMessage').text(response.message);
                             $('#confirmationModal').modal('show');
-                            $('#confirmationModal').on('hidden.bs.modal', function () {
-                                location.reload();
-                            });
                         } else {
                             $('#errorMessage').text(response.message);
                             $('#errorModal').modal('show');
                         }
                     },
-                    error: function() {
-                        $('#toggleStatusModal').modal('hide');
-                        $('#errorMessage').text('Error al procesar la solicitud');
+                    error: function(xhr, status, error) {
+                        $('#errorMessage').text('Error al procesar la solicitud: ' + error);
                         $('#errorModal').modal('show');
+                        console.error('Error:', error);
                     }
                 });
             });
