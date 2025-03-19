@@ -23,34 +23,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Click handler
+        // Click handler para dropdowns
         item.addEventListener('click', function(e) {
             const link = this.querySelector('a');
             if (!link) return;
 
             if (link.classList.contains('dropdown-toggle')) {
-                // Es un ítem con submenú
                 e.preventDefault();
-                const targetId = link.getAttribute('data-target');
+                const targetId = link.getAttribute('data-bs-target');
                 const targetCollapse = document.querySelector(targetId);
                 
                 if (targetCollapse) {
-                    // Toggle del submenú
-                    const wasActive = targetCollapse.classList.contains('show');
-                    
-                    // Cerrar todos los submenús
-                    document.querySelectorAll('.collapse.show').forEach(collapse => {
-                        collapse.classList.remove('show');
+                    const bsCollapse = new bootstrap.Collapse(targetCollapse, {
+                        toggle: true
                     });
-
-                    // Abrir el submenú si estaba cerrado
-                    if (!wasActive) {
-                        targetCollapse.classList.add('show');
-                    }
                 }
-            } else {
-                // Es un enlace normal, navegar a la URL
-                window.location.href = link.getAttribute('href');
             }
         });
     });
@@ -73,7 +60,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 menuLateral.classList.remove('expanded');
                 // Cerrar todos los submenús al contraer
                 document.querySelectorAll('.collapse.show').forEach(collapse => {
-                    collapse.classList.remove('show');
+                    const bsCollapse = bootstrap.Collapse.getInstance(collapse);
+                    if (bsCollapse) {
+                        bsCollapse.hide();
+                    }
                 });
             }, 300);
         }
