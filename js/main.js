@@ -333,10 +333,109 @@ const handleUsuarios = {
     }
 };
 
+// Funciones para el dashboard
+const handleDashboard = {
+    init: function() {
+        if (document.getElementById('posChart') && document.getElementById('estadosChart')) {
+            this.loadChartData();
+        }
+    },
+
+    loadChartData: function() {
+        $.ajax({
+            url: '../controllers/DashboardController.php',
+            method: 'POST',
+            data: { action: 'getChartData' },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    // Gráfico de POs por mes
+                    const posCtx = document.getElementById('posChart').getContext('2d');
+                    new Chart(posCtx, {
+                        type: 'line',
+                        data: {
+                            labels: response.posPorMes.labels,
+                            datasets: [{
+                                label: 'POs Creadas',
+                                data: response.posPorMes.data,
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    // Gráfico de Estado de POs
+                    const estadosCtx = document.getElementById('estadosChart').getContext('2d');
+                    new Chart(estadosCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: response.estadosPo.labels,
+                            datasets: [{
+                                data: response.estadosPo.data,
+                                backgroundColor: [
+                                    'rgba(255, 193, 7, 0.8)',    // Pendiente (warning)
+                                    'rgba(13, 110, 253, 0.8)',   // En proceso (primary)
+                                    'rgba(25, 135, 84, 0.8)',    // Completada (success)
+                                    'rgba(220, 53, 69, 0.8)'     // Cancelada (danger)
+                                ],
+                                borderColor: [
+                                    'rgba(255, 193, 7, 1)',      // Pendiente
+                                    'rgba(13, 110, 253, 1)',     // En proceso
+                                    'rgba(25, 135, 84, 1)',      // Completada
+                                    'rgba(220, 53, 69, 1)'       // Cancelada
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    console.error('Error al cargar datos:', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error en la petición AJAX:', error);
+            }
+        });
+    }
+};
+
 // Inicializar todos los manejadores cuando el documento esté listo
 $(document).ready(function() {
     // Inicializar manejadores según la página actual
-    if ($('#clienteForm').length) handleClientes.init();
-    if ($('#rolForm').length) handleRoles.init();
-    if ($('#usuarioForm').length) handleUsuarios.init();
+    if (document.getElementById('clienteForm')) {
+        handleClientes.init();
+    }
+    if (document.getElementById('usuarioForm')) {
+        handleUsuarios.init();
+    }
+    if (document.getElementById('rolForm')) {
+        handleRoles.init();
+    }
+    if (document.getElementById('posChart')) {
+        handleDashboard.init();
+    }
 });
