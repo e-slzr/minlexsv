@@ -1,62 +1,141 @@
-/* menu lateral */
-nav {
-    background-color: #f3f4f6;
-    width: 325px;
-    height: 100vh;
-    padding-top: 10px;
+/* Variables del menú */
+:root {
+    --menu-width: 250px;
+    --menu-width-collapsed: 64px;
+    --menu-transition: 0.3s ease-in-out;
+    --menu-bg: #212529;
+    --menu-hover: rgba(255, 255, 255, 0.1);
+    --menu-text: #f8f9fa;
 }
-nav h2 {
-    padding-left: 20px;
-}
-li {
-    padding: 10px 0px 10px 40px;
-    font-weight: 500;
-    list-style-type: none;
-    transition: 0.2s;
-}
-li:hover {
-    background-color: #dadada;
-    transition: 0.2s;
-}
-li img {
-    margin-bottom: 4px;
-    margin-right: 10px;
-}
-a {
-    text-decoration: none;
-    color: black;
-}
-.dropdown-toggle {
-    cursor: pointer;
-}
-.collapse {
-    transition: 0.2s;
-}
-.collapse li {
-    padding-left: 80px;
-}
+
+/* Barra superior */
 .barra_superior {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    height: 36px;
+    height: 48px;
     z-index: 1002;
-    background: #212529;
-    color: white;
-    padding: 1rem;
+    background: var(--menu-bg);
+    color: var(--menu-text);
+    padding: 0 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-.link_login, .link_login a {
-    color: white;
-    text-decoration: no;
-    flex: 1;
-    text-align: right;
-    padding-right: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.link_login, .link_login a {
+    color: var(--menu-text);
+    text-decoration: none;
+    text-align: right;
+}
+
+/* Menú lateral */
+.menu-lateral {
+    background-color: var(--menu-bg);
+    width: var(--menu-width);
+    height: 100vh;
+    position: fixed;
+    top: 48px;
+    left: 0;
+    padding-top: 1rem;
+    transition: width var(--menu-transition);
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 1001;
+}
+
+.menu-lateral.collapsed {
+    width: var(--menu-width-collapsed);
+}
+
+.menu-lateral .list-group {
+    padding: 0;
+    margin: 0;
+}
+
+.menu-lateral a {
+    text-decoration: none;
+    color: var(--menu-text);
+    transition: background-color var(--menu-transition);
+}
+
+.menu-lateral li {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: background-color var(--menu-transition);
+    white-space: nowrap;
+}
+
+.menu-lateral li:hover {
+    background-color: var(--menu-hover);
+}
+
+.menu-lateral svg {
+    min-width: 24px;
+    height: 24px;
+    stroke: var(--menu-text);
+}
+
+/* Submenús */
+.menu-lateral .collapse {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.menu-lateral .collapse li {
+    padding-left: 3.25rem;
+}
+
+/* Botón de toggle */
+.menu-toggle-btn {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 1003;
+    background: transparent;
+    border: none;
+    color: var(--menu-text);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color var(--menu-transition);
+}
+
+.menu-toggle-btn:hover {
+    background-color: var(--menu-hover);
+}
+
+/* Ajustes para el contenido principal */
+main {
+    margin-left: var(--menu-width);
+    margin-top: 48px;
+    transition: margin-left var(--menu-transition);
+    padding: 1.5rem;
+}
+
+main.menu-collapsed {
+    margin-left: var(--menu-width-collapsed);
+}
+
+/* Ajustes responsive */
+@media (max-width: 768px) {
+    .menu-lateral {
+        width: var(--menu-width-collapsed);
+        transform: translateX(-100%);
+    }
+    
+    .menu-lateral.show {
+        transform: translateX(0);
+        width: var(--menu-width);
+    }
+    
+    main {
+        margin-left: 0;
+    }
+}
 
 /* footer */ 
 footer {
@@ -69,21 +148,7 @@ footer {
     padding: 5px 10px;
 }
 
-
 /* en comun */
-main {
-    /* flex: 1; */
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: start;
-    align-items: stretch;
-    align-content: start;
-    gap: 20px;
-    width: 100%;
-    height: 100vh;
-    padding: 35px;
-}
 .titulo-vista {
     display: flex;
     flex-direction: row;
@@ -95,105 +160,4 @@ main {
 .titulo-vista button {
     height: 38px;
     width: 175px;
-}
-
-/* Estilos específicos del menú lateral */
-.menu-toggle-btn {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 1001;
-    background: #212529;
-    border: none;
-    border-radius: 50%;
-    width: 45px;
-    height: 45px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.menu-toggle-btn svg {
-    color: white;
-}
-
-.menu-lateral {
-    position: fixed;
-    top: 36px;
-    left: 0;
-    height: calc(150vh - 36px);
-    width: 250px;
-    background: #f8f9fa;
-    transition: width 0.3s ease-in-out;
-    z-index: 1000;
-    overflow-x: hidden;
-}
-
-/* Estilos de los elementos del menú */
-.menu-lateral .list-group li {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    padding-left: 1rem;
-    cursor: pointer;
-}
-
-.menu-lateral .list-group li img {
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
-    pointer-events: none;
-}
-
-.menu-lateral .list-group li a {
-    margin-left: 1rem;
-    white-space: nowrap;
-    transition: opacity 0.2s ease-in-out;
-    pointer-events: none;
-    text-decoration: none;
-    color: #212529;
-}
-
-/* Estados del menú */
-.menu-lateral.hidden {
-    width: 85px;
-}
-
-.menu-lateral.hidden .list-group li a,
-.menu-lateral.hidden .collapse {
-    display: none;
-}
-
-.menu-lateral.hidden .list-group li {
-    justify-content: center;
-    padding: 0.5rem 0;
-}
-
-.menu-lateral.expanded {
-    width: 250px;
-}
-
-.menu-lateral.expanded .list-group li {
-    justify-content: flex-start;
-    padding: 0.5rem;
-    padding-left: 1rem;
-}
-
-.menu-lateral.expanded .list-group li a {
-    display: block;
-}
-
-/* Submenús */
-.menu-lateral .collapse {
-    padding-left: 2rem;
-}
-
-.menu-lateral.expanded .collapse {
-    display: none;
-}
-
-.menu-lateral.expanded .collapse.show {
-    display: block;
 }

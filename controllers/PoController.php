@@ -1,4 +1,13 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['user'])) {
+    header('Location: ../views/login.php');
+    exit();
+}
+
 require_once __DIR__ . '/../models/Po.php';
 require_once __DIR__ . '/../models/PoDetalle.php';
 require_once __DIR__ . '/../models/Usuario.php';
@@ -82,39 +91,83 @@ class PoController {
                 throw new Exception("Número de PO y Cliente son requeridos");
             }
 
+            // Validar que haya al menos un detalle
+            if (empty($_POST['items']) || !is_array($_POST['items'])) {
+                throw new Exception("Debe agregar al menos un detalle a la PO");
+            }
+
             // Verificar si ya existe una PO con el mismo número
             if ($this->po->existsPoNumero($_POST['po_numero'])) {
                 throw new Exception("Ya existe una PO con este número");
             }
 
-            // Asignar valores al objeto PO
-            $this->po->po_numero = $_POST['po_numero'];
-            $this->po->po_fecha_creacion = date('Y-m-d');
-            $this->po->po_fecha_inicio_produccion = !empty($_POST['po_fecha_inicio_produccion']) ? $_POST['po_fecha_inicio_produccion'] : null;
-            $this->po->po_fecha_fin_produccion = !empty($_POST['po_fecha_fin_produccion']) ? $_POST['po_fecha_fin_produccion'] : null;
-            $this->po->po_fecha_envio_programada = !empty($_POST['po_fecha_envio_programada']) ? $_POST['po_fecha_envio_programada'] : null;
-            $this->po->po_estado = 'Pendiente';
-            $this->po->po_id_cliente = $_POST['po_id_cliente'];
-            $this->po->po_id_usuario_creacion = $_SESSION['user']['id'];
-            $this->po->po_tipo_envio = $_POST['po_tipo_envio'] ?? 'Tipo 1';
-            $this->po->po_comentario = $_POST['po_comentario'] ?? null;
-            $this->po->po_notas = $_POST['po_notas'] ?? null;
+            // Obtener la conexión y comenzar transacción
+            $conn = $this->po->getConnection();
+            $conn->beginTransaction();
 
-            // Crear la PO
-            // $poId = $this->po->create();
-            // if (!$poId) {
-            //     throw new Exception("Error al crear la PO");
-            // }
+            try {
+                // Asignar valores al objeto PO
+                $this->po->po_numero = $_POST['po_numero'];
+                $this->po->po_fecha_creacion = date('Y-m-d');
+                $this->po->po_fecha_inicio_produccion = !empty($_POST['po_fecha_inicio_produccion']) ? $_POST['po_fecha_inicio_produccion'] : null;
+                $this->po->po_fecha_fin_produccion = !empty($_POST['po_fecha_fin_produccion']) ? $_POST['po_fecha_fin_produccion'] : null;
+                $this->po->po_fecha_envio_programada = $_POST['po_fecha_envio_programada'];
+                $this->po->po_estado = 'Pendiente';
+                $this->po->po_id_cliente = $_POST['po_id_cliente'];
+                $this->po->po_id_usuario_creacion = $_SESSION['user']['id'];
+                $this->po->po_tipo_envio = $_POST['po_tipo_envio'] ?? 'Tipo 1';
+                $this->po->po_comentario = $_POST['po_comentario'] ?? null;
 
-            // return [
-            //     'success' => true,
-            //     'message' => 'PO creada exitosamente',
-            //     'po_id' => $poId
-            // ];
+                // Crear la PO
+                $poId = $this->po->create();
+
+                if (!$poId) {
+                    throw new Exception("Error al crear la PO");
+                }
+
+                // Procesar los detalles
+                $items = $_POST['items'];
+                $cantidades = $_POST['cant_piezas_total'];
+                $pcsCarton = $_POST['pcs_carton'];
+                $pcsPoly = $_POST['pcs_poly'];
+                $precios = $_POST['precio_unitario'];
+
+                foreach ($items as $index => $itemId) {
+                    $detalle = [
+                        'pd_id_po' => $poId,
+                        'pd_item' => $itemId,
+                        'pd_cant_piezas_total' => $cantidades[$index],
+                        'pd_pcs_carton' => $pcsCarton[$index],
+                        'pd_pcs_poly' => $pcsPoly[$index],
+                        'pd_estado' => 'Pendiente',
+                        'pd_precio_unitario' => $precios[$index]
+                    ];
+
+                    if (!$this->poDetalle->create($detalle)) {
+                        throw new Exception("Error al crear el detalle de la PO");
+                    }
+                }
+
+                // Confirmar transacción
+                $conn->commit();
+
+                return [
+                    'success' => true,
+                    'message' => 'PO creada exitosamente',
+                    'id' => $poId
+                ];
+
+            } catch (Exception $e) {
+                $conn->rollBack();
+                throw $e;
+            }
 
         } catch (Exception $e) {
-            error_log("Error al crear PO: " . $e->getMessage());
-            throw $e;
+            error_log("Error en PoController::createPo: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
         }
     }
 
@@ -154,21 +207,16 @@ class PoController {
             $password = $_POST['password'];
 
             // Verificar la contraseña del usuario
-            session_start();
             if (!isset($_SESSION['user'])) {
                 throw new Exception("Usuario no autenticado");
             }
 
-            require_once __DIR__ . '/../models/Usuario.php';
-            $usuario = new Usuario();
-            if (!$usuario->verifyPassword($_SESSION['user']['id'], $password)) {
+            if (!$this->usuario->verifyPassword($_SESSION['user']['id'], $password)) {
                 throw new Exception("Contraseña incorrecta");
             }
 
             // Verificar si la PO tiene detalles
-            require_once __DIR__ . '/../models/PoDetalle.php';
-            $poDetalle = new PoDetalle();
-            if ($poDetalle->hasDetails($poId)) {
+            if ($this->poDetalle->hasDetails($poId)) {
                 throw new Exception("No se puede eliminar la PO porque tiene detalles asociados");
             }
 

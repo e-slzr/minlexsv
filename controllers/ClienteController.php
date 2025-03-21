@@ -8,141 +8,97 @@ class ClienteController {
         $this->cliente = new Cliente();
     }
 
-    public function handleRequest() {
-        // Determina qué acción realizar basado en el parámetro 'action' de la URL
-        $action = isset($_GET['action']) ? $_GET['action'] : 'list';
-
-        switch($action) {
-            case 'create':
-                $this->create();
-                break;
-            case 'update':
-                $this->update();
-                break;
-            case 'delete':
-                $this->delete();
-                break;
-            case 'view':
-                $this->view();
-                break;
-            case 'search':
-                $this->search();
-                break;
-            default:
-                $this->list();
-                break;
-        }
-    }
-
-    // Crear un nuevo cliente
-    private function create() {
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Recibimos los datos del formulario
-            $this->cliente->cliente_empresa = $_POST['empresa'];
-            $this->cliente->cliente_nombre = $_POST['nombre'];
-            $this->cliente->cliente_apellido = $_POST['apellido'];
-            $this->cliente->cliente_direccion = $_POST['direccion'];
-            $this->cliente->cliente_telefono = $_POST['telefono'];
-            $this->cliente->cliente_correo = $_POST['correo'];
-
-            if($this->cliente->create()) {
-                // Si se creó exitosamente, redirigimos con mensaje de éxito
-                header('Location: ../views/clientes.php?success=1');
-            } else {
-                // Si hubo error, redirigimos con mensaje de error
-                header('Location: ../views/clientes.php?error=1');
-            }
-            exit();
-        }
-    }
-
-    // Actualizar un cliente existente
-    private function update() {
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->cliente->id = $_POST['id'];
-            $this->cliente->cliente_empresa = $_POST['empresa'];
-            $this->cliente->cliente_nombre = $_POST['nombre'];
-            $this->cliente->cliente_apellido = $_POST['apellido'];
-            $this->cliente->cliente_direccion = $_POST['direccion'];
-            $this->cliente->cliente_telefono = $_POST['telefono'];
-            $this->cliente->cliente_correo = $_POST['correo'];
-
-            if($this->cliente->update()) {
-                header('Location: ../views/clientes.php?success=2');
-            } else {
-                header('Location: ../views/clientes.php?error=2');
-            }
-            exit();
-        }
-    }
-
-    // Eliminar un cliente
-    private function delete() {
-        if(isset($_GET['id'])) {
-            $this->cliente->id = $_GET['id'];
-            if($this->cliente->delete()) {
-                header('Location: ../views/clientes.php?success=3');
-            } else {
-                header('Location: ../views/clientes.php?error=3');
-            }
-            exit();
-        }
-    }
-
-    // Ver detalles de un cliente
-    private function view() {
-        if(isset($_GET['id'])) {
-            $this->cliente->id = $_GET['id'];
-            if($this->cliente->readOne()) {
-                return [
-                    'id' => $this->cliente->id,
-                    'empresa' => $this->cliente->cliente_empresa,
-                    'nombre' => $this->cliente->cliente_nombre,
-                    'apellido' => $this->cliente->cliente_apellido,
-                    'direccion' => $this->cliente->cliente_direccion,
-                    'telefono' => $this->cliente->cliente_telefono,
-                    'correo' => $this->cliente->cliente_correo
-                ];
-            }
-        }
-        return null;
-    }
-
-    // Listar todos los clientes
-    private function list() {
-        $result = $this->cliente->read();
-        return $result->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    // Buscar clientes
-    private function search() {
-        if(isset($_GET['keyword'])) {
-            $result = $this->cliente->search($_GET['keyword']);
-            return $result->fetchAll(PDO::FETCH_ASSOC);
-        }
-        return [];
-    }
-
-    // Métodos públicos para usar desde las vistas
     public function getClientes() {
-        return $this->list();
+        try {
+            return $this->cliente->getAll();
+        } catch (Exception $e) {
+            error_log("Error al obtener clientes: " . $e->getMessage());
+            return null;
+        }
     }
 
-    public function getCliente($id) {
-        $this->cliente->id = $id;
-        return $this->cliente->readOne() ? [
-            'id' => $this->cliente->id,
-            'empresa' => $this->cliente->cliente_empresa,
-            'nombre' => $this->cliente->cliente_nombre,
-            'apellido' => $this->cliente->cliente_apellido,
-            'direccion' => $this->cliente->cliente_direccion,
-            'telefono' => $this->cliente->cliente_telefono,
-            'correo' => $this->cliente->cliente_correo
-        ] : null;
-    }
+    public function handleRequest() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $action = $_POST['action'] ?? '';
+            $response = ['success' => false, 'message' => ''];
 
-    public function buscarClientes($keyword) {
-        return $this->cliente->search($keyword)->fetchAll(PDO::FETCH_ASSOC);
+            switch ($action) {
+                case 'create':
+                    try {
+                        $nombres = explode(' ', $_POST['contacto'], 2);
+                        $nombre = $nombres[0];
+                        $apellido = $nombres[1] ?? '';
+                        
+                        $this->cliente->cliente_empresa = $_POST['empresa'];
+                        $this->cliente->cliente_nombre = $nombre;
+                        $this->cliente->cliente_apellido = $apellido;
+                        $this->cliente->cliente_telefono = $_POST['telefono'];
+                        $this->cliente->cliente_correo = $_POST['email'];
+                        $this->cliente->cliente_direccion = $_POST['direccion'] ?? '';
+
+                        if ($this->cliente->create()) {
+                            $response = ['success' => true, 'message' => 'Cliente creado exitosamente'];
+                        } else {
+                            $response = ['success' => false, 'message' => 'Error al crear el cliente'];
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error al crear cliente: " . $e->getMessage());
+                        $response = ['success' => false, 'message' => 'Error al crear el cliente'];
+                    }
+                    break;
+
+                case 'update':
+                    try {
+                        $nombres = explode(' ', $_POST['contacto'], 2);
+                        $nombre = $nombres[0];
+                        $apellido = $nombres[1] ?? '';
+
+                        $this->cliente->id = $_POST['id'];
+                        $this->cliente->cliente_empresa = $_POST['empresa'];
+                        $this->cliente->cliente_nombre = $nombre;
+                        $this->cliente->cliente_apellido = $apellido;
+                        $this->cliente->cliente_telefono = $_POST['telefono'];
+                        $this->cliente->cliente_correo = $_POST['email'];
+                        $this->cliente->cliente_direccion = $_POST['direccion'] ?? '';
+
+                        if ($this->cliente->update()) {
+                            $response = ['success' => true, 'message' => 'Cliente actualizado exitosamente'];
+                        } else {
+                            $response = ['success' => false, 'message' => 'Error al actualizar el cliente'];
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error al actualizar cliente: " . $e->getMessage());
+                        $response = ['success' => false, 'message' => 'Error al actualizar el cliente'];
+                    }
+                    break;
+
+                case 'toggleStatus':
+                    try {
+                        error_log("=== Cambiando estado de cliente ===");
+                        error_log("ID: " . $_POST['id']);
+                        error_log("Nuevo estado: " . $_POST['estado']);
+                        
+                        $this->cliente->id = $_POST['id'];
+                        $this->cliente->estado = $_POST['estado'];
+                        
+                        if ($this->cliente->toggleStatus()) {
+                            error_log("Estado de cliente actualizado exitosamente");
+                            $response = ['success' => true, 'message' => 'Estado de cliente actualizado exitosamente'];
+                        } else {
+                            error_log("Error al actualizar estado de cliente");
+                            $response = ['success' => false, 'message' => 'Error al actualizar el estado del cliente'];
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error al actualizar estado de cliente: " . $e->getMessage());
+                        $response = ['success' => false, 'message' => 'Error al actualizar el estado del cliente'];
+                    }
+                    break;
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit();
+        }
     }
 }
 
@@ -151,4 +107,3 @@ if(basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
     $controller = new ClienteController();
     $controller->handleRequest();
 }
-?>

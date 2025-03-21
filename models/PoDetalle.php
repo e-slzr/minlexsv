@@ -20,7 +20,7 @@ class PoDetalle {
     }
 
     // Crear un nuevo detalle de PO
-    public function create() {
+    public function create($data = null) {
         $query = "INSERT INTO " . $this->table_name . "
                 SET
                     pd_id_po = :pd_id_po,
@@ -32,6 +32,17 @@ class PoDetalle {
                     pd_precio_unitario = :pd_precio_unitario";
 
         $stmt = $this->conn->prepare($query);
+
+        // Si se proporcionan datos como array, usarlos
+        if (is_array($data)) {
+            $this->pd_id_po = $data['pd_id_po'];
+            $this->pd_item = $data['pd_item'];
+            $this->pd_cant_piezas_total = $data['pd_cant_piezas_total'];
+            $this->pd_pcs_carton = $data['pd_pcs_carton'];
+            $this->pd_pcs_poly = $data['pd_pcs_poly'];
+            $this->pd_estado = $data['pd_estado'] ?? 'Pendiente';
+            $this->pd_precio_unitario = $data['pd_precio_unitario'];
+        }
 
         // Sanitizar y bindear valores
         $this->pd_estado = $this->pd_estado ?: 'Pendiente';

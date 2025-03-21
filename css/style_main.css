@@ -1,102 +1,238 @@
-/* Estilos generales */
-body {
-    zoom: 0.8;
-    margin: 36px 0 0 0;
-    padding: 0;
-    display: flex;
-    font-family: Arial, sans-serif;
+/* Variables */
+:root {
+    --sidebar-width: 250px;
+    --header-height: 60px;
+    --primary-color: #212529;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
 }
 
 /* Layout principal */
+body {
+    /* min-height: 100vh; */
+    zoom: 0.9;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
 main {
-    margin-top: 36px;
-    margin-left: 250px;
-    transition: margin-left 0.3s ease-in-out;
+    margin-left: var(--sidebar-width);
     padding: 20px;
+    min-height: calc(100vh - var(--header-height));
+    background-color: #f5f5f5;
 }
 
-main.reduced {
-    margin-left: 85px;
-}
-
-/* Estilos del loader */
-.loader-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+/* Menú lateral */
+.sidebar {
+    width: var(--sidebar-width);
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
     height: 100vh;
-    background-color: rgba(255, 255, 255, 0.95);
-    z-index: 99999;
-    margin: 0;
-    pointer-events: none;
+    background-color: var(--primary-color);
+    padding-top: 20px;
+    z-index: 1000;
 }
 
-.loader-container.active {
-    pointer-events: all;
-}
-
-body.loading {
-    overflow: hidden;
-}
-
-body.loading .loader-container {
-    display: flex;
-}
-
-.loader {
-    width: 100px;
-    height: 100px;
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #212529;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 20px;
-}
-
-.loader-text {
-    color: #212529;
-    font-size: 1.2rem;
-    font-weight: 500;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Estilos de componentes generales */
+/* Título de la vista */
 .titulo-vista {
-    padding: 1rem;
-    margin-bottom: 2rem;
-}
-
-.filtrar {
     display: flex;
-    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 2rem;
-    flex-wrap: wrap;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--secondary-color);
 }
 
-/* Estilos de tablas */
-.table th {
-    background-color: #f8f9fa;
+.titulo-vista h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--primary-color);
 }
 
-.table td, .table th {
-    padding: .75rem;
+/* Tablas */
+.table-responsive {
+    margin-top: 1rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    font-weight: 500;
     vertical-align: middle;
 }
 
-/* Estilos de formularios */
-.form-control {
+.table tbody td {
+    padding: 0.5rem;
+    vertical-align: middle;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Estilos para botones de acción en tablas */
+.table .btn {
+    padding: 4px;
+    margin: 0 2px;
+    line-height: 1;
+}
+
+.table .btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Ajuste de ancho de columnas */
+.table th:last-child,
+.table td:last-child {
+    width: 100px;
+    white-space: nowrap;
+}
+
+/* Ajustar el padding de las celdas */
+.table td, 
+.table th {
+    padding: 0.5rem;
+    vertical-align: middle;
+}
+
+/* Ajustar el tamaño de los badges */
+.table .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Botones en tablas */
+.table .btn {
+    padding: 4px 8px;
+    margin: 0 2px;
+}
+
+.table .btn i {
+    font-size: 0.9rem;
+}
+
+/* Estados */
+.badge {
+    padding: 8px 12px;
+    font-weight: 500;
+    border-radius: 4px;
+}
+
+.color-activo {
+    color: var(--success-color);
+    font-weight: 500;
+}
+
+.color-inactivo {
+    color: var(--danger-color);
+    font-weight: 500;
+}
+
+/* Modales */
+.modal-content {
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 1rem;
+}
+
+.modal-title {
+    font-weight: 500;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+}
+
+/* Formularios */
+.form-label {
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.form-control, .form-select {
     border-radius: 4px;
     border: 1px solid #ced4da;
-    padding: .375rem .75rem;
+    padding: 8px 12px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(33, 37, 41, 0.25);
+}
+
+/* Botones */
+.btn {
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-dark {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-dark:hover {
+    background-color: #000;
+    border-color: #000;
+}
+
+.btn-warning {
+    color: var(--dark-color);
+}
+
+/* Utilidades */
+.progress {
+    height: 30px;
+    border-radius: 4px;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 150vw !important;
+    height: 150vh !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    z-index: 1040;
+}
+
+.modal {
+    z-index: 1050;
 }
 
 /* dashboard */
@@ -112,13 +248,15 @@ body.loading .loader-container {
     font-size: 18pt;
     font-weight: bold;
 }
+
 /* filtrar */
 .filtrar {
     width: 100%;
     display: flex;
     gap: 5px;
-    flex-wrap: nowrap  ;
+    flex-wrap: nowrap;
 }
+
 .filtrar input {
     height: 40px;
     flex-basis: 1;    
@@ -132,29 +270,20 @@ body.loading .loader-container {
     border: 1px solid #dadada;
 }
 
-/* ... otros estilos generales ... */
+/* Responsive */
+@media (max-width: 768px) {
+    main {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    main.reduced {
+        margin-left: 0;
+        width: 100%;
+    }
+}
 
 /* Estilos de estado */
-.color-activo {
-    background-color: #157347;
-    color: white;
-    display: inline-block;
-    width: 100px;
-    text-align: center;
-    padding: 6px;
-    border-radius: 4px;
-}
-
-.color-inactivo {
-    background-color: #BF3131;
-    color: white;
-    display: inline-block;
-    width: 100px;
-    text-align: center;
-    padding: 6px;
-    border-radius: 4px;
-}
-
 .dashboard-container {
     width: 100%;
     display: flex;
