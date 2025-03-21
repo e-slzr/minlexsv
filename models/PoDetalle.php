@@ -13,56 +13,45 @@ class PoDetalle {
     public $pd_estado;
     public $pd_precio_unitario;
 
-    public function __construct() {
-        require_once __DIR__ . '/../config/Database.php';
-        $database = new Database();
-        $this->conn = $database->getConnection();
+    public function __construct($db = null) {
+        if ($db === null) {
+            require_once __DIR__ . '/../config/Database.php';
+            $database = new Database();
+            $this->conn = $database->connect();
+        } else {
+            $this->conn = $db;
+        }
     }
 
     // Crear un nuevo detalle de PO
-    public function create($data = null) {
-        $query = "INSERT INTO " . $this->table_name . "
-                SET
-                    pd_id_po = :pd_id_po,
-                    pd_item = :pd_item,
-                    pd_cant_piezas_total = :pd_cant_piezas_total,
-                    pd_pcs_carton = :pd_pcs_carton,
-                    pd_pcs_poly = :pd_pcs_poly,
-                    pd_estado = :pd_estado,
-                    pd_precio_unitario = :pd_precio_unitario";
-
-        $stmt = $this->conn->prepare($query);
-
-        // Si se proporcionan datos como array, usarlos
-        if (is_array($data)) {
-            $this->pd_id_po = $data['pd_id_po'];
-            $this->pd_item = $data['pd_item'];
-            $this->pd_cant_piezas_total = $data['pd_cant_piezas_total'];
-            $this->pd_pcs_carton = $data['pd_pcs_carton'];
-            $this->pd_pcs_poly = $data['pd_pcs_poly'];
-            $this->pd_estado = $data['pd_estado'] ?? 'Pendiente';
-            $this->pd_precio_unitario = $data['pd_precio_unitario'];
-        }
-
-        // Sanitizar y bindear valores
-        $this->pd_estado = $this->pd_estado ?: 'Pendiente';
-
-        $stmt->bindParam(":pd_id_po", $this->pd_id_po);
-        $stmt->bindParam(":pd_item", $this->pd_item);
-        $stmt->bindParam(":pd_cant_piezas_total", $this->pd_cant_piezas_total);
-        $stmt->bindParam(":pd_pcs_carton", $this->pd_pcs_carton);
-        $stmt->bindParam(":pd_pcs_poly", $this->pd_pcs_poly);
-        $stmt->bindParam(":pd_estado", $this->pd_estado);
-        $stmt->bindParam(":pd_precio_unitario", $this->pd_precio_unitario);
-
+    public function create($data) {
         try {
-            if($stmt->execute()) {
+            $query = "INSERT INTO " . $this->table_name . "
+                    (pd_id_po, pd_item, pd_cant_piezas_total,
+                     pd_pcs_carton, pd_pcs_poly, pd_estado,
+                     pd_precio_unitario)
+                    VALUES
+                    (:pd_id_po, :pd_item, :pd_cant_piezas_total,
+                     :pd_pcs_carton, :pd_pcs_poly, :pd_estado,
+                     :pd_precio_unitario)";
+
+            $stmt = $this->conn->prepare($query);
+
+            // Bind values
+            $stmt->bindParam(":pd_id_po", $data['pd_id_po']);
+            $stmt->bindParam(":pd_item", $data['pd_item']);
+            $stmt->bindParam(":pd_cant_piezas_total", $data['pd_cant_piezas_total']);
+            $stmt->bindParam(":pd_pcs_carton", $data['pd_pcs_carton']);
+            $stmt->bindParam(":pd_pcs_poly", $data['pd_pcs_poly']);
+            $stmt->bindParam(":pd_estado", $data['pd_estado']);
+            $stmt->bindParam(":pd_precio_unitario", $data['pd_precio_unitario']);
+
+            if ($stmt->execute()) {
                 return $this->conn->lastInsertId();
             }
             return false;
-        } catch(PDOException $e) {
-            error_log("Error en PoDetalle::create(): " . $e->getMessage());
-            throw $e;
+        } catch (PDOException $e) {
+            throw new Exception("Error al crear detalle de PO: " . $e->getMessage());
         }
     }
 

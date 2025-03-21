@@ -33,12 +33,21 @@ class UsuarioController {
                         $user = $this->usuario->getByUsername($username);
                         
                         if ($user && password_verify($password, $user['usuario_password'])) {
+                            // Obtener el nombre del rol
+                            $rol = $this->usuario->getRolById($user['usuario_rol_id']);
+                            $rolNombre = $rol ? $rol['rol_nombre'] : 'Usuario';
+
+                            // Crear el nombre completo
+                            $nombreCompleto = trim($user['usuario_nombre'] . ' ' . $user['usuario_apellido']);
+                            
                             $_SESSION['user'] = [
                                 'id' => $user['id'],
                                 'nombre' => $user['usuario_nombre'],
                                 'apellido' => $user['usuario_apellido'],
+                                'nombre_completo' => $nombreCompleto,
                                 'usuario' => $user['usuario_usuario'],
                                 'rol_id' => $user['usuario_rol_id'],
+                                'rol_nombre' => $rolNombre,
                                 'departamento' => $user['usuario_departamento']
                             ];
                             header("Location: ../views/home.php");
@@ -55,7 +64,14 @@ class UsuarioController {
                     break;
 
                 case 'logout':
+                    // Limpiar y destruir la sesión
+                    $_SESSION = array();
+                    if (isset($_COOKIE[session_name()])) {
+                        setcookie(session_name(), '', time()-42000, '/');
+                    }
                     session_destroy();
+                    
+                    // Redireccionar al login
                     header("Location: ../views/login.php");
                     exit();
                     break;

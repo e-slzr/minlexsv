@@ -10,13 +10,27 @@ document.addEventListener('DOMContentLoaded', function() {
         mainContent.classList.add('menu-collapsed');
     }
 
+    // Función para colapsar el menú
+    function collapseMenu() {
+        menuLateral.classList.add('collapsed');
+        mainContent.classList.add('menu-collapsed');
+        localStorage.setItem('menuState', 'collapsed');
+    }
+
+    // Función para expandir el menú
+    function expandMenu() {
+        menuLateral.classList.remove('collapsed');
+        mainContent.classList.remove('menu-collapsed');
+        localStorage.setItem('menuState', 'expanded');
+    }
+
+    // Toggle del menú al hacer clic en el botón
     menuToggle.addEventListener('click', function() {
-        menuLateral.classList.toggle('collapsed');
-        mainContent.classList.toggle('menu-collapsed');
-        
-        // Guardar el estado del menú en localStorage
-        const isCollapsed = menuLateral.classList.contains('collapsed');
-        localStorage.setItem('menuState', isCollapsed ? 'collapsed' : 'expanded');
+        if (menuLateral.classList.contains('collapsed')) {
+            expandMenu();
+        } else {
+            collapseMenu();
+        }
     });
 
     // Manejo de submenús en modo colapsado
@@ -25,10 +39,24 @@ document.addEventListener('DOMContentLoaded', function() {
         toggle.addEventListener('click', function(e) {
             if (menuLateral.classList.contains('collapsed')) {
                 e.preventDefault();
-                menuLateral.classList.remove('collapsed');
-                mainContent.classList.remove('menu-collapsed');
-                localStorage.setItem('menuState', 'expanded');
+                expandMenu();
+                
+                // Esperar un poco y luego abrir el submenú
+                setTimeout(() => {
+                    const target = this.getAttribute('data-bs-target');
+                    const subMenu = document.querySelector(target);
+                    if (subMenu && !subMenu.classList.contains('show')) {
+                        const bsCollapse = new bootstrap.Collapse(subMenu);
+                        bsCollapse.show();
+                    }
+                }, 300);
             }
         });
     });
+
+    // Si el menú está colapsado, añadir eventos de hover
+    if (window.innerWidth > 768) { // Solo para pantallas más grandes que móviles
+        // No necesitamos agregar eventos hover ya que lo manejamos con CSS
+        // pero podemos agregar lógica adicional si es necesario
+    }
 });

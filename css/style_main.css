@@ -13,9 +13,10 @@
 
 /* Layout principal */
 body {
-    /* min-height: 100vh; */
+    min-height: 100vh;
     zoom: 0.9;
     margin: 0;
+    margin-top: 57.59px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -24,6 +25,7 @@ main {
     padding: 20px;
     min-height: calc(100vh - var(--header-height));
     background-color: #f5f5f5;
+    margin-bottom: 60px; /* Espacio para el footer */
 }
 
 /* Menú lateral */
@@ -32,7 +34,6 @@ main {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
     background-color: var(--primary-color);
     padding-top: 20px;
     z-index: 1000;
@@ -385,4 +386,39 @@ main {
 .chart-area {
     height: 80%;
     width: 100%;
+}
+
+/* Estilos del footer */
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--primary-color);
+    color: #f8f9fa;
+    padding: 1rem 0;
+    font-size: 0.875rem;
+    z-index: 1000;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer-text i {
+    color: #0d6efd;
+}
+
+.footer-version {
+    opacity: 0.7;
+    font-size: 0.75rem;
 }

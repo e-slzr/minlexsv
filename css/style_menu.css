@@ -14,30 +14,142 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 48px;
+    height: 64px;
     z-index: 1002;
     background: var(--menu-bg);
     color: var(--menu-text);
-    padding: 0 1rem;
+    padding: 0 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.link_login, .link_login a {
+.brand {
+    margin-left: 48px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand i {
+    font-size: 1.5rem;
+    color: #0d6efd;
+}
+
+.link_login {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 12px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    transition: background-color 0.2s ease;
+}
+
+.user-profile:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #0d6efd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+    text-transform: uppercase;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.user-name {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.notifications {
+    position: relative;
+    padding: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.notifications:hover {
+    opacity: 0.8;
+}
+
+.notifications i {
+    font-size: 1.2rem;
+}
+
+.notifications-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #dc3545;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 500;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+}
+
+.logout-btn {
     color: var(--menu-text);
     text-decoration: none;
-    text-align: right;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--menu-text);
+}
+
+.logout-btn i {
+    font-size: 1.1rem;
 }
 
 /* Menú lateral */
 .menu-lateral {
     background-color: var(--menu-bg);
     width: var(--menu-width);
-    height: 100vh;
+    height: 120vh;
     position: fixed;
-    top: 48px;
+    top: 64px;
     left: 0;
     padding-top: 1rem;
     transition: width var(--menu-transition);
@@ -59,6 +171,8 @@
     text-decoration: none;
     color: var(--menu-text);
     transition: background-color var(--menu-transition);
+    display: block;
+    position: relative;
 }
 
 .menu-lateral li {
@@ -92,28 +206,84 @@
 /* Botón de toggle */
 .menu-toggle-btn {
     position: fixed;
-    top: 8px;
-    left: 8px;
+    top: 24px;
+    left: 12px;
     z-index: 1003;
     background: transparent;
     border: none;
     color: var(--menu-text);
     cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    transition: background-color var(--menu-transition);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
 }
 
-.menu-toggle-btn:hover {
-    background-color: var(--menu-hover);
+/* Estilos para el menú colapsado */
+.menu-lateral.collapsed .dropdown-toggle::after {
+    display: none;
 }
 
-/* Ajustes para el contenido principal */
+.menu-lateral.collapsed li span {
+    display: none;
+}
+
+.menu-lateral.collapsed a:not(.dropdown-toggle) li {
+    justify-content: center;
+    padding: 0.75rem 0;
+}
+
+.menu-lateral.collapsed .dropdown-toggle li {
+    justify-content: center;
+    padding: 0.75rem 0;
+}
+
+/* Manejo de flechas para submenús */
+.dropdown-toggle {
+    position: relative;
+}
+
+.dropdown-toggle::after {
+    content: '\f105'; /* Ícono de flecha a la derecha */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.3s ease;
+}
+
+.dropdown-toggle[aria-expanded="true"]::after {
+    transform: translateY(-50%) rotate(90deg);
+}
+
+/* Efecto hover para mostrar menú cuando está colapsado */
+.menu-lateral.collapsed:hover {
+    width: var(--menu-width);
+}
+
+.menu-lateral.collapsed:hover li span {
+    display: inline;
+}
+
+.menu-lateral.collapsed:hover .dropdown-toggle::after {
+    display: block;
+}
+
+.menu-lateral.collapsed:hover a:not(.dropdown-toggle) li,
+.menu-lateral.collapsed:hover .dropdown-toggle li {
+    justify-content: flex-start;
+    padding: 0.75rem 1rem;
+}
+
+/* Ajuste para el contenido principal */
 main {
     margin-left: var(--menu-width);
-    margin-top: 48px;
+    padding: 64px 20px 20px;
     transition: margin-left var(--menu-transition);
-    padding: 1.5rem;
 }
 
 main.menu-collapsed {

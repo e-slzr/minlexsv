@@ -6,7 +6,7 @@ class DashboardController {
 
     public function __construct() {
         $database = new Database();
-        $this->conn = $database->getConnection();
+        $this->conn = $database->connect();
     }
 
     public function getCounts() {

@@ -25,16 +25,13 @@ class ClienteController {
             switch ($action) {
                 case 'create':
                     try {
-                        $nombres = explode(' ', $_POST['contacto'], 2);
-                        $nombre = $nombres[0];
-                        $apellido = $nombres[1] ?? '';
-                        
-                        $this->cliente->cliente_empresa = $_POST['empresa'];
-                        $this->cliente->cliente_nombre = $nombre;
-                        $this->cliente->cliente_apellido = $apellido;
-                        $this->cliente->cliente_telefono = $_POST['telefono'];
-                        $this->cliente->cliente_correo = $_POST['email'];
-                        $this->cliente->cliente_direccion = $_POST['direccion'] ?? '';
+                        $this->cliente->cliente_empresa = $_POST['cliente_empresa'];
+                        $this->cliente->cliente_nombre = $_POST['cliente_nombre'];
+                        $this->cliente->cliente_apellido = $_POST['cliente_apellido'];
+                        $this->cliente->cliente_direccion = $_POST['cliente_direccion'];
+                        $this->cliente->cliente_telefono = $_POST['cliente_telefono'];
+                        $this->cliente->cliente_correo = $_POST['cliente_correo'];
+                        $this->cliente->estado = 'Activo';
 
                         if ($this->cliente->create()) {
                             $response = ['success' => true, 'message' => 'Cliente creado exitosamente'];
@@ -49,17 +46,13 @@ class ClienteController {
 
                 case 'update':
                     try {
-                        $nombres = explode(' ', $_POST['contacto'], 2);
-                        $nombre = $nombres[0];
-                        $apellido = $nombres[1] ?? '';
-
                         $this->cliente->id = $_POST['id'];
-                        $this->cliente->cliente_empresa = $_POST['empresa'];
-                        $this->cliente->cliente_nombre = $nombre;
-                        $this->cliente->cliente_apellido = $apellido;
-                        $this->cliente->cliente_telefono = $_POST['telefono'];
-                        $this->cliente->cliente_correo = $_POST['email'];
-                        $this->cliente->cliente_direccion = $_POST['direccion'] ?? '';
+                        $this->cliente->cliente_empresa = $_POST['cliente_empresa'];
+                        $this->cliente->cliente_nombre = $_POST['cliente_nombre'];
+                        $this->cliente->cliente_apellido = $_POST['cliente_apellido'];
+                        $this->cliente->cliente_direccion = $_POST['cliente_direccion'];
+                        $this->cliente->cliente_telefono = $_POST['cliente_telefono'];
+                        $this->cliente->cliente_correo = $_POST['cliente_correo'];
 
                         if ($this->cliente->update()) {
                             $response = ['success' => true, 'message' => 'Cliente actualizado exitosamente'];
@@ -74,23 +67,27 @@ class ClienteController {
 
                 case 'toggleStatus':
                     try {
-                        error_log("=== Cambiando estado de cliente ===");
-                        error_log("ID: " . $_POST['id']);
-                        error_log("Nuevo estado: " . $_POST['estado']);
-                        
                         $this->cliente->id = $_POST['id'];
                         $this->cliente->estado = $_POST['estado'];
                         
                         if ($this->cliente->toggleStatus()) {
-                            error_log("Estado de cliente actualizado exitosamente");
                             $response = ['success' => true, 'message' => 'Estado de cliente actualizado exitosamente'];
                         } else {
-                            error_log("Error al actualizar estado de cliente");
                             $response = ['success' => false, 'message' => 'Error al actualizar el estado del cliente'];
                         }
                     } catch (Exception $e) {
                         error_log("Error al actualizar estado de cliente: " . $e->getMessage());
                         $response = ['success' => false, 'message' => 'Error al actualizar el estado del cliente'];
+                    }
+                    break;
+
+                case 'list':
+                    try {
+                        $clientes = $this->getClientes();
+                        $response = ['success' => true, 'data' => $clientes];
+                    } catch (Exception $e) {
+                        error_log("Error al listar clientes: " . $e->getMessage());
+                        $response = ['success' => false, 'message' => 'Error al obtener la lista de clientes'];
                     }
                     break;
             }

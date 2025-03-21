@@ -16,17 +16,19 @@ class Cliente {
 
     public function __construct() {
         $database = new Database();
-        $this->conn = $database->getConnection();
+        $this->conn = $database->connect();
     }
 
     public function getAll() {
         $query = "SELECT 
                     id,
                     cliente_empresa,
-                    CONCAT(cliente_nombre, ' ', cliente_apellido) as cliente_contacto,
+                    cliente_nombre,
+                    cliente_apellido,
+                    cliente_direccion,
                     cliente_telefono,
-                    cliente_correo as cliente_email,
-                    'Activo' as estado
+                    cliente_correo,
+                    COALESCE(estado, 'Activo') as estado
                 FROM " . $this->table_name;
         
         $stmt = $this->conn->prepare($query);
@@ -42,7 +44,8 @@ class Cliente {
                     cliente_apellido = :apellido,
                     cliente_telefono = :telefono,
                     cliente_correo = :correo,
-                    cliente_direccion = :direccion";
+                    cliente_direccion = :direccion,
+                    estado = :estado";
 
         $stmt = $this->conn->prepare($query);
 
@@ -52,6 +55,7 @@ class Cliente {
         $stmt->bindParam(":telefono", $this->cliente_telefono);
         $stmt->bindParam(":correo", $this->cliente_correo);
         $stmt->bindParam(":direccion", $this->cliente_direccion);
+        $stmt->bindParam(":estado", $this->estado);
 
         return $stmt->execute();
     }

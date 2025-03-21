@@ -12,43 +12,127 @@ if (isset($_SESSION['user'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MPC System | Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style_main.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style_login.css">
+    <style>
+        .login-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.875rem;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .login-footer i {
+            color: #0d6efd;
+            margin-right: 0.5rem;
+        }
+
+        .login-footer span {
+            opacity: 0.8;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <?php include '../components/loader.php'; ?>
-    <div class="container d-flex justify-content-center align-items-center vh-100">
-        <div class="card p-4 shadow-sm">
-            <h2 class="text-center fw-bold">MPC System | by ECODE</h2>
-            <hr> 
-            <h4 class="text-center">Inicio de sesión</h4>
+    
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-brand">
+                <i class="fas fa-layer-group brand-icon"></i>
+                <h1 class="brand-name">MPC System</h1>
+                <div class="brand-subtitle">by ECODE</div>
+            </div>
+
             <?php if (isset($_GET['error'])): ?>
-                <div class="alert alert-danger text-center">
+                <div class="alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
                     Usuario o contraseña incorrectos. Por favor intente nuevamente.
                 </div>
             <?php endif; ?>
-            <form id="loginForm" action="../controllers/UsuarioController.php" method="POST">
+
+            <form id="loginForm" class="login-form" action="../controllers/UsuarioController.php" method="POST">
                 <input type="hidden" name="action" value="login">
+                
                 <div class="mb-3">
                     <label for="username" class="form-label">Usuario</label>
-                    <input type="text" class="form-control" id="username" name="username" required 
-                           placeholder="Ingrese su nombre de usuario">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control" 
+                               id="username" 
+                               name="username" 
+                               required 
+                               placeholder="Ingrese su nombre de usuario"
+                               autocomplete="username">
+                    </div>
                 </div>
+
                 <div class="mb-3">
                     <label for="password" class="form-label">Contraseña</label>
-                    <input type="password" class="form-control" id="password" name="password" required
-                           placeholder="Ingrese su contraseña">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password" 
+                               required
+                               placeholder="Ingrese su contraseña"
+                               autocomplete="current-password">
+                        <button type="button" 
+                                class="btn btn-outline-secondary" 
+                                id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-dark w-100">Iniciar Sesión</button>
+
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Iniciar Sesión
+                </button>
             </form>
-            <div class="mt-3 text-center">
-                <small class="text-muted">Utilice su nombre de usuario (alias) para ingresar</small>
+
+            <div class="login-help">
+                <i class="fas fa-info-circle me-1"></i>
+                Utilice su nombre de usuario (alias) para ingresar
             </div>
         </div>
     </div>
 
+    <footer class="login-footer">
+        <i class="fas fa-code"></i>
+        <span>Developed by ECODE | Software Development</span>
+    </footer>
+
     <script>
     $(document).ready(function() {
+        // Mostrar/ocultar contraseña
+        $('#togglePassword').on('click', function() {
+            const passwordInput = $('#password');
+            const icon = $(this).find('i');
+            
+            if (passwordInput.attr('type') === 'password') {
+                passwordInput.attr('type', 'text');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                passwordInput.attr('type', 'password');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+        });
+
+        // Mostrar loader al enviar el formulario
         $('#loginForm').on('submit', function() {
             $('#loader').show();
         });

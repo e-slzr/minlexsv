@@ -27,7 +27,7 @@ class Usuario {
     public function __construct() {
         require_once __DIR__ . '/../config/Database.php';
         $database = new Database();
-        $this->conn = $database->getConnection();
+        $this->conn = $database->connect();
     }
 
     public function validate() {
@@ -249,6 +249,41 @@ class Usuario {
         } catch(PDOException $e) {
             error_log("Error en Usuario::verifyPassword(): " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    public function getRolById($rolId) {
+        try {
+            $query = "SELECT * FROM roles WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $rolId, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error al obtener rol: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function validatePassword($userId, $password) {
+        try {
+            $query = "SELECT usuario_password FROM " . $this->table_name . " WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":id", $userId);
+            $stmt->execute();
+
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                return ['success' => false, 'message' => 'Usuario no encontrado'];
+            }
+
+            if (password_verify($password, $row['usuario_password'])) {
+                return ['success' => true];
+            }
+
+            return ['success' => false, 'message' => 'Contraseña incorrecta'];
+        } catch (PDOException $e) {
+            throw new Exception("Error al validar contraseña: " . $e->getMessage());
         }
     }
 }

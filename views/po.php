@@ -229,6 +229,8 @@ $pos = $poController->getPos($filtros);
         </div>
     </main>
 
+    <?php include '../components/footer.php'; ?>
+
     <!-- Modal para Crear/Editar PO -->
     <div class="modal fade" id="poModal" tabindex="-1" role="dialog" aria-labelledby="poModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
@@ -521,9 +523,8 @@ $pos = $poController->getPos($filtros);
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/po.js"></script>
 </body>
 </html>

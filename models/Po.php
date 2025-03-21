@@ -17,10 +17,13 @@ class Po {
     public $po_comentario;
     public $po_notas;
 
-    public function __construct() {
-        require_once __DIR__ . '/../config/Database.php';
-        $database = new Database();
-        $this->conn = $database->getConnection();
+    public function __construct($db = null) {
+        if ($db === null) {
+            $database = new Database();
+            $this->conn = $database->connect();
+        } else {
+            $this->conn = $db;
+        }
     }
 
     // Leer todas las POs con información relacionada
@@ -216,39 +219,38 @@ class Po {
     }
 
     // Crear PO
-    public function create() {
-        $query = "INSERT INTO " . $this->table_name . "
-                (po_numero, po_fecha_creacion, po_fecha_inicio_produccion, 
-                 po_fecha_fin_produccion, po_fecha_envio_programada, po_estado,
-                 po_id_cliente, po_id_usuario_creacion, po_tipo_envio, po_comentario)
-                VALUES
-                (:po_numero, :po_fecha_creacion, :po_fecha_inicio_produccion,
-                 :po_fecha_fin_produccion, :po_fecha_envio_programada, :po_estado,
-                 :po_id_cliente, :po_id_usuario_creacion, :po_tipo_envio, :po_comentario)";
-
+    public function create($data) {
         try {
+            $query = "INSERT INTO " . $this->table_name . "
+                    (po_numero, po_fecha_creacion, po_fecha_inicio_produccion, 
+                     po_fecha_fin_produccion, po_fecha_envio_programada, 
+                     po_estado, po_id_cliente, po_id_usuario_creacion,
+                     po_tipo_envio, po_comentario)
+                    VALUES
+                    (:po_numero, NOW(), :po_fecha_inicio_produccion,
+                     :po_fecha_fin_produccion, :po_fecha_envio_programada,
+                     :po_estado, :po_id_cliente, :po_id_usuario_creacion,
+                     :po_tipo_envio, :po_comentario)";
+
             $stmt = $this->conn->prepare($query);
 
-            // Sanitizar y asignar valores
-            $stmt->bindParam(':po_numero', $this->po_numero);
-            $stmt->bindParam(':po_fecha_creacion', $this->po_fecha_creacion);
-            $stmt->bindParam(':po_fecha_inicio_produccion', $this->po_fecha_inicio_produccion);
-            $stmt->bindParam(':po_fecha_fin_produccion', $this->po_fecha_fin_produccion);
-            $stmt->bindParam(':po_fecha_envio_programada', $this->po_fecha_envio_programada);
-            $stmt->bindParam(':po_estado', $this->po_estado);
-            $stmt->bindParam(':po_id_cliente', $this->po_id_cliente);
-            $stmt->bindParam(':po_id_usuario_creacion', $this->po_id_usuario_creacion);
-            $stmt->bindParam(':po_tipo_envio', $this->po_tipo_envio);
-            $stmt->bindParam(':po_comentario', $this->po_comentario);
+            // Bind values
+            $stmt->bindParam(":po_numero", $data['po_numero']);
+            $stmt->bindParam(":po_fecha_inicio_produccion", $data['po_fecha_inicio_produccion']);
+            $stmt->bindParam(":po_fecha_fin_produccion", $data['po_fecha_fin_produccion']);
+            $stmt->bindParam(":po_fecha_envio_programada", $data['po_fecha_envio_programada']);
+            $stmt->bindParam(":po_estado", $data['po_estado']);
+            $stmt->bindParam(":po_id_cliente", $data['po_id_cliente']);
+            $stmt->bindParam(":po_id_usuario_creacion", $data['po_id_usuario_creacion']);
+            $stmt->bindParam(":po_tipo_envio", $data['po_tipo_envio']);
+            $stmt->bindParam(":po_comentario", $data['po_comentario']);
 
             if ($stmt->execute()) {
                 return $this->conn->lastInsertId();
             }
             return false;
-
-        } catch(PDOException $e) {
-            error_log("Error en Po::create(): " . $e->getMessage());
-            throw $e;
+        } catch (PDOException $e) {
+            throw new Exception("Error al crear PO: " . $e->getMessage());
         }
     }
 
