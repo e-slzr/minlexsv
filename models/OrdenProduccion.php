@@ -188,4 +188,97 @@ class OrdenProduccion {
             throw new Exception("Error al buscar órdenes de producción", 0, $e);
         }
     }
+
+    // Actualizar solo el progreso y estado de una orden de producción
+    public function updateProgress($data) {
+        try {
+            $query = "UPDATE " . $this->table_name . " 
+                    SET op_cantidad_completada = :op_cantidad_completada,
+                        op_estado = :op_estado,
+                        op_comentario = :op_comentario";
+            
+            // Añadir fecha de fin si se proporciona
+            if (isset($data['op_fecha_fin'])) {
+                $query .= ", op_fecha_fin = :op_fecha_fin";
+            }
+            
+            $query .= " WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            // Bind de los valores
+            $stmt->bindValue(':op_cantidad_completada', $data['op_cantidad_completada']);
+            $stmt->bindValue(':op_estado', $data['op_estado']);
+            $stmt->bindValue(':op_comentario', $data['op_comentario']);
+            $stmt->bindValue(':id', $data['id']);
+            
+            // Bind de fecha_fin si existe
+            if (isset($data['op_fecha_fin'])) {
+                $stmt->bindValue(':op_fecha_fin', $data['op_fecha_fin']);
+            }
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error en OrdenProduccion::updateProgress: " . $e->getMessage());
+            throw new Exception("Error al actualizar el progreso de la orden de producción", 0, $e);
+        }
+    }
+
+    // Obtener órdenes filtradas
+    public function getFiltered($filters = []) {
+        try {
+            $query = "SELECT op.*, 
+                    u.usuario_nombre, u.usuario_apellido,
+                    pp.pp_nombre,
+                    pd.pd_item,
+                    i.item_numero, i.item_nombre,
+                    po.po_numero
+                    FROM " . $this->table_name . " op
+                    LEFT JOIN usuarios u ON op.op_operador_asignado = u.id
+                    LEFT JOIN procesos_produccion pp ON op.op_id_proceso = pp.id
+                    LEFT JOIN po_detalle pd ON op.op_id_pd = pd.id
+                    LEFT JOIN items i ON pd.pd_item = i.id
+                    LEFT JOIN po po ON pd.pd_id_po = po.id
+                    WHERE 1=1";
+            
+            $params = [];
+            
+            // Añadir filtros si existen
+            if (isset($filters['operador']) && $filters['operador'] > 0) {
+                $query .= " AND op.op_operador_asignado = :operador";
+                $params[':operador'] = $filters['operador'];
+            }
+            
+            if (isset($filters['proceso']) && $filters['proceso'] > 0) {
+                $query .= " AND op.op_id_proceso = :proceso";
+                $params[':proceso'] = $filters['proceso'];
+            }
+            
+            if (isset($filters['estado']) && !empty($filters['estado'])) {
+                $query .= " AND op.op_estado = :estado";
+                $params[':estado'] = $filters['estado'];
+            }
+            
+            if (isset($filters['item']) && !empty($filters['item'])) {
+                $query .= " AND (i.item_numero LIKE :item OR i.item_nombre LIKE :item)";
+                $params[':item'] = '%' . $filters['item'] . '%';
+            }
+            
+            $query .= " ORDER BY op.id DESC";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            // Bind de parámetros
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en OrdenProduccion::getFiltered: " . $e->getMessage());
+            // En lugar de lanzar una excepción, retornamos un array vacío para evitar errores
+            return [];
+        }
+    }
 }

@@ -119,6 +119,14 @@ class OrdenProduccionController {
                     ];
                     break;
 
+                case 'getOrdenesFiltered':
+                    $this->getOrdenesFiltered();
+                    return;
+
+                case 'updateProgress':
+                    $this->updateProgress();
+                    return;
+
                 default:
                     throw new Exception('Acción no válida');
             }
@@ -151,6 +159,100 @@ class OrdenProduccionController {
         } catch (Exception $e) {
             error_log("Error al buscar órdenes: " . $e->getMessage());
             return null;
+        }
+    }
+
+    public function getOrdenesFiltered() {
+        try {
+            // Obtener parámetros de filtro
+            $operador = isset($_GET['operador']) ? (int)$_GET['operador'] : 0;
+            $proceso = isset($_GET['proceso']) ? (int)$_GET['proceso'] : 0;
+            $estado = isset($_GET['estado']) ? $_GET['estado'] : '';
+            $item = isset($_GET['item']) ? $_GET['item'] : '';
+            
+            // Construir array de filtros
+            $filters = [];
+            if ($operador > 0) $filters['operador'] = $operador;
+            if ($proceso > 0) $filters['proceso'] = $proceso;
+            if (!empty($estado)) $filters['estado'] = $estado;
+            if (!empty($item)) $filters['item'] = $item;
+            
+            // Usar getAll como fallback si getFiltered no existe o falla
+            try {
+                $ordenes = $this->ordenProduccion->getFiltered($filters);
+            } catch (Exception $e) {
+                error_log("Error al usar getFiltered, usando getAll como fallback: " . $e->getMessage());
+                $ordenes = $this->ordenProduccion->getAll();
+            }
+            
+            header('Content-Type: application/json');
+            echo json_encode($ordenes);
+        } catch (Exception $e) {
+            error_log("Error en getOrdenesFiltered: " . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function updateProgress() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
+            try {
+                $id = (int)$_POST['id'];
+                $cantidadCompletada = (int)$_POST['op_cantidad_completada'];
+                $estado = $_POST['op_estado'];
+                $comentario = $_POST['op_comentario'] ?? '';
+                
+                // Obtener la orden actual para validaciones
+                $orden = $this->ordenProduccion->getById($id);
+                
+                if (!$orden) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Orden de producción no encontrada']);
+                    return;
+                }
+                
+                // Validar que la cantidad completada no exceda la asignada
+                if ($cantidadCompletada > $orden['op_cantidad_asignada']) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => 'La cantidad completada no puede ser mayor que la asignada'
+                    ]);
+                    return;
+                }
+                
+                // Preparar datos para la actualización
+                $data = [
+                    'id' => $id,
+                    'op_cantidad_completada' => $cantidadCompletada,
+                    'op_estado' => $estado,
+                    'op_comentario' => $comentario
+                ];
+                
+                // Si se marca como completado, pero no coincide la cantidad, ajustar el estado
+                if ($estado === 'Completado' && $cantidadCompletada < $orden['op_cantidad_asignada']) {
+                    $data['op_estado'] = 'En proceso';
+                }
+                
+                // Si ya se completó toda la cantidad, marcar como completado automáticamente
+                if ($cantidadCompletada >= $orden['op_cantidad_asignada']) {
+                    $data['op_estado'] = 'Completado';
+                }
+                
+                // Actualizar la fecha de fin si se marca como completado
+                if ($data['op_estado'] === 'Completado' && $orden['op_estado'] !== 'Completado') {
+                    $data['op_fecha_fin'] = date('Y-m-d');
+                }
+                
+                // Actualizar el registro
+                $result = $this->ordenProduccion->updateProgress($data);
+                
+                header('Content-Type: application/json');
+                echo json_encode(['success' => $result]);
+            } catch (Exception $e) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
         }
     }
 }

@@ -94,7 +94,9 @@ $rol = $_SESSION['user']['rol_nombre'] ?? 'Usuario';
         </a>
         <ul id="subMenuProduccion" class="collapse list-group">
             <a href="../views/po.php"><li><span>PO (Purchase Orders)</span></li></a>
-            <a href="../views/ordenes_produccion.php"><li><span>Ordenes de producción</span></li></a>
+            <a href="../views/ordenes_produccion.php"><li><span>Órdenes de Producción</span></li></a>
+            <a href="../views/actualizar_produccion.php"><li><span>Actualizar Producción</span></li></a>
+            <a href="../views/registro_produccion.php"><li><span>Registro de Producción</span></li></a>
             <a href="../views/items.php"><li><span>Items</span></li></a>
             <a href="../views/procesos_produccion.php"><li><span>Procesos de producción</span></li></a>
         </ul>
