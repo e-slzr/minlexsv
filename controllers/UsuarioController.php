@@ -8,29 +8,71 @@ class UsuarioController {
         $this->usuario = new Usuario();
     }
 
+    public function getUsuarios() {
+        try {
+            return $this->usuario->getAll();
+        } catch (Exception $e) {
+            error_log("Error al obtener usuarios: " . $e->getMessage());
+            return null;
+        }
+    }
+
     public function handleRequest() {
+        session_start();
+        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action = $_POST['action'] ?? '';
             $response = ['success' => false, 'message' => ''];
 
             switch ($action) {
+                case 'login':
+                    try {
+                        $username = $_POST['username'];
+                        $password = $_POST['password'];
+                        
+                        $user = $this->usuario->getByUsername($username);
+                        
+                        if ($user && password_verify($password, $user['usuario_password'])) {
+                            $_SESSION['user'] = [
+                                'id' => $user['id'],
+                                'nombre' => $user['usuario_nombre'],
+                                'apellido' => $user['usuario_apellido'],
+                                'usuario' => $user['usuario_usuario'],
+                                'rol_id' => $user['usuario_rol_id'],
+                                'departamento' => $user['usuario_departamento']
+                            ];
+                            header("Location: ../views/home.php");
+                            exit();
+                        } else {
+                            header("Location: ../views/login.php?error=1");
+                            exit();
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error en login: " . $e->getMessage());
+                        header("Location: ../views/login.php?error=1");
+                        exit();
+                    }
+                    break;
+
+                case 'logout':
+                    session_destroy();
+                    header("Location: ../views/login.php");
+                    exit();
+                    break;
+
                 case 'create':
                     try {
-                        error_log("=== Creando nuevo usuario ===");
-                        error_log("Alias: " . $_POST['alias']);
-                        
-                        $this->usuario->usuario_alias = $_POST['alias'];
-                        $this->usuario->usuario_nombre = $_POST['nombre'];
-                        $this->usuario->usuario_apellido = $_POST['apellido'];
-                        $this->usuario->usuario_rol_id = $_POST['rol_id'];
-                        $this->usuario->usuario_departamento = $_POST['departamento'];
-
+                        $this->usuario->usuario_usuario = $_POST['usuario'] ?? '';
+                        $this->usuario->usuario_nombre = $_POST['nombre'] ?? '';
+                        $this->usuario->usuario_apellido = $_POST['apellido'] ?? '';
                         $this->usuario->usuario_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+                        $this->usuario->usuario_rol_id = $_POST['rol_id'] ?? '';
+                        $this->usuario->usuario_departamento = $_POST['departamento'] ?? '';
+                        $this->usuario->estado = 'Activo';
+
                         if ($this->usuario->create()) {
-                            error_log("Usuario creado exitosamente");
                             $response = ['success' => true, 'message' => 'Usuario creado exitosamente'];
                         } else {
-                            error_log("Error al crear usuario");
                             $response = ['success' => false, 'message' => 'Error al crear el usuario'];
                         }
                     } catch (Exception $e) {
@@ -41,50 +83,21 @@ class UsuarioController {
 
                 case 'update':
                     try {
-                        error_log("=== Actualizando usuario ===");
-                        error_log("ID: " . $_POST['id']);
-                        error_log("Alias: " . $_POST['alias']);
-                        
-                        $this->usuario->id = $_POST['id'];
-                        $this->usuario->usuario_alias = $_POST['alias'];
-                        $this->usuario->usuario_nombre = $_POST['nombre'];
-                        $this->usuario->usuario_apellido = $_POST['apellido'];
-                        $this->usuario->usuario_rol_id = $_POST['rol_id'];
-                        $this->usuario->usuario_departamento = $_POST['departamento'];
-                        $this->usuario->estado = $_POST['estado'];
+                        $this->usuario->id = $_POST['id'] ?? '';
+                        $this->usuario->usuario_usuario = $_POST['usuario'] ?? '';
+                        $this->usuario->usuario_nombre = $_POST['nombre'] ?? '';
+                        $this->usuario->usuario_apellido = $_POST['apellido'] ?? '';
+                        $this->usuario->usuario_rol_id = $_POST['rol_id'] ?? '';
+                        $this->usuario->usuario_departamento = $_POST['departamento'] ?? '';
                         
                         if (!empty($_POST['password'])) {
-                            error_log("Actualizando contraseña");
-                            $hashedPassword = password_hash($_POST['password'], PASSWORD_DEFAULT);
-                            if ($this->usuario->update($hashedPassword)) {
-                                error_log("Usuario actualizado exitosamente");
-                                $response = ['success' => true, 'message' => 'Usuario actualizado exitosamente'];
-                            } else {
-                                error_log("Error al actualizar usuario");
-                                $response = ['success' => false, 'message' => 'Error al actualizar el usuario'];
-                            }
-                        } else if ($_POST['action'] === 'resetPassword') {
-                            if (empty($_POST['password']) || strlen($_POST['password']) < 8) {
-                                $response = ['success' => false, 'message' => 'La contraseña debe tener al menos 8 caracteres'];
-                            } else {
-                                error_log("Reseteando contraseña para usuario ID: " . $_POST['id']);
-                                $hashedPassword = password_hash($_POST['password'], PASSWORD_DEFAULT);
-                                if ($this->usuario->update($hashedPassword)) {
-                                    error_log("Contraseña actualizada exitosamente");
-                                    $response = ['success' => true, 'message' => 'Contraseña actualizada exitosamente'];
-                                } else {
-                                    error_log("Error al actualizar la contraseña");
-                                    $response = ['success' => false, 'message' => 'Error al actualizar la contraseña'];
-                                }
-                            }
+                            $this->usuario->usuario_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+                        }
+
+                        if ($this->usuario->update()) {
+                            $response = ['success' => true, 'message' => 'Usuario actualizado exitosamente'];
                         } else {
-                            if ($this->usuario->update()) {
-                                error_log("Usuario actualizado exitosamente");
-                                $response = ['success' => true, 'message' => 'Usuario actualizado exitosamente'];
-                            } else {
-                                error_log("Error al actualizar usuario");
-                                $response = ['success' => false, 'message' => 'Error al actualizar el usuario'];
-                            }
+                            $response = ['success' => false, 'message' => 'Error al actualizar el usuario'];
                         }
                     } catch (Exception $e) {
                         error_log("Error al actualizar usuario: " . $e->getMessage());
@@ -94,98 +107,29 @@ class UsuarioController {
 
                 case 'toggleStatus':
                     try {
-                        error_log("=== Cambiando estado de usuario ===");
-                        error_log("ID: " . $_POST['id']);
-                        
-                        $this->usuario->id = $_POST['id'];
-                        
+                        $this->usuario->id = $_POST['id'] ?? '';
+                        $this->usuario->estado = $_POST['estado'] === 'Activo' ? 'Inactivo' : 'Activo';
+
                         if ($this->usuario->toggleStatus()) {
-                            error_log("Estado de usuario actualizado exitosamente");
-                            $response = ['success' => true, 'message' => 'Estado de usuario actualizado exitosamente'];
+                            $response = ['success' => true, 'message' => 'Estado actualizado exitosamente'];
                         } else {
-                            error_log("Error al actualizar estado de usuario");
-                            $response = ['success' => false, 'message' => 'Error al actualizar el estado del usuario'];
+                            $response = ['success' => false, 'message' => 'Error al actualizar el estado'];
                         }
                     } catch (Exception $e) {
-                        error_log("Error al actualizar estado de usuario: " . $e->getMessage());
-                        $response = ['success' => false, 'message' => 'Error al actualizar el estado del usuario'];
+                        error_log("Error al cambiar estado: " . $e->getMessage());
+                        $response = ['success' => false, 'message' => 'Error al cambiar el estado'];
                     }
                     break;
 
-                case 'login':
-                    if (isset($_POST['username']) && isset($_POST['password'])) {
-                        try {
-                            $user = $this->usuario->authenticate($_POST['username'], $_POST['password']);
-                            
-                            if ($user['success']) {
-                                session_start();
-                                // Estructurar correctamente la sesión
-                                $_SESSION['user'] = [
-                                    'id' => $user['user_id'],
-                                    'usuario_nombre' => $user['user_nombre'],
-                                    'usuario_apellido' => $user['user_apellido']
-                                ];
-                                $_SESSION['user_id'] = $user['id'];
-                                $_SESSION['rol'] = $user['rol_nombre'];
-                                $_SESSION['nombre_completo'] = $user['user_nombre'] . ' ' . $user['user_apellido'];
-                                error_log("Login exitoso para usuario: " . $_POST['username']);
-                                header("Location: ../views/home.php");
-                                exit();
-                            } else {
-                                error_log("Login fallido para usuario: " . $_POST['username']);
-                                header("Location: ../views/login.php?error=1");
-                                exit();
-                            }
-                        } catch (Exception $e) {
-                            error_log("Error en la autenticación: " . $e->getMessage());
-                            header("Location: ../views/login.php?error=3");
-                            exit();
-                        }
-                    }
+                default:
+                    $response = ['success' => false, 'message' => 'Acción no válida'];
                     break;
             }
-            
+
             header('Content-Type: application/json');
             echo json_encode($response);
-            exit;
-        } else if ($_GET['action'] === 'logout') {
-                session_start();
-                session_destroy();
-                session_write_close();
-                setcookie(session_name(),'',0,'/');
-                session_regenerate_id(true);
-                header("Location: ../views/login.php");
-                exit();
-            }
-        } 
-
-    public function getUsuarios() {
-        $result = $this->usuario->read();
-        return $result->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function login() {
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $username = isset($_POST['username']) ? trim($_POST['username']) : '';
-            $password = isset($_POST['password']) ? $_POST['password'] : '';
-
-            try {
-                $result = $this->usuario->authenticate($username, $password);
-                
-                if ($result['success']) {
-                    $_SESSION['user'] = $result['user_id'];
-                    header("Location: main.php");
-                    exit();
-                } else {
-                    return $result['message'];
-                }
-            } catch (Exception $e) {
-                error_log("Error en la autenticación: " . $e->getMessage());
-                header("Location: ../views/login.php?error=3");
-                exit();
-            }
+            exit();
         }
-        return null;
     }
 }
 
@@ -194,4 +138,3 @@ if(basename($_SERVER['PHP_SELF']) == basename(__FILE__)) {
     $controller = new UsuarioController();
     $controller->handleRequest();
 }
-?>

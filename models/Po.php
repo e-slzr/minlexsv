@@ -161,18 +161,17 @@ class Po {
     // Verificar si existe una PO con el mismo número
     public function existsPoNumero($poNumero) {
         $query = "SELECT COUNT(*) FROM " . $this->table_name . " WHERE po_numero = :po_numero";
-        if($this->id) {
-            $query .= " AND id != :id";
-        }
         
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":po_numero", $poNumero);
-        if($this->id) {
-            $stmt->bindParam(":id", $this->id);
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':po_numero', $poNumero);
+            $stmt->execute();
+            
+            return $stmt->fetchColumn() > 0;
+        } catch(PDOException $e) {
+            error_log("Error en Po::existsPoNumero(): " . $e->getMessage());
+            throw $e;
         }
-        
-        $stmt->execute();
-        return $stmt->fetchColumn() > 0;
     }
 
     // Obtener el progreso general de la PO
@@ -199,6 +198,63 @@ class Po {
             error_log("Error en Po::getProgress(): " . $e->getMessage());
             throw $e;
         }
+    }
+
+    // Iniciar transacción
+    public function beginTransaction() {
+        return $this->conn->beginTransaction();
+    }
+
+    // Confirmar transacción
+    public function commit() {
+        return $this->conn->commit();
+    }
+
+    // Revertir transacción
+    public function rollBack() {
+        return $this->conn->rollBack();
+    }
+
+    // Crear PO
+    public function create() {
+        $query = "INSERT INTO " . $this->table_name . "
+                (po_numero, po_fecha_creacion, po_fecha_inicio_produccion, 
+                 po_fecha_fin_produccion, po_fecha_envio_programada, po_estado,
+                 po_id_cliente, po_id_usuario_creacion, po_tipo_envio, po_comentario)
+                VALUES
+                (:po_numero, :po_fecha_creacion, :po_fecha_inicio_produccion,
+                 :po_fecha_fin_produccion, :po_fecha_envio_programada, :po_estado,
+                 :po_id_cliente, :po_id_usuario_creacion, :po_tipo_envio, :po_comentario)";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+
+            // Sanitizar y asignar valores
+            $stmt->bindParam(':po_numero', $this->po_numero);
+            $stmt->bindParam(':po_fecha_creacion', $this->po_fecha_creacion);
+            $stmt->bindParam(':po_fecha_inicio_produccion', $this->po_fecha_inicio_produccion);
+            $stmt->bindParam(':po_fecha_fin_produccion', $this->po_fecha_fin_produccion);
+            $stmt->bindParam(':po_fecha_envio_programada', $this->po_fecha_envio_programada);
+            $stmt->bindParam(':po_estado', $this->po_estado);
+            $stmt->bindParam(':po_id_cliente', $this->po_id_cliente);
+            $stmt->bindParam(':po_id_usuario_creacion', $this->po_id_usuario_creacion);
+            $stmt->bindParam(':po_tipo_envio', $this->po_tipo_envio);
+            $stmt->bindParam(':po_comentario', $this->po_comentario);
+
+            if ($stmt->execute()) {
+                return $this->conn->lastInsertId();
+            }
+            return false;
+
+        } catch(PDOException $e) {
+            error_log("Error en Po::create(): " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    // Obtener la conexión PDO
+    public function getConnection() {
+        return $this->conn;
     }
 }
 ?>

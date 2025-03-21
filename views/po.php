@@ -30,6 +30,7 @@ $pos = $poController->getPos($filtros);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MINLEX | Purchase Orders</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/style_main.css">
     <style>
         .progress {
@@ -47,6 +48,23 @@ $pos = $poController->getPos($filtros);
         .modal {
             z-index: 1050;
         }
+        /* Estilos para la tabla y paginación */
+        .sortable {
+            cursor: pointer;
+        }
+        .page-item.active .page-link {
+            background-color: #212529;
+            border-color: #212529;
+        }
+        .page-link {
+            color: #212529;
+        }
+        .page-link:hover {
+            color: #000;
+        }
+        .filtered-row {
+            display: table-row;
+        }
     </style>
 </head>
 <body>
@@ -61,39 +79,62 @@ $pos = $poController->getPos($filtros);
         </div>
         
         <!-- Filtros -->
-        <form id="filtroForm" class="filtrar" method="GET">
-            <input type="text" name="po_numero" class="form-control" placeholder="# PO" value="<?php echo $_GET['po_numero'] ?? ''; ?>">
-            <select name="estado" class="form-control">
-                <option value="">Estado...</option>
-                <option value="Pendiente" <?php echo (isset($_GET['estado']) && $_GET['estado'] == 'Pendiente') ? 'selected' : ''; ?>>Pendiente</option>
-                <option value="En proceso" <?php echo (isset($_GET['estado']) && $_GET['estado'] == 'En proceso') ? 'selected' : ''; ?>>En proceso</option>
-                <option value="Completada" <?php echo (isset($_GET['estado']) && $_GET['estado'] == 'Completada') ? 'selected' : ''; ?>>Completada</option>
-                <option value="Cancelada" <?php echo (isset($_GET['estado']) && $_GET['estado'] == 'Cancelada') ? 'selected' : ''; ?>>Cancelada</option>
-            </select>
-            <div class="input-group">
-                <span class="input-group-text">Desde</span>
-                <input type="date" name="fecha_inicio" class="form-control" value="<?php echo $_GET['fecha_inicio'] ?? ''; ?>">
-                <span class="input-group-text">Hasta</span>
-                <input type="date" name="fecha_fin" class="form-control" value="<?php echo $_GET['fecha_fin'] ?? ''; ?>">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-filter"></i> Filtros
             </div>
-            <input type="text" name="cliente" class="form-control" placeholder="Cliente" value="<?php echo $_GET['cliente'] ?? ''; ?>">
-            <button type="submit" class="btn btn-dark">Filtrar</button>
-            <a href="po.php" class="btn btn-light">Limpiar</a>
-        </form>
+            <div class="card-body">
+                <form id="filtroForm" method="GET">
+                    <div class="row">
+                        <div class="col-md-2 mb-2">
+                            <label for="po_numero" class="form-label">Número PO</label>
+                            <input type="text" name="po_numero" id="po_numero" class="form-control filtro" placeholder="# PO" value="<?php echo $_GET['po_numero'] ?? ''; ?>">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label for="estado" class="form-label">Estado</label>
+                            <select name="estado" id="estado" class="form-select filtro">
+                                <option value="">Todos</option>
+                                <option value="Pendiente" <?php echo (isset($_GET['estado']) && $_GET['estado'] == 'Pendiente') ? 'selected' : ''; ?>>Pendiente</option>
+                                <option value="En proceso" <?php echo (isset($_GET['estado']) && $_GET['estado'] == 'En proceso') ? 'selected' : ''; ?>>En proceso</option>
+                                <option value="Completada" <?php echo (isset($_GET['estado']) && $_GET['estado'] == 'Completada') ? 'selected' : ''; ?>>Completada</option>
+                                <option value="Cancelada" <?php echo (isset($_GET['estado']) && $_GET['estado'] == 'Cancelada') ? 'selected' : ''; ?>>Cancelada</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label for="cliente" class="form-label">Cliente</label>
+                            <input type="text" name="cliente" id="cliente" class="form-control filtro" placeholder="Cliente" value="<?php echo $_GET['cliente'] ?? ''; ?>">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label for="fecha_inicio" class="form-label">Fecha Desde</label>
+                            <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control filtro" value="<?php echo $_GET['fecha_inicio'] ?? ''; ?>">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label for="fecha_fin" class="form-label">Fecha Hasta</label>
+                            <input type="date" name="fecha_fin" id="fecha_fin" class="form-control filtro" value="<?php echo $_GET['fecha_fin'] ?? ''; ?>">
+                        </div>
+                        <div class="col-md-1 mb-2 d-flex align-items-end">
+                            <button type="button" id="limpiar-filtros" class="btn btn-secondary">
+                                <i class="fas fa-eraser"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <!-- Tabla de POs -->
         <div class="table-responsive" style="width: 100%;">
-            <table class="table table-striped table-hover" style="width: 100%;">
+            <table class="table table-striped table-hover" id="tabla-pos" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>PO</th>
-                        <th>Fecha Creación</th>
-                        <th>Fecha Envío</th>
-                        <th>Estado</th>
-                        <th>Cliente</th>
-                        <th>Usuario de ingreso</th>
-                        <th>Progreso</th>
+                        <th class="sortable" data-column="id">ID <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-column="po">PO <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-column="creacion">Fecha Creación <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-column="envio">Fecha Envío <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-column="estado">Estado <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-column="cliente">Cliente <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-column="usuario">Usuario de ingreso <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-column="progreso">Progreso <i class="fas fa-sort"></i></th>
                         <th>Opciones</th>
                     </tr>
                 </thead>
@@ -158,6 +199,33 @@ $pos = $poController->getPos($filtros);
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        </div>
+        
+        <!-- Paginación -->
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="registros-info">
+                    Mostrando <span id="registros-mostrados">0</span> de <span id="registros-totales">0</span> registros
+                </div>
+            </div>
+            <div class="col-md-6">
+                <nav aria-label="Paginación de POs">
+                    <ul class="pagination justify-content-end" id="paginacion">
+                        <!-- Los botones de paginación se generarán dinámicamente -->
+                    </ul>
+                </nav>
+            </div>
+            <div class="col-md-6 mt-2">
+                <div class="form-group">
+                    <label for="registros-por-pagina" class="form-label">Registros por página:</label>
+                    <select class="form-select form-select-sm w-auto d-inline-block ms-2" id="registros-por-pagina">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
         </div>
     </main>
 
