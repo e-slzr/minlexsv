@@ -33,23 +33,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Manejo de submenús en modo colapsado
+    // Manejo de submenús en modo colapsado y toggle de submenús
     const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
     dropdownToggles.forEach(toggle => {
         toggle.addEventListener('click', function(e) {
+            // Obtener el target del submenú
+            const targetId = this.getAttribute('data-bs-target');
+            const subMenu = document.querySelector(targetId);
+            
+            // Si el menú está colapsado, primero expandir el menú
             if (menuLateral.classList.contains('collapsed')) {
                 e.preventDefault();
                 expandMenu();
                 
                 // Esperar un poco y luego abrir el submenú
                 setTimeout(() => {
-                    const target = this.getAttribute('data-bs-target');
-                    const subMenu = document.querySelector(target);
                     if (subMenu && !subMenu.classList.contains('show')) {
                         const bsCollapse = new bootstrap.Collapse(subMenu);
                         bsCollapse.show();
                     }
                 }, 300);
+            } else {
+                // Si el menú ya está expandido, toggle el submenú manualmente
+                // Esto permite colapsar el submenú al hacer clic nuevamente
+                if (subMenu) {
+                    e.preventDefault(); // Prevenir el comportamiento predeterminado
+                    if (subMenu.classList.contains('show')) {
+                        const bsCollapse = new bootstrap.Collapse(subMenu);
+                        bsCollapse.hide();
+                    } else {
+                        const bsCollapse = new bootstrap.Collapse(subMenu);
+                        bsCollapse.show();
+                    }
+                }
             }
         });
     });

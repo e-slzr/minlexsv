@@ -11,6 +11,11 @@ if (!isset($_SESSION['user'])) {
 require_once '../controllers/ClienteController.php';
 $clienteController = new ClienteController();
 $clientes = $clienteController->getClientes() ?? [];
+
+// Añadir verificación para debugging
+if (empty($clientes)) {
+    error_log("No se encontraron clientes en la base de datos o hubo un error al recuperarlos.");
+}
 ?>
 
 <!DOCTYPE html>
@@ -110,42 +115,48 @@ $clientes = $clienteController->getClientes() ?? [];
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($clientes as $cliente): ?>
+                        <?php if (!empty($clientes)): ?>
+                            <?php foreach ($clientes as $cliente): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($cliente['id']); ?></td>
+                                    <td><?php echo htmlspecialchars($cliente['cliente_empresa']); ?></td>
+                                    <td><?php echo htmlspecialchars($cliente['cliente_nombre']); ?></td>
+                                    <td><?php echo htmlspecialchars($cliente['cliente_apellido']); ?></td>
+                                    <td><?php echo htmlspecialchars($cliente['cliente_direccion'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($cliente['cliente_telefono'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($cliente['cliente_correo'] ?? ''); ?></td>
+                                    <td>
+                                        <span class="badge <?php echo (isset($cliente['estado']) && $cliente['estado'] == 'Inactivo') ? 'bg-danger' : 'bg-success'; ?>">
+                                            <?php echo htmlspecialchars(isset($cliente['estado']) ? $cliente['estado'] : 'Activo'); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-dark btn-sm editar-cliente" data-bs-toggle="modal" 
+                                                data-bs-target="#editarClienteModal"
+                                                data-id="<?php echo htmlspecialchars($cliente['id']); ?>"
+                                                data-empresa="<?php echo htmlspecialchars($cliente['cliente_empresa']); ?>"
+                                                data-nombre="<?php echo htmlspecialchars($cliente['cliente_nombre']); ?>"
+                                                data-apellido="<?php echo htmlspecialchars($cliente['cliente_apellido']); ?>"
+                                                data-direccion="<?php echo htmlspecialchars($cliente['cliente_direccion'] ?? ''); ?>"
+                                                data-telefono="<?php echo htmlspecialchars($cliente['cliente_telefono'] ?? ''); ?>"
+                                                data-correo="<?php echo htmlspecialchars($cliente['cliente_correo'] ?? ''); ?>">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn <?php echo (isset($cliente['estado']) && $cliente['estado'] == 'Inactivo') ? 'btn-success' : 'btn-danger'; ?> btn-sm toggle-status"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#confirmStatusModal"
+                                                data-id="<?php echo htmlspecialchars($cliente['id']); ?>"
+                                                data-estado="<?php echo (isset($cliente['estado']) && $cliente['estado'] == 'Inactivo') ? 'Activo' : 'Inactivo'; ?>">
+                                            <i class="fas <?php echo (isset($cliente['estado']) && $cliente['estado'] == 'Inactivo') ? 'fa-check' : 'fa-ban'; ?>"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($cliente['id']); ?></td>
-                                <td><?php echo htmlspecialchars($cliente['cliente_empresa']); ?></td>
-                                <td><?php echo htmlspecialchars($cliente['cliente_nombre']); ?></td>
-                                <td><?php echo htmlspecialchars($cliente['cliente_apellido']); ?></td>
-                                <td><?php echo htmlspecialchars($cliente['cliente_direccion']); ?></td>
-                                <td><?php echo htmlspecialchars($cliente['cliente_telefono']); ?></td>
-                                <td><?php echo htmlspecialchars($cliente['cliente_correo']); ?></td>
-                                <td>
-                                    <span class="badge <?php echo $cliente['estado'] == 'Activo' ? 'bg-success' : 'bg-danger'; ?>">
-                                        <?php echo htmlspecialchars($cliente['estado']); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-dark btn-sm editar-cliente" data-bs-toggle="modal" 
-                                            data-bs-target="#editarClienteModal"
-                                            data-id="<?php echo htmlspecialchars($cliente['id']); ?>"
-                                            data-empresa="<?php echo htmlspecialchars($cliente['cliente_empresa']); ?>"
-                                            data-nombre="<?php echo htmlspecialchars($cliente['cliente_nombre']); ?>"
-                                            data-apellido="<?php echo htmlspecialchars($cliente['cliente_apellido']); ?>"
-                                            data-direccion="<?php echo htmlspecialchars($cliente['cliente_direccion']); ?>"
-                                            data-telefono="<?php echo htmlspecialchars($cliente['cliente_telefono']); ?>"
-                                            data-correo="<?php echo htmlspecialchars($cliente['cliente_correo']); ?>">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button type="button" class="btn <?php echo $cliente['estado'] == 'Activo' ? 'btn-danger' : 'btn-success'; ?> btn-sm toggle-status"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#confirmStatusModal"
-                                            data-id="<?php echo htmlspecialchars($cliente['id']); ?>"
-                                            data-estado="<?php echo $cliente['estado'] == 'Activo' ? 'Inactivo' : 'Activo'; ?>">
-                                        <i class="fas <?php echo $cliente['estado'] == 'Activo' ? 'fa-ban' : 'fa-check'; ?>"></i>
-                                    </button>
-                                </td>
+                                <td colspan="9" class="text-center">No se encontraron clientes</td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
                 <!-- Controles de paginación -->
@@ -182,7 +193,7 @@ $clientes = $clienteController->getClientes() ?? [];
             </div>
         </div>
 
-        <!-- Modal Nuevo Cliente -->
+        <!-- Modal para Nuevo Cliente -->
         <div class="modal fade" id="nuevoClienteModal" tabindex="-1" aria-labelledby="nuevoClienteModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -191,49 +202,42 @@ $clientes = $clienteController->getClientes() ?? [];
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form id="nuevoClienteForm">
-                            <input type="hidden" name="action" value="create">
-
+                        <form id="nuevo-cliente-form">
                             <div class="mb-3">
-                                <label for="nuevo_empresa" class="form-label">Empresa* <small>(máx. 50 caracteres)</small></label>
-                                <input type="text" class="form-control" id="nuevo_empresa" name="cliente_empresa" maxlength="50" required>
+                                <label for="empresa" class="form-label">Empresa*</label>
+                                <input type="text" class="form-control" id="empresa" name="cliente_empresa" required>
                             </div>
-
                             <div class="mb-3">
-                                <label for="nuevo_nombre" class="form-label">Nombre* <small>(máx. 50 caracteres)</small></label>
-                                <input type="text" class="form-control" id="nuevo_nombre" name="cliente_nombre" maxlength="50" required>
+                                <label for="nombre" class="form-label">Nombre*</label>
+                                <input type="text" class="form-control" id="nombre" name="cliente_nombre" required>
                             </div>
-
                             <div class="mb-3">
-                                <label for="nuevo_apellido" class="form-label">Apellido* <small>(máx. 50 caracteres)</small></label>
-                                <input type="text" class="form-control" id="nuevo_apellido" name="cliente_apellido" maxlength="50" required>
+                                <label for="apellido" class="form-label">Apellido*</label>
+                                <input type="text" class="form-control" id="apellido" name="cliente_apellido" required>
                             </div>
-
                             <div class="mb-3">
-                                <label for="nuevo_direccion" class="form-label">Dirección</label>
-                                <textarea class="form-control" id="nuevo_direccion" name="cliente_direccion" rows="2"></textarea>
+                                <label for="direccion" class="form-label">Dirección</label>
+                                <textarea class="form-control" id="direccion" name="cliente_direccion" rows="2"></textarea>
                             </div>
-
                             <div class="mb-3">
-                                <label for="nuevo_telefono" class="form-label">Teléfono <small>(máx. 20 caracteres)</small></label>
-                                <input type="tel" class="form-control" id="nuevo_telefono" name="cliente_telefono" maxlength="20">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="telefono" name="cliente_telefono">
                             </div>
-
                             <div class="mb-3">
-                                <label for="nuevo_correo" class="form-label">Correo <small>(máx. 100 caracteres)</small></label>
-                                <input type="email" class="form-control" id="nuevo_correo" name="cliente_correo" maxlength="100">
+                                <label for="correo" class="form-label">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="correo" name="cliente_correo">
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-dark" id="guardarNuevoCliente">Guardar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" id="guardar-nuevo">Guardar</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Modal Editar Cliente -->
+        <!-- Modal para Editar Cliente -->
         <div class="modal fade" id="editarClienteModal" tabindex="-1" aria-labelledby="editarClienteModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -242,69 +246,66 @@ $clientes = $clienteController->getClientes() ?? [];
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form id="editarClienteForm">
-                            <input type="hidden" name="action" value="update">
-                            <input type="hidden" name="id" id="editar_id">
-
+                        <form id="editar-cliente-form">
+                            <input type="hidden" id="editar-id" name="id">
                             <div class="mb-3">
-                                <label for="editar_empresa" class="form-label">Empresa* <small>(máx. 50 caracteres)</small></label>
-                                <input type="text" class="form-control" id="editar_empresa" name="cliente_empresa" maxlength="50" required>
+                                <label for="editar-empresa" class="form-label">Empresa*</label>
+                                <input type="text" class="form-control" id="editar-empresa" name="cliente_empresa" required>
                             </div>
-
                             <div class="mb-3">
-                                <label for="editar_nombre" class="form-label">Nombre* <small>(máx. 50 caracteres)</small></label>
-                                <input type="text" class="form-control" id="editar_nombre" name="cliente_nombre" maxlength="50" required>
+                                <label for="editar-nombre" class="form-label">Nombre*</label>
+                                <input type="text" class="form-control" id="editar-nombre" name="cliente_nombre" required>
                             </div>
-
                             <div class="mb-3">
-                                <label for="editar_apellido" class="form-label">Apellido* <small>(máx. 50 caracteres)</small></label>
-                                <input type="text" class="form-control" id="editar_apellido" name="cliente_apellido" maxlength="50" required>
+                                <label for="editar-apellido" class="form-label">Apellido*</label>
+                                <input type="text" class="form-control" id="editar-apellido" name="cliente_apellido" required>
                             </div>
-
                             <div class="mb-3">
-                                <label for="editar_direccion" class="form-label">Dirección</label>
-                                <textarea class="form-control" id="editar_direccion" name="cliente_direccion" rows="2"></textarea>
+                                <label for="editar-direccion" class="form-label">Dirección</label>
+                                <textarea class="form-control" id="editar-direccion" name="cliente_direccion" rows="2"></textarea>
                             </div>
-
                             <div class="mb-3">
-                                <label for="editar_telefono" class="form-label">Teléfono <small>(máx. 20 caracteres)</small></label>
-                                <input type="tel" class="form-control" id="editar_telefono" name="cliente_telefono" maxlength="20">
+                                <label for="editar-telefono" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="editar-telefono" name="cliente_telefono">
                             </div>
-
                             <div class="mb-3">
-                                <label for="editar_correo" class="form-label">Correo <small>(máx. 100 caracteres)</small></label>
-                                <input type="email" class="form-control" id="editar_correo" name="cliente_correo" maxlength="100">
+                                <label for="editar-correo" class="form-label">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="editar-correo" name="cliente_correo">
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-dark" id="guardarEditarCliente">Guardar Cambios</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" id="guardar-edicion">Guardar</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Modal de Confirmación de Estado -->
-        <div class="modal fade" id="confirmStatusModal" tabindex="-1" aria-hidden="true">
+        <!-- Modal para Confirmar Cambio de Estado -->
+        <div class="modal fade" id="confirmStatusModal" tabindex="-1" aria-labelledby="confirmStatusModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Confirmar Cambio de Estado</h5>
+                        <h5 class="modal-title" id="confirmStatusModalLabel">Confirmar Cambio de Estado</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>¿Está seguro que desea cambiar el estado de este cliente?</p>
+                        <p>¿Está seguro de que desea cambiar el estado de este cliente?</p>
+                        <form id="status-form">
+                            <input type="hidden" id="status-id" name="id">
+                            <input type="hidden" id="status-estado" name="estado">
+                        </form>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-warning" id="confirmToggleStatus">Confirmar</button>
+                        <button type="button" class="btn btn-primary" id="confirmar-estado">Confirmar</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Modales de éxito y error -->
+        <!-- Modal de Éxito -->
         <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -313,27 +314,10 @@ $clientes = $clienteController->getClientes() ?? [];
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p id="successMessage"></p>
+                        <p id="success-message">Operación completada con éxito.</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Error</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p id="errorMessage"></p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </div>
@@ -344,9 +328,278 @@ $clientes = $clienteController->getClientes() ?? [];
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap 5 Bundle JS -->
+    <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
-    <script src="../js/clientes.js"></script>
+    <script>
+        $(document).ready(function() {
+            
+            // Variables para paginación
+            let registrosPorPagina = parseInt($('#registros-por-pagina').val());
+            let paginaActual = 1;
+            let totalPaginas = 1;
+            
+            // Filtrar la tabla cuando se ingresan datos en los filtros
+            $('.filtro').on('input change', function() {
+                actualizarFilasVisibles();
+            });
+            
+            // Limpiar filtros
+            $('#limpiar-filtros').click(function() {
+                $('.filtro').val('');
+                actualizarFilasVisibles();
+            });
+            
+            // Función para actualizar las filas visibles según los filtros
+            function actualizarFilasVisibles() {
+                let empresaFiltro = $('#filtro-empresa').val().toLowerCase();
+                let nombreFiltro = $('#filtro-nombre').val().toLowerCase();
+                let apellidoFiltro = $('#filtro-apellido').val().toLowerCase();
+                let estadoFiltro = $('#filtro-estado').val();
+                
+                let filas = $('#tabla-clientes tbody tr');
+                let contadorVisible = 0;
+                
+                filas.each(function(index, fila) {
+                    let empresa = $(fila).find('td:eq(1)').text().toLowerCase();
+                    let nombre = $(fila).find('td:eq(2)').text().toLowerCase();
+                    let apellido = $(fila).find('td:eq(3)').text().toLowerCase();
+                    let estado = $(fila).find('td:eq(7)').text().trim();
+                    
+                    let coincideEmpresa = empresa.includes(empresaFiltro);
+                    let coincideNombre = nombre.includes(nombreFiltro);
+                    let coincideApellido = apellido.includes(apellidoFiltro);
+                    let coincideEstado = estadoFiltro === "" || estado === estadoFiltro;
+                    
+                    if (coincideEmpresa && coincideNombre && coincideApellido && coincideEstado) {
+                        contadorVisible++;
+                        let paginaRow = Math.ceil(contadorVisible / registrosPorPagina);
+                        $(fila).addClass('filtered-row');
+                        
+                        if (paginaRow === paginaActual) {
+                            $(fila).show();
+                        } else {
+                            $(fila).hide();
+                        }
+                    } else {
+                        $(fila).removeClass('filtered-row');
+                        $(fila).hide();
+                    }
+                });
+                
+                // Actualizar paginación
+                totalPaginas = Math.max(1, Math.ceil($('.filtered-row').length / registrosPorPagina));
+                actualizarPaginacion();
+                
+                // Si no hay registros que coincidan con el filtro
+                if ($('.filtered-row').length === 0) {
+                    if ($('#tabla-clientes tbody tr.no-results').length === 0) {
+                        $('#tabla-clientes tbody').append('<tr class="no-results"><td colspan="9" class="text-center">No se encontraron registros que coincidan con los filtros</td></tr>');
+                    }
+                } else {
+                    $('#tabla-clientes tbody tr.no-results').remove();
+                }
+            }
+            
+            // Función para actualizar la información de paginación
+            function actualizarPaginacion() {
+                $('#info-pagina').text('Página ' + paginaActual + ' de ' + totalPaginas);
+                
+                if (paginaActual <= 1) {
+                    $('#anterior-pagina').addClass('disabled');
+                } else {
+                    $('#anterior-pagina').removeClass('disabled');
+                }
+                
+                if (paginaActual >= totalPaginas) {
+                    $('#siguiente-pagina').addClass('disabled');
+                } else {
+                    $('#siguiente-pagina').removeClass('disabled');
+                }
+            }
+            
+            // Evento para cambiar registros por página
+            $('#registros-por-pagina').change(function() {
+                registrosPorPagina = parseInt($(this).val());
+                paginaActual = 1;
+                actualizarFilasVisibles();
+            });
+            
+            // Eventos de paginación
+            $('#anterior-pagina').click(function(e) {
+                e.preventDefault();
+                if (paginaActual > 1) {
+                    paginaActual--;
+                    actualizarFilasVisibles();
+                }
+            });
+            
+            $('#siguiente-pagina').click(function(e) {
+                e.preventDefault();
+                if (paginaActual < totalPaginas) {
+                    paginaActual++;
+                    actualizarFilasVisibles();
+                }
+            });
+            
+            // Ordenar por columnas
+            $('.sortable').click(function() {
+                let column = $(this).data('column');
+                let currentDir = $(this).hasClass('asc') ? 'desc' : 'asc';
+                
+                // Restablecer otras columnas
+                $('.sortable').not(this).removeClass('asc desc');
+                $(this).removeClass('asc desc').addClass(currentDir);
+                
+                // Ordenar la tabla
+                let rows = $('#tabla-clientes tbody tr').toArray();
+                rows.sort(function(a, b) {
+                    let aVal, bVal;
+                    
+                    if (column === 'id') {
+                        aVal = parseInt($(a).find('td:eq(0)').text());
+                        bVal = parseInt($(b).find('td:eq(0)').text());
+                    } else if (column === 'empresa') {
+                        aVal = $(a).find('td:eq(1)').text().toLowerCase();
+                        bVal = $(b).find('td:eq(1)').text().toLowerCase();
+                    } else if (column === 'nombre') {
+                        aVal = $(a).find('td:eq(2)').text().toLowerCase();
+                        bVal = $(b).find('td:eq(2)').text().toLowerCase();
+                    } else if (column === 'apellido') {
+                        aVal = $(a).find('td:eq(3)').text().toLowerCase();
+                        bVal = $(b).find('td:eq(3)').text().toLowerCase();
+                    } else if (column === 'estado') {
+                        aVal = $(a).find('td:eq(7)').text().trim();
+                        bVal = $(b).find('td:eq(7)').text().trim();
+                    }
+                    
+                    if (currentDir === 'asc') {
+                        return aVal > bVal ? 1 : -1;
+                    } else {
+                        return aVal < bVal ? 1 : -1;
+                    }
+                });
+                
+                // Volver a añadir filas ordenadas
+                $.each(rows, function(index, row) {
+                    $('#tabla-clientes tbody').append(row);
+                });
+                
+                // Restablecer paginación y filtros
+                paginaActual = 1;
+                actualizarFilasVisibles();
+            });
+            
+            // Inicialización
+            actualizarFilasVisibles();
+            
+            // Guardar nuevo cliente
+            $('#guardar-nuevo').click(function() {
+                let formData = $('#nuevo-cliente-form').serializeArray();
+                formData.push({name: 'action', value: 'create'});
+                
+                $.ajax({
+                    url: '../controllers/ClienteController.php',
+                    type: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            $('#nuevoClienteModal').modal('hide');
+                            $('#success-message').text('Cliente creado exitosamente.');
+                            $('#successModal').modal('show');
+                            
+                            // Recargar la página después de cerrar el modal de éxito
+                            $('#successModal').on('hidden.bs.modal', function () {
+                                location.reload();
+                            });
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error al procesar la solicitud.');
+                    }
+                });
+            });
+            
+            // Cargar datos para editar
+            $('.editar-cliente').click(function() {
+                $('#editar-id').val($(this).data('id'));
+                $('#editar-empresa').val($(this).data('empresa'));
+                $('#editar-nombre').val($(this).data('nombre'));
+                $('#editar-apellido').val($(this).data('apellido'));
+                $('#editar-direccion').val($(this).data('direccion'));
+                $('#editar-telefono').val($(this).data('telefono'));
+                $('#editar-correo').val($(this).data('correo'));
+            });
+            
+            // Guardar edición de cliente
+            $('#guardar-edicion').click(function() {
+                let formData = $('#editar-cliente-form').serializeArray();
+                formData.push({name: 'action', value: 'update'});
+                
+                $.ajax({
+                    url: '../controllers/ClienteController.php',
+                    type: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            $('#editarClienteModal').modal('hide');
+                            $('#success-message').text('Cliente actualizado exitosamente.');
+                            $('#successModal').modal('show');
+                            
+                            // Recargar la página después de cerrar el modal de éxito
+                            $('#successModal').on('hidden.bs.modal', function () {
+                                location.reload();
+                            });
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error al procesar la solicitud.');
+                    }
+                });
+            });
+            
+            // Cargar datos para cambiar estado
+            $('.toggle-status').click(function() {
+                $('#status-id').val($(this).data('id'));
+                $('#status-estado').val($(this).data('estado'));
+            });
+            
+            // Confirmar cambio de estado
+            $('#confirmar-estado').click(function() {
+                let formData = $('#status-form').serializeArray();
+                formData.push({name: 'action', value: 'toggleStatus'});
+                
+                $.ajax({
+                    url: '../controllers/ClienteController.php',
+                    type: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            $('#confirmStatusModal').modal('hide');
+                            $('#success-message').text('Estado de cliente actualizado exitosamente.');
+                            $('#successModal').modal('show');
+                            
+                            // Recargar la página después de cerrar el modal de éxito
+                            $('#successModal').on('hidden.bs.modal', function () {
+                                location.reload();
+                            });
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error al procesar la solicitud.');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

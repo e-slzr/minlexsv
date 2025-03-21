@@ -260,6 +260,11 @@
     transform: translateY(-50%) rotate(90deg);
 }
 
+.dropdown-toggle[aria-expanded="true"] li {
+    background-color: rgba(255, 255, 255, 0.1);
+    font-weight: 500;
+}
+
 /* Efecto hover para mostrar menú cuando está colapsado */
 .menu-lateral.collapsed:hover {
     width: var(--menu-width);

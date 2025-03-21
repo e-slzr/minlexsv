@@ -95,6 +95,8 @@ $rol = $_SESSION['user']['rol_nombre'] ?? 'Usuario';
         <ul id="subMenuProduccion" class="collapse list-group">
             <a href="../views/po.php"><li><span>PO (Purchase Orders)</span></li></a>
             <a href="../views/ordenes_produccion.php"><li><span>Ordenes de producción</span></li></a>
+            <a href="../views/items.php"><li><span>Items</span></li></a>
+            <a href="../views/procesos_produccion.php"><li><span>Procesos de producción</span></li></a>
         </ul>
         <a href="#" class="dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#subMenuAlmacen">
             <li>
@@ -109,6 +111,20 @@ $rol = $_SESSION['user']['rol_nombre'] ?? 'Usuario';
         </a>
         <ul id="subMenuAlmacen" class="collapse list-group">
             <a href="../views/bodegas.php"><li><span>Bodegas</span></li></a>
+        </ul>
+        <a href="#" class="dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#subMenuCalidad">
+            <li>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Control de Calidad</span>
+            </li>
+        </a>
+        <ul id="subMenuCalidad" class="collapse list-group">
+            <a href="../views/pruebas_calidad.php"><li><span>Pruebas de Calidad</span></li></a>
+            <a href="../views/tipos_pruebas.php"><li><span>Tipos de Pruebas</span></li></a>
+            <a href="../views/resultados_pruebas.php"><li><span>Resultados de Pruebas</span></li></a>
         </ul>
         <a href="#" class="dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#subMenuReportes">
             <li>
@@ -126,6 +142,7 @@ $rol = $_SESSION['user']['rol_nombre'] ?? 'Usuario';
             <a href="../views/reporte_corte.php"><li><span>Reporte de Corte</span></li></a>
             <a href="../views/reporte_costura.php"><li><span>Reporte de Costura</span></li></a>
             <a href="../views/reporte_produccion.php"><li><span>Reporte de Produccion</span></li></a>
+            <a href="../views/reporte_aprobaciones.php"><li><span>Reporte de Aprobaciones</span></li></a>
         </ul>
         <a href="#" class="dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#subMenuAdmin">
             <li>
@@ -145,6 +162,8 @@ $rol = $_SESSION['user']['rol_nombre'] ?? 'Usuario';
             <a href="../views/clientes.php"><li><span>Clientes</span></li></a>
             <a href="../views/usuarios.php"><li><span>Usuarios</span></li></a>
             <a href="../views/roles.php"><li><span>Roles</span></li></a>
+            <a href="../views/aprobaciones.php"><li><span>Aprobaciones</span></li></a>
+            <a href="../views/modificaciones.php"><li><span>Modificaciones</span></li></a>
         </ul>
         <a href="#" class="dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#subMenuAyuda">
             <li>
