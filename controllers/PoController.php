@@ -101,16 +101,16 @@ class PoController {
             $this->po->po_notas = $_POST['po_notas'] ?? null;
 
             // Crear la PO
-            $poId = $this->po->create();
-            if (!$poId) {
-                throw new Exception("Error al crear la PO");
-            }
+            // $poId = $this->po->create();
+            // if (!$poId) {
+            //     throw new Exception("Error al crear la PO");
+            // }
 
-            return [
-                'success' => true,
-                'message' => 'PO creada exitosamente',
-                'po_id' => $poId
-            ];
+            // return [
+            //     'success' => true,
+            //     'message' => 'PO creada exitosamente',
+            //     'po_id' => $poId
+            // ];
 
         } catch (Exception $e) {
             error_log("Error al crear PO: " . $e->getMessage());

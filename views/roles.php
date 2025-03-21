@@ -41,7 +41,7 @@ $roles = $rolController->getRoles();
     <main>
         <div style="width: 100%;" class="border-bottom border-secondary titulo-vista">
             <h1><strong>Gestión de Roles</strong></h1><br>
-            <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#roleModal">
+            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#roleModal">
                 Nuevo Rol
             </button>
         </div>
@@ -80,7 +80,7 @@ $roles = $rolController->getRoles();
                                     data-nombre="<?php echo htmlspecialchars($rol['rol_nombre']); ?>"
                                     data-descripcion="<?php echo htmlspecialchars($rol['rol_descripcion']); ?>"
                                     data-estado="<?php echo htmlspecialchars($rol['estado']); ?>"
-                                    data-toggle="modal" data-target="#roleModal">
+                                    data-bs-toggle="modal" data-bs-target="#roleModal">
                                 <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M14 6L16.2929 3.70711C16.6834 3.31658 17.3166 3.31658 17.7071 3.70711L20.2929 6.29289C20.6834 6.68342 20.6834 7.31658 20.2929 7.70711L18 10M14 6L4.29289 15.7071C4.10536 15.8946 4 16.149 4 16.4142V19C4 19.5523 4.44772 20 5 20H7.58579C7.851 20 8.10536 19.8946 8.29289 19.7071L18 10M14 6L18 10" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
                                 </svg>
@@ -108,14 +108,12 @@ $roles = $rolController->getRoles();
         </div>
 
         <!-- Modal para Crear/Editar Rol -->
-        <div class="modal fade" id="roleModal" tabindex="-1" role="dialog" aria-labelledby="roleModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+        <div class="modal fade" id="roleModal" tabindex="-1">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="roleModalLabel">Nuevo Rol</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <form id="roleForm">
                         <div class="modal-body">
@@ -141,7 +139,7 @@ $roles = $rolController->getRoles();
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                             <button type="submit" class="btn btn-dark">Guardar</button>
                         </div>
                     </form>
@@ -150,14 +148,12 @@ $roles = $rolController->getRoles();
         </div>
 
         <!-- Modal para Cambiar Estado -->
-        <div class="modal fade" id="toggleStatusModal" tabindex="-1" role="dialog" aria-labelledby="toggleStatusModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+        <div class="modal fade" id="toggleStatusModal" tabindex="-1">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="toggleStatusModalLabel">Confirmar Cambio de Estado</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                        <h5 class="modal-title">Confirmar Cambio de Estado</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <p>¿Está seguro que desea <span id="actionType"></span> el rol <strong><span id="roleName"></span></strong>?</p>
@@ -166,68 +162,16 @@ $roles = $rolController->getRoles();
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                         <button type="button" class="btn btn-dark" id="confirmToggleStatus">Confirmar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal de Confirmación -->
-        <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="confirmationModalLabel">Operación Exitosa</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-check-circle text-success" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-                            </svg>
-                            <p class="mt-3" id="confirmationMessage"></p>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-dark" data-dismiss="modal">Aceptar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal de Error -->
-        <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="errorModalLabel">Error</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-x-circle text-danger" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                            </svg>
-                            <p class="mt-3" id="errorMessage"></p>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-dark" data-dismiss="modal">Aceptar</button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function() {
             // Búsqueda en tiempo real
@@ -238,117 +182,85 @@ $roles = $rolController->getRoles();
                 });
             });
 
-            // Manejo del cambio de estado
-            $('.toggle-status').click(function() {
-                var id = $(this).data('id');
-                var nombre = $(this).data('nombre');
-                var estadoActual = $(this).data('estado');
-                var nuevoEstado = estadoActual === 'Activo' ? 'Inactivo' : 'Activo';
-                
-                $('#actionType').text(nuevoEstado);
-                $('#roleName').text(nombre);
-                $('#confirmToggleStatus').data('id', id);
-                $('#toggleStatusModal').modal('show');
-            });
-
-            // Confirmar cambio de estado
-            $('#confirmToggleStatus').click(function() {
-                var id = $(this).data('id');
-                
-                $.ajax({
-                    url: '../controllers/RolController.php',
-                    type: 'POST',
-                    data: {
-                        action: 'toggleStatus',
-                        id: id
-                    },
-                    dataType: 'json',
-                    beforeSend: function() {
-                        $('#toggleStatusModal').modal('hide');
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            $('#confirmationMessage').text(response.message);
-                            $('#confirmationModal').modal('show');
-                        } else {
-                            $('#errorMessage').text(response.message);
-                            $('#errorModal').modal('show');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        $('#errorMessage').text('Error al procesar la solicitud: ' + error);
-                        $('#errorModal').modal('show');
-                        console.error('Error:', error);
-                    }
-                });
-            });
-
-            // Mostrar/ocultar campo de estado según la acción
-            $('[data-target="#roleModal"]').click(function() {
-                if (!$(this).hasClass('edit-role')) {
-                    $('#estadoGroup').hide();
-                } else {
-                    $('#estadoGroup').show();
-                }
-            });
-
-            // Editar rol
-            $('.edit-role').click(function() {
-                $('#roleId').val($(this).data('id'));
-                $('#nombre').val($(this).data('nombre'));
-                $('#descripcion').val($(this).data('descripcion'));
-                $('#estado').val($(this).data('estado'));
-                $('#formAction').val('update');
-                $('#roleModalLabel').text('Editar Rol');
-                $('#estadoGroup').show();
-            });
-
-            // Resetear el modal al crear nuevo rol
-            $('[data-target="#roleModal"]').click(function() {
-                if (!$(this).hasClass('edit-role')) {
-                    $('#roleForm')[0].reset();
-                    $('#roleId').val('');
-                    $('#formAction').val('create');
-                    $('#roleModalLabel').text('Nuevo Rol');
-                    $('#estadoGroup').hide();
-                }
-            });
-
-            // Manejo del formulario con AJAX
+            // Manejar el envío del formulario
             $('#roleForm').on('submit', function(e) {
                 e.preventDefault();
                 
+                var formData = $(this).serialize();
+                
                 $.ajax({
                     url: '../controllers/RolController.php',
                     type: 'POST',
-                    data: $(this).serialize(),
-                    dataType: 'json',
+                    data: formData,
                     success: function(response) {
-                        $('#roleModal').modal('hide');
-                        if (response.success) {
-                            $('#confirmationMessage').text(response.message);
-                            $('#confirmationModal').modal('show');
-                            $('#confirmationModal').on('hidden.bs.modal', function () {
-                                location.reload();
-                            });
+                        var res = JSON.parse(response);
+                        if (res.success) {
+                            location.reload();
                         } else {
-                            $('#errorMessage').text(response.message);
-                            $('#errorModal').modal('show');
+                            alert('Error: ' + res.message);
                         }
                     },
                     error: function() {
-                        $('#roleModal').modal('hide');
-                        $('#errorMessage').text('Error al procesar la solicitud');
-                        $('#errorModal').modal('show');
+                        alert('Error al procesar la solicitud');
                     }
                 });
             });
 
-            // Cerrar modal de confirmación
-            $('#confirmationModal, #errorModal').on('hidden.bs.modal', function () {
-                if ($(this).attr('id') === 'confirmationModal') {
-                    location.reload();
-                }
+            // Editar rol
+            $('.edit-role').on('click', function() {
+                var id = $(this).data('id');
+                var nombre = $(this).data('nombre');
+                var descripcion = $(this).data('descripcion');
+                var estado = $(this).data('estado');
+                
+                $('#formAction').val('update');
+                $('#roleId').val(id);
+                $('#nombre').val(nombre);
+                $('#descripcion').val(descripcion);
+                $('#estado').val(estado);
+                $('#roleModalLabel').text('Editar Rol');
+            });
+
+            // Toggle estado
+            $('.toggle-status').on('click', function() {
+                var id = $(this).data('id');
+                var nombre = $(this).data('nombre');
+                var estado = $(this).data('estado');
+                var nuevoEstado = estado === 'Activo' ? 'Inactivo' : 'Activo';
+                
+                $('#actionType').text(estado === 'Activo' ? 'desactivar' : 'activar');
+                $('#roleName').text(nombre);
+                
+                var modal = new bootstrap.Modal(document.getElementById('toggleStatusModal'));
+                modal.show();
+                
+                $('#confirmToggleStatus').off('click').on('click', function() {
+                    $.ajax({
+                        url: '../controllers/RolController.php',
+                        type: 'POST',
+                        data: {
+                            action: 'toggleStatus',
+                            id: id,
+                            estado: nuevoEstado
+                        },
+                        success: function(response) {
+                            var res = JSON.parse(response);
+                            if (res.success) {
+                                location.reload();
+                            } else {
+                                alert('Error: ' + res.message);
+                            }
+                        }
+                    });
+                });
+            });
+
+            // Limpiar modal al cerrarlo
+            $('#roleModal').on('hidden.bs.modal', function() {
+                $('#roleForm')[0].reset();
+                $('#formAction').val('create');
+                $('#roleId').val('');
+                $('#roleModalLabel').text('Nuevo Rol');
             });
         });
     </script>
