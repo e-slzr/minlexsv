@@ -16,8 +16,9 @@ body {
 }
 
 .login-container {
+    zoom: 0.7;
     width: 100%;
-    max-width: 420px;
+    max-width: 620px;
     padding: 2rem;
 }
 

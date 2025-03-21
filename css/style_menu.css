@@ -147,7 +147,7 @@
 .menu-lateral {
     background-color: var(--menu-bg);
     width: var(--menu-width);
-    height: 120vh;
+    height: 130vh;
     position: fixed;
     top: 64px;
     left: 0;
