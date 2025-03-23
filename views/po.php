@@ -135,8 +135,8 @@ $pos = $poController->getPos($filtros);
                         <th class="sortable" data-column="cliente">Cliente <i class="fas fa-sort"></i></th>
                         <th class="sortable" data-column="usuario">Usuario de ingreso <i class="fas fa-sort"></i></th>
                         <th class="sortable" data-column="progreso">Progreso <i class="fas fa-sort"></i></th>
-                        <th>Opciones</th>
-                    </tr>
+                <th>Opciones</th>
+            </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($pos as $po): ?>
@@ -194,7 +194,7 @@ $pos = $poController->getPos($filtros);
                                           stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
                                 </svg>
                             </button>
-                        </td>
+                </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -228,6 +228,8 @@ $pos = $poController->getPos($filtros);
             </div>
         </div>
     </main>
+
+    <?php include '../components/footer.php'; ?>
 
     <!-- Modal para Crear/Editar PO -->
     <div class="modal fade" id="poModal" tabindex="-1" role="dialog" aria-labelledby="poModalLabel" aria-hidden="true">
@@ -335,12 +337,12 @@ $pos = $poController->getPos($filtros);
                                 <tr>
                                     <th>Cliente:</th>
                                     <td id="detailCliente"></td>
-                                </tr>
-                                <tr>
+            </tr>
+            <tr>
                                     <th>Estado:</th>
                                     <td id="detailEstado"></td>
-                                </tr>
-                                <tr>
+        </tr>
+        <tr>
                                     <th>Fecha Creación:</th>
                                     <td id="detailFechaCreacion"></td>
                                 </tr>
@@ -352,20 +354,20 @@ $pos = $poController->getPos($filtros);
                                 <tr>
                                     <th>Inicio Producción:</th>
                                     <td id="detailFechaInicio"></td>
-                                </tr>
-                                <tr>
+        </tr>
+        <tr>
                                     <th>Fin Producción:</th>
                                     <td id="detailFechaFin"></td>
-                                </tr>
-                                <tr>
+        </tr>
+        <tr>
                                     <th>Envío Programado:</th>
                                     <td id="detailFechaEnvio"></td>
-                                </tr>
-                                <tr>
+        </tr>
+        <tr>
                                     <th>Tipo Envío:</th>
                                     <td id="detailTipoEnvio"></td>
-                                </tr>
-                            </table>
+        </tr>
+        </table>
                         </div>
                     </div>
                     <div class="row mt-3">
@@ -521,9 +523,8 @@ $pos = $poController->getPos($filtros);
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/po.js"></script>
 </body>
 </html>

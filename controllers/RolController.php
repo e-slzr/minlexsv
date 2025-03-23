@@ -39,6 +39,10 @@ class RolController {
         return $this->rol->getAll();
     }
 
+    public function getActiveRoles() {
+        return $this->rol->getActiveRoles();
+    }
+
     private function createRol() {
         try {
             if (empty($_POST['nombre']) || empty($_POST['descripcion'])) {

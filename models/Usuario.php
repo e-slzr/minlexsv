@@ -13,6 +13,7 @@ class Usuario {
     public $estado;
     public $usuario_creacion;
     public $usuario_modificacion;
+    public $usuario_modulo_id;
 
     private $validation_rules = [
         'usuario_usuario' => ['required' => true, 'max_length' => 25],
@@ -21,7 +22,8 @@ class Usuario {
         'usuario_password' => ['required' => true, 'max_length' => 255],
         'usuario_rol_id' => ['required' => true, 'type' => 'integer'],
         'usuario_departamento' => ['required' => false, 'max_length' => 25],
-        'estado' => ['required' => false, 'values' => ['Activo', 'Inactivo']]
+        'estado' => ['required' => false, 'values' => ['Activo', 'Inactivo']],
+        'usuario_modulo_id' => ['required' => false, 'type' => 'integer']
     ];
 
     public function __construct() {
@@ -67,7 +69,7 @@ class Usuario {
         return empty($errors) ? true : $errors;
     }
 
-    public function create() {
+    public function create($data) {
         // Validar antes de crear
         $validation = $this->validate();
         if ($validation !== true) {
@@ -83,7 +85,8 @@ class Usuario {
                     usuario_rol_id = :usuario_rol_id,
                     usuario_departamento = :usuario_departamento,
                     estado = :estado,
-                    usuario_creacion = NOW()";
+                    usuario_creacion = NOW(),
+                    usuario_modulo_id = :modulo_id";
 
         $stmt = $this->conn->prepare($query);
 
@@ -94,28 +97,28 @@ class Usuario {
         $stmt->bindParam(":usuario_rol_id", $this->usuario_rol_id);
         $stmt->bindParam(":usuario_departamento", $this->usuario_departamento);
         $stmt->bindParam(":estado", $this->estado);
+        $stmt->bindParam(":modulo_id", $this->usuario_modulo_id);
 
         return $stmt->execute();
     }
 
-    public function update($newPassword = null) {
-        // Validar antes de actualizar
-        $validation = $this->validate();
-        if ($validation !== true) {
-            throw new Exception(implode(", ", $validation));
-        }
-        
-        $passwordClause = $newPassword ? ", usuario_password = :usuario_password" : "";
-        
+    public function update($data = null) {
         $query = "UPDATE " . $this->table_name . "
                 SET
                     usuario_alias = :usuario_usuario,
                     usuario_nombre = :usuario_nombre,
                     usuario_apellido = :usuario_apellido,
                     usuario_rol_id = :usuario_rol_id,
-                    usuario_departamento = :usuario_departamento" . $passwordClause . ",
-                    usuario_modificacion = NOW()
-                WHERE id = :id";
+                    usuario_departamento = :usuario_departamento,
+                    usuario_modulo_id = :modulo_id,
+                    usuario_modificacion = NOW()";
+
+        // Agregar la actualización de contraseña solo si se proporciona una nueva
+        if (!empty($this->usuario_password)) {
+            $query .= ", usuario_password = :usuario_password";
+        }
+
+        $query .= " WHERE id = :id";
 
         $stmt = $this->conn->prepare($query);
 
@@ -124,10 +127,11 @@ class Usuario {
         $stmt->bindParam(":usuario_apellido", $this->usuario_apellido);
         $stmt->bindParam(":usuario_rol_id", $this->usuario_rol_id);
         $stmt->bindParam(":usuario_departamento", $this->usuario_departamento);
+        $stmt->bindParam(":modulo_id", $this->usuario_modulo_id);
         $stmt->bindParam(":id", $this->id);
 
-        if ($newPassword) {
-            $stmt->bindParam(":usuario_password", $newPassword);
+        if (!empty($this->usuario_password)) {
+            $stmt->bindParam(":usuario_password", $this->usuario_password);
         }
 
         return $stmt->execute();
@@ -164,12 +168,15 @@ class Usuario {
                     u.usuario_apellido,
                     u.usuario_departamento,
                     u.usuario_rol_id,
+                    u.usuario_modulo_id,
                     r.rol_nombre,
+                    m.modulo_codigo,
                     u.estado,
                     u.usuario_creacion,
                     u.usuario_modificacion
                 FROM " . $this->table_name . " u
                 LEFT JOIN roles r ON u.usuario_rol_id = r.id
+                LEFT JOIN modulos m ON u.usuario_modulo_id = m.id
                 ORDER BY u.id DESC";
 
         $stmt = $this->conn->prepare($query);
@@ -218,7 +225,8 @@ class Usuario {
     public function read() {
         $query = "SELECT u.*, r.rol_nombre 
                 FROM " . $this->table_name . " u 
-                LEFT JOIN roles r ON u.usuario_rol_id = r.id";
+                LEFT JOIN roles r ON u.usuario_rol_id = r.id
+                ORDER BY u.id DESC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -249,6 +257,41 @@ class Usuario {
         } catch(PDOException $e) {
             error_log("Error en Usuario::verifyPassword(): " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    public function getRolById($rolId) {
+        try {
+            $query = "SELECT * FROM roles WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $rolId, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error al obtener rol: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function validatePassword($userId, $password) {
+        try {
+            $query = "SELECT usuario_password FROM " . $this->table_name . " WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":id", $userId);
+            $stmt->execute();
+
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                return ['success' => false, 'message' => 'Usuario no encontrado'];
+            }
+
+            if (password_verify($password, $row['usuario_password'])) {
+                return ['success' => true];
+            }
+
+            return ['success' => false, 'message' => 'Contraseña incorrecta'];
+        } catch (PDOException $e) {
+            throw new Exception("Error al validar contraseña: " . $e->getMessage());
         }
     }
 }
