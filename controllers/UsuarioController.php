@@ -87,6 +87,11 @@ class UsuarioController {
                         break;
 
                     case 'logout':
+                        // Verificar si la sesión está iniciada antes de intentar destruirla
+                        if (session_status() === PHP_SESSION_NONE) {
+                            session_start();
+                        }
+                        
                         // Limpiar y destruir la sesión
                         $_SESSION = array();
                         if (isset($_COOKIE[session_name()])) {
@@ -95,7 +100,8 @@ class UsuarioController {
                         session_destroy();
                         
                         // Redireccionar al login
-                        return ['success' => true, 'message' => 'Sesión cerrada exitosamente'];
+                        echo json_encode(['success' => true, 'message' => 'Sesión cerrada exitosamente', 'redirect' => '../views/login.php']);
+                        exit;
                         break;
 
                     case 'create':

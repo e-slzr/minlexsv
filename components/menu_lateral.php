@@ -17,6 +17,7 @@ $rol = $_SESSION['user']['rol_nombre'] ?? 'Usuario';
 
 <link rel="stylesheet" href="../css/style_menu.css">
 <script src="../js/menu.js"></script>
+<script src="../js/logout.js"></script>
 
 <div class="barra_superior">
     <div class="brand">
