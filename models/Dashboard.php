@@ -5,7 +5,7 @@ class Dashboard {
     public function __construct() {
         require_once __DIR__ . '/../config/Database.php';
         $database = new Database();
-        $this->conn = $database->connect();
+        $this->conn = $database->getConnection();
     }
 
     public function getStats() {

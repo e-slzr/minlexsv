@@ -7,7 +7,7 @@ class Rol {
 
     public function __construct() {
         $database = new Database();
-        $this->conn = $database->connect();
+        $this->conn = $database->getConnection();
     }
 
     public function getAll() {
@@ -91,6 +91,18 @@ class Rol {
         } catch (PDOException $e) {
             error_log("Error en Rol::isInUse: " . $e->getMessage());
             throw new Exception("Error al verificar si el rol está en uso");
+        }
+    }
+
+    public function getActiveRoles() {
+        try {
+            $query = "SELECT * FROM {$this->table} WHERE estado = 'Activo' ORDER BY rol_nombre ASC";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en Rol::getActiveRoles: " . $e->getMessage());
+            throw new Exception("Error al obtener los roles activos");
         }
     }
 }

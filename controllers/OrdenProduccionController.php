@@ -13,10 +13,23 @@ class OrdenProduccionController {
     }
 
     public function handleRequest() {
-        $action = $_REQUEST['action'] ?? '';
-        $response = ['success' => false, 'message' => 'Acción no válida'];
-
+        header('Content-Type: application/json');
+        
         try {
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                if (isset($_GET['action']) && $_GET['action'] === 'getOrdenesPorModulo') {
+                    $moduloId = $_GET['modulo_id'] ?? null;
+                    if (!$moduloId) {
+                        throw new Exception('ID de módulo no proporcionado');
+                    }
+                    $ordenes = $this->getOrdenesPorModulo($moduloId);
+                    echo json_encode(['success' => true, 'data' => $ordenes]);
+                    exit;
+                }
+            }
+            $action = $_REQUEST['action'] ?? '';
+            $response = ['success' => false, 'message' => 'Acción no válida'];
+
             switch ($action) {
                 case 'getAll':
                     $response = [
@@ -120,12 +133,38 @@ class OrdenProduccionController {
                     break;
 
                 case 'getOrdenesFiltered':
-                    $this->getOrdenesFiltered();
-                    return;
+                    $filtros = [
+                        'modulo_id' => $_GET['modulo_id'] ?? null,
+                        'proceso_id' => $_GET['proceso_id'] ?? null,
+                        'estado' => $_GET['estado'] ?? null
+                    ];
+                    try {
+                        $ordenes = $this->getOrdenesFiltered($filtros);
+                        $response = ['success' => true, 'data' => $ordenes];
+                    } catch (Exception $e) {
+                        $response = ['success' => false, 'message' => $e->getMessage()];
+                    }
+                    echo json_encode($response);
+                    exit;
+                    break;
 
                 case 'updateProgress':
                     $this->updateProgress();
                     return;
+                    
+                case 'getOrdenesPendientes':
+                    $this->getOrdenesPendientes();
+                    return;
+
+                case 'getOrdenesPorModulo':
+                    if (!isset($_GET['modulo_id'])) {
+                        throw new Exception('ID de módulo no proporcionado');
+                    }
+                    $response = [
+                        'success' => true,
+                        'ordenes' => $this->getOrdenesPorModulo($_GET['modulo_id'])
+                    ];
+                    break;
 
                 default:
                     throw new Exception('Acción no válida');
@@ -138,7 +177,6 @@ class OrdenProduccionController {
             ];
         }
 
-        header('Content-Type: application/json');
         echo json_encode($response);
         exit();
     }
@@ -162,33 +200,74 @@ class OrdenProduccionController {
         }
     }
 
-    public function getOrdenesFiltered() {
+    public function getOrdenesFiltered($filters = []) {
+        try {
+            $query = "SELECT 
+                        op.*,
+                        pd.pd_item,
+                        i.item_numero,
+                        i.item_nombre,
+                        po.po_numero,
+                        pp.pp_nombre as proceso_nombre,
+                        m.modulo_codigo
+                    FROM ordenes_produccion op
+                    LEFT JOIN po_detalle pd ON op.op_id_pd = pd.id
+                    LEFT JOIN items i ON pd.pd_item = i.id
+                    LEFT JOIN po po ON pd.pd_id_po = po.id
+                    LEFT JOIN procesos_produccion pp ON op.op_id_proceso = pp.id
+                    LEFT JOIN modulos m ON op.op_modulo_id = m.id
+                    WHERE 1=1";
+
+            $params = [];
+            
+            if (!empty($filters['modulo_id'])) {
+                $query .= " AND op.op_modulo_id = :modulo_id";
+                $params[':modulo_id'] = $filters['modulo_id'];
+            }
+            
+            if (!empty($filters['proceso_id'])) {
+                $query .= " AND op.op_id_proceso = :proceso_id";
+                $params[':proceso_id'] = $filters['proceso_id'];
+            }
+            
+            if (!empty($filters['estado'])) {
+                $query .= " AND op.op_estado = :estado";
+                $params[':estado'] = $filters['estado'];
+            }
+            
+            $query .= " ORDER BY op.op_fecha_inicio DESC";
+            
+            $stmt = $this->db->prepare($query);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en getOrdenesFiltered: " . $e->getMessage());
+            throw new Exception("Error al obtener órdenes de producción");
+        }
+    }
+
+    public function getOrdenesPendientes() {
         try {
             // Obtener parámetros de filtro
-            $operador = isset($_GET['operador']) ? (int)$_GET['operador'] : 0;
+            $po = isset($_GET['po']) ? (int)$_GET['po'] : 0;
             $proceso = isset($_GET['proceso']) ? (int)$_GET['proceso'] : 0;
-            $estado = isset($_GET['estado']) ? $_GET['estado'] : '';
-            $item = isset($_GET['item']) ? $_GET['item'] : '';
             
             // Construir array de filtros
             $filters = [];
-            if ($operador > 0) $filters['operador'] = $operador;
+            if ($po > 0) $filters['po'] = $po;
             if ($proceso > 0) $filters['proceso'] = $proceso;
-            if (!empty($estado)) $filters['estado'] = $estado;
-            if (!empty($item)) $filters['item'] = $item;
             
-            // Usar getAll como fallback si getFiltered no existe o falla
-            try {
-                $ordenes = $this->ordenProduccion->getFiltered($filters);
-            } catch (Exception $e) {
-                error_log("Error al usar getFiltered, usando getAll como fallback: " . $e->getMessage());
-                $ordenes = $this->ordenProduccion->getAll();
-            }
+            // Obtener órdenes pendientes
+            $ordenes = $this->ordenProduccion->getOrdenesPendientes($filters);
             
             header('Content-Type: application/json');
             echo json_encode($ordenes);
         } catch (Exception $e) {
-            error_log("Error en getOrdenesFiltered: " . $e->getMessage());
+            error_log("Error en getOrdenesPendientes: " . $e->getMessage());
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
         }
@@ -253,6 +332,38 @@ class OrdenProduccionController {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             }
+        }
+    }
+
+    public function getOrdenesPorModulo($moduloId) {
+        try {
+            $query = "SELECT 
+                        op.*,
+                        pd.pd_item,
+                        i.item_numero,
+                        i.item_nombre,
+                        i.item_talla,
+                        po.po_numero,
+                        pp.pp_nombre as proceso_nombre,
+                        m.modulo_codigo
+                    FROM ordenes_produccion op
+                    LEFT JOIN po_detalle pd ON op.op_id_pd = pd.id
+                    LEFT JOIN items i ON pd.pd_item = i.id
+                    LEFT JOIN po po ON pd.pd_id_po = po.id
+                    LEFT JOIN procesos_produccion pp ON op.op_id_proceso = pp.id
+                    LEFT JOIN modulos m ON op.op_modulo_id = m.id
+                    WHERE op.op_modulo_id = :modulo_id
+                    AND op.op_estado != 'Completado'
+                    ORDER BY op.op_fecha_inicio ASC";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':modulo_id', $moduloId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en getOrdenesPorModulo: " . $e->getMessage());
+            throw new Exception("Error al obtener órdenes de producción");
         }
     }
 }

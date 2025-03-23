@@ -41,7 +41,6 @@ if (isset($_SESSION['user'])) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <?php include '../components/loader.php'; ?>
     
     <div class="login-container">
         <div class="login-card">
@@ -58,7 +57,7 @@ if (isset($_SESSION['user'])) {
                 </div>
             <?php endif; ?>
 
-            <form id="loginForm" class="login-form" action="../controllers/UsuarioController.php" method="POST">
+            <form id="loginForm" class="login-form">
                 <input type="hidden" name="action" value="login">
                 
                 <div class="mb-3">
@@ -132,9 +131,55 @@ if (isset($_SESSION['user'])) {
             }
         });
 
-        // Mostrar loader al enviar el formulario
-        $('#loginForm').on('submit', function() {
-            $('#loader').show();
+        // Manejar el envío del formulario
+        $('#loginForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const username = $('#username').val().trim();
+            const password = $('#password').val().trim();
+            
+            if (!username || !password) {
+                alert('Por favor complete todos los campos');
+                return;
+            }
+            
+            const data = {
+                action: 'login',
+                username: username,
+                password: password
+            };
+
+            // Deshabilitar el botón de envío
+            const submitBtn = $(this).find('button[type="submit"]');
+            submitBtn.prop('disabled', true);
+
+            fetch('../controllers/UsuarioController.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('Redirigiendo a:', data.redirect);
+                    window.location.replace(data.redirect);
+                } else {
+                    alert(data.message || 'Error al iniciar sesión');
+                    submitBtn.prop('disabled', false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al iniciar sesión');
+                submitBtn.prop('disabled', false);
+            });
         });
     });
     </script>

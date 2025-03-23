@@ -10,12 +10,15 @@ if (!isset($_SESSION['user'])) {
 
 require_once '../controllers/UsuarioController.php';
 require_once '../controllers/RolController.php';
+require_once '../controllers/ModuloController.php';
 
 $usuarioController = new UsuarioController();
 $rolController = new RolController();
+$moduloController = new ModuloController();
 
 $usuarios = $usuarioController->getUsuarios() ?? [];
-$roles = $rolController->getRoles() ?? [];
+$roles = $rolController->getActiveRoles() ?? [];
+$modulos = $moduloController->getModulos() ?? [];
 
 $departamentos = [
     'Corte',
@@ -61,20 +64,16 @@ $departamentos = [
                     <i class="fas fa-filter"></i> Filtros
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-2 mb-2">
+                    <div class="row align-items-end">
+                        <div class="col-md-2">
                             <label for="filtro-usuario" class="form-label">Usuario</label>
                             <input type="text" class="form-control filtro" id="filtro-usuario" placeholder="Buscar usuario...">
                         </div>
-                        <div class="col-md-2 mb-2">
-                            <label for="filtro-nombre" class="form-label">Nombre</label>
-                            <input type="text" class="form-control filtro" id="filtro-nombre" placeholder="Buscar nombre...">
+                        <div class="col-md-3">
+                            <label for="filtro-nombre" class="form-label">Nombre y Apellido</label>
+                            <input type="text" class="form-control filtro" id="filtro-nombre" placeholder="Buscar por nombre o apellido...">
                         </div>
-                        <div class="col-md-2 mb-2">
-                            <label for="filtro-apellido" class="form-label">Apellido</label>
-                            <input type="text" class="form-control filtro" id="filtro-apellido" placeholder="Buscar apellido...">
-                        </div>
-                        <div class="col-md-2 mb-2">
+                        <div class="col-md-2">
                             <label for="filtro-departamento" class="form-label">Departamento</label>
                             <select class="form-select filtro" id="filtro-departamento">
                                 <option value="">Todos</option>
@@ -85,7 +84,18 @@ $departamentos = [
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-2 mb-2">
+                        <div class="col-md-1">
+                            <label for="filtro-modulo" class="form-label">Módulo</label>
+                            <select class="form-select filtro" id="filtro-modulo">
+                                <option value="">Todos</option>
+                                <?php foreach ($modulos as $modulo): ?>
+                                    <option value="<?php echo htmlspecialchars($modulo['modulo_codigo']); ?>">
+                                        <?php echo htmlspecialchars($modulo['modulo_codigo']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <label for="filtro-rol" class="form-label">Rol</label>
                             <select class="form-select filtro" id="filtro-rol">
                                 <option value="">Todos</option>
@@ -96,7 +106,7 @@ $departamentos = [
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-2 mb-2">
+                        <div class="col-md-1">
                             <label for="filtro-estado" class="form-label">Estado</label>
                             <select class="form-select filtro" id="filtro-estado">
                                 <option value="">Todos</option>
@@ -104,11 +114,9 @@ $departamentos = [
                                 <option value="Inactivo">Inactivo</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-12">
-                            <button class="btn btn-secondary" id="limpiar-filtros">
-                                <i class="fas fa-eraser"></i> Limpiar filtros
+                        <div class="col-md-1">
+                            <button class="btn btn-secondary w-100" id="limpiar-filtros">
+                                <i class="fas fa-eraser"></i>
                             </button>
                         </div>
                     </div>
@@ -124,6 +132,7 @@ $departamentos = [
                             <th class="sortable" data-column="nombre">Nombre <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-column="apellido">Apellido <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-column="departamento">Departamento <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-column="modulo">Módulo Asignado <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-column="rol">Rol <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-column="estado">Estado <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-column="creacion">Creación <i class="fas fa-sort"></i></th>
@@ -139,6 +148,15 @@ $departamentos = [
                                 <td><?php echo htmlspecialchars($usuario['usuario_nombre']); ?></td>
                                 <td><?php echo htmlspecialchars($usuario['usuario_apellido']); ?></td>
                                 <td><?php echo htmlspecialchars($usuario['usuario_departamento']); ?></td>
+                                <td>
+                                    <?php 
+                                    if (isset($usuario['modulo_codigo']) && !empty($usuario['modulo_codigo'])) {
+                                        echo htmlspecialchars($usuario['modulo_codigo']);
+                                    } else {
+                                        echo '-';
+                                    }
+                                    ?>
+                                </td>
                                 <td><?php echo htmlspecialchars($usuario['rol_nombre']); ?></td>
                                 <td>
                                     <span class="badge <?php echo $usuario['estado'] === 'Activo' ? 'bg-success' : 'bg-danger'; ?>">
@@ -149,18 +167,16 @@ $departamentos = [
                                 <td><?php echo date('d/m/Y H:i', strtotime($usuario['usuario_modificacion'])); ?></td>
                                 <td>
                                     <button type="button" class="btn btn-light edit-usuario" 
-                                            data-id="<?php echo $usuario['id']; ?>"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editarUsuarioModal"
+                                            data-id="<?php echo htmlspecialchars($usuario['id']); ?>"
+                                            data-usuario="<?php echo htmlspecialchars($usuario['usuario_usuario']); ?>"
                                             data-nombre="<?php echo htmlspecialchars($usuario['usuario_nombre']); ?>"
                                             data-apellido="<?php echo htmlspecialchars($usuario['usuario_apellido']); ?>"
-                                            data-usuario="<?php echo htmlspecialchars($usuario['usuario_usuario']); ?>"
                                             data-departamento="<?php echo htmlspecialchars($usuario['usuario_departamento']); ?>"
-                                            data-rol-id="<?php echo htmlspecialchars($usuario['usuario_rol_id']); ?>"
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#editarUsuarioModal">
-                                        <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M14 6L16.2929 3.70711C16.6834 3.31658 17.3166 3.31658 17.7071 3.70711L20.2929 6.29289C20.6834 6.68342 20.6834 7.31658 20.2929 7.70711L18 10M14 6L4.29289 15.7071C4.10536 15.8946 4 16.149 4 16.4142V19C4 19.5523 4.44772 20 5 20H7.58579C7.851 20 8.10536 19.8946 8.29289 19.7071L18 10M14 6L18 10" 
-                                                  stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                                        </svg>
+                                            data-rol="<?php echo htmlspecialchars($usuario['usuario_rol_id']); ?>"
+                                            data-modulo="<?php echo htmlspecialchars($usuario['usuario_modulo_id'] ?? ''); ?>">
+                                        <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="btn btn-light toggle-status"
                                             data-id="<?php echo $usuario['id']; ?>"
@@ -168,13 +184,9 @@ $departamentos = [
                                             data-bs-toggle="modal"
                                             data-bs-target="#confirmStatusModal">
                                         <?php if ($usuario['estado'] === 'Activo'): ?>
-                                            <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M18 6L6 18M6 6L18 18" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                                            </svg>
+                                            <i class="fas fa-times"></i>
                                         <?php else: ?>
-                                            <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M5 13L9 17L19 7" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                                            </svg>
+                                            <i class="fas fa-check"></i>
                                         <?php endif; ?>
                                     </button>
                                 </td>
@@ -182,33 +194,6 @@ $departamentos = [
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-            </div>
-            
-            <!-- Paginación -->
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <div class="registros-info">
-                        Mostrando <span id="registros-mostrados">0</span> de <span id="registros-totales">0</span> registros
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <nav aria-label="Paginación de usuarios">
-                        <ul class="pagination justify-content-end" id="paginacion">
-                            <!-- Los botones de paginación se generarán dinámicamente -->
-                        </ul>
-                    </nav>
-                </div>
-                <div class="col-md-6 mt-2">
-                    <div class="form-group">
-                        <label for="registros-por-pagina" class="form-label">Registros por página:</label>
-                        <select class="form-select form-select-sm w-auto d-inline-block ms-2" id="registros-por-pagina">
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -259,6 +244,20 @@ $departamentos = [
                                         <option value="<?php echo $departamento; ?>">
                                             <?php echo htmlspecialchars($departamento); ?>
                                         </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="nuevo_modulo_id" class="form-label">Módulo Asignado</label>
+                                <select class="form-select" id="nuevo_modulo_id" name="modulo_id">
+                                    <option value="">Sin módulo asignado</option>
+                                    <?php foreach ($modulos as $modulo): ?>
+                                        <?php if ($modulo['modulo_estado'] === 'Activo'): ?>
+                                            <option value="<?php echo $modulo['id']; ?>">
+                                                <?php echo htmlspecialchars($modulo['modulo_codigo'] . ' - ' . $modulo['modulo_tipo']); ?>
+                                            </option>
+                                        <?php endif; ?>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -330,6 +329,20 @@ $departamentos = [
                                         <option value="<?php echo $departamento; ?>">
                                             <?php echo htmlspecialchars($departamento); ?>
                                         </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editar_modulo_id" class="form-label">Módulo Asignado</label>
+                                <select class="form-select" id="editar_modulo_id" name="modulo_id">
+                                    <option value="">Sin módulo asignado</option>
+                                    <?php foreach ($modulos as $modulo): ?>
+                                        <?php if ($modulo['modulo_estado'] === 'Activo'): ?>
+                                            <option value="<?php echo $modulo['id']; ?>">
+                                                <?php echo htmlspecialchars($modulo['modulo_codigo'] . ' - ' . $modulo['modulo_tipo']); ?>
+                                            </option>
+                                        <?php endif; ?>
                                     <?php endforeach; ?>
                                 </select>
                             </div>

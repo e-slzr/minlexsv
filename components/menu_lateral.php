@@ -95,6 +95,7 @@ $rol = $_SESSION['user']['rol_nombre'] ?? 'Usuario';
         <ul id="subMenuProduccion" class="collapse list-group">
             <a href="../views/po.php"><li><span>PO (Purchase Orders)</span></li></a>
             <a href="../views/ordenes_produccion.php"><li><span>Órdenes de Producción</span></li></a>
+            <a href="../views/programacion_ordenes.php"><li><span>Programación de Órdenes</span></li></a>
             <a href="../views/actualizar_produccion.php"><li><span>Actualizar Producción</span></li></a>
             <a href="../views/registro_produccion.php"><li><span>Registro de Producción</span></li></a>
             <a href="../views/items.php"><li><span>Items</span></li></a>
@@ -164,6 +165,7 @@ $rol = $_SESSION['user']['rol_nombre'] ?? 'Usuario';
             <a href="../views/clientes.php"><li><span>Clientes</span></li></a>
             <a href="../views/usuarios.php"><li><span>Usuarios</span></li></a>
             <a href="../views/roles.php"><li><span>Roles</span></li></a>
+            <a href="../views/modulos.php"><li><span>Módulos</span></li></a>
             <a href="../views/aprobaciones.php"><li><span>Aprobaciones</span></li></a>
             <a href="../views/modificaciones.php"><li><span>Modificaciones</span></li></a>
         </ul>

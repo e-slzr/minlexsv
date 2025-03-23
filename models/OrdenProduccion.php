@@ -281,4 +281,61 @@ class OrdenProduccion {
             return [];
         }
     }
+
+    /**
+     * Obtiene las órdenes de producción pendientes filtradas por PO y proceso
+     * @param array $filters Filtros a aplicar (po, proceso)
+     * @return array Lista de órdenes pendientes
+     */
+    public function getOrdenesPendientes($filters = []) {
+        try {
+            $query = "SELECT op.*, 
+                    u.usuario_nombre, u.usuario_apellido,
+                    pp.pp_nombre as proceso_nombre,
+                    pd.pd_cant_piezas_total as cantidad_total,
+                    pd.pd_pcs_carton, pd.pd_pcs_poly,
+                    COALESCE(SUM(pa.pa_cantidad_completada), 0) as cantidad_completada,
+                    i.item_numero, i.item_nombre, i.item_talla, i.item_descripcion,
+                    po.po_numero,
+                    (SELECT c.color_nombre FROM item_colores ic JOIN colores c ON ic.ic_id_color = c.id WHERE ic.ic_id_item = i.id LIMIT 1) as item_color,
+                    (SELECT d.diseno_nombre FROM item_disenos id JOIN disenos d ON id.id_id_diseno = d.id WHERE id.id_id_item = i.id LIMIT 1) as item_diseno,
+                    (SELECT ub.ubicacion_nombre FROM item_ubicaciones iu JOIN ubicaciones ub ON iu.iu_id_ubicacion = ub.id WHERE iu.iu_id_item = i.id LIMIT 1) as item_ubicacion
+                    FROM " . $this->table_name . " op
+                    LEFT JOIN usuarios u ON op.op_operador_asignado = u.id
+                    LEFT JOIN procesos_produccion pp ON op.op_id_proceso = pp.id
+                    LEFT JOIN po_detalle pd ON op.op_id_pd = pd.id
+                    LEFT JOIN items i ON pd.pd_item = i.id
+                    LEFT JOIN po ON pd.pd_id_po = po.id
+                    LEFT JOIN produccion_avance pa ON pa.pa_id_orden_produccion = op.id
+                    WHERE op.op_estado IN ('Pendiente', 'En proceso')";
+
+            $params = [];
+            
+            // Aplicar filtros
+            if (!empty($filters['po'])) {
+                $query .= " AND pd.pd_id_po = :po_id";
+                $params[':po_id'] = $filters['po'];
+            }
+            
+            if (!empty($filters['proceso'])) {
+                $query .= " AND op.op_id_proceso = :proceso_id";
+                $params[':proceso_id'] = $filters['proceso'];
+            }
+            
+            $query .= " GROUP BY op.id ORDER BY op.id DESC";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            // Bind de parámetros
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en OrdenProduccion::getOrdenesPendientes: " . $e->getMessage());
+            throw new Exception("Error al obtener las órdenes de producción pendientes", 0, $e);
+        }
+    }
 }

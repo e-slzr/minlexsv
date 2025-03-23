@@ -244,5 +244,36 @@ class PoDetalle {
             return false;
         }
     }
+
+    /**
+     * Lee todos los detalles de una PO específica
+     * @param int $poId ID de la PO
+     * @return PDOStatement Resultado de la consulta
+     */
+    public function readByPo($poId) {
+        try {
+            $query = "SELECT pd.*, i.item_numero, i.item_nombre, i.item_descripcion, i.item_talla,
+                    (SELECT c.color_nombre FROM item_colores ic 
+                     JOIN colores c ON ic.ic_id_color = c.id 
+                     WHERE ic.ic_id_item = i.id LIMIT 1) as item_color,
+                    (SELECT d.diseno_nombre FROM item_disenos id 
+                     JOIN disenos d ON id.id_id_diseno = d.id 
+                     WHERE id.id_id_item = i.id LIMIT 1) as item_diseno,
+                    (SELECT ub.ubicacion_nombre FROM item_ubicaciones iu 
+                     JOIN ubicaciones ub ON iu.iu_id_ubicacion = ub.id 
+                     WHERE iu.iu_id_item = i.id LIMIT 1) as item_ubicacion
+                    FROM " . $this->table_name . " pd
+                    LEFT JOIN items i ON pd.pd_item = i.id
+                    WHERE pd.pd_id_po = :po_id";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":po_id", $poId);
+            $stmt->execute();
+            return $stmt;
+        } catch (PDOException $e) {
+            error_log("Error en PoDetalle::readByPo: " . $e->getMessage());
+            throw new Exception("Error al obtener detalles de la PO", 0, $e);
+        }
+    }
 }
 ?>

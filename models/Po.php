@@ -20,7 +20,7 @@ class Po {
     public function __construct($db = null) {
         if ($db === null) {
             $database = new Database();
-            $this->conn = $database->connect();
+            $this->conn = $database->getConnection();
         } else {
             $this->conn = $db;
         }
@@ -28,66 +28,45 @@ class Po {
 
     // Leer todas las POs con información relacionada
     public function read($filtros = []) {
-        $query = "SELECT 
-                    p.*,
-                    c.cliente_empresa,
-                    u.usuario_nombre as usuario_creacion,
-                    COALESCE(
-                        (
-                            SELECT 
-                                ROUND(
-                                    (SUM(COALESCE(op.op_cantidad_completada, 0)) * 100.0) / 
-                                    NULLIF(SUM(COALESCE(op.op_cantidad_asignada, 0)), 0)
-                                )
-                            FROM po_detalle pd
-                            LEFT JOIN ordenes_produccion op ON op.op_id_pd = pd.id
-                            WHERE pd.pd_id_po = p.id
-                        ),
-                        0
-                    ) as progreso
+        $sql = "SELECT p.*, 
+                c.cliente_empresa,
+                CONCAT(u.usuario_nombre, ' ', u.usuario_apellido) as usuario_creacion,
+                COALESCE(
+                    (SELECT ROUND(
+                        (SUM(COALESCE(op.op_cantidad_completada, 0)) / NULLIF(SUM(COALESCE(op.op_cantidad_asignada, 0)), 0)) * 100
+                    ) 
+                    FROM po_detalle pd
+                    LEFT JOIN ordenes_produccion op ON op.op_id_pd = pd.id
+                    WHERE pd.pd_id_po = p.id), 0
+                ) as progreso
                 FROM " . $this->table_name . " p
                 LEFT JOIN clientes c ON p.po_id_cliente = c.id
-                LEFT JOIN usuarios u ON p.po_id_usuario_creacion = u.id
-                WHERE 1=1";
-
-        if (!empty($filtros['po_numero'])) {
-            $query .= " AND p.po_numero LIKE :po_numero";
+                LEFT JOIN usuarios u ON p.po_id_usuario_creacion = u.id";
+        
+        // Agregar cualquier filtro necesario
+        if (!empty($filtros)) {
+            if (isset($filtros['po_numero'])) {
+                $sql .= " WHERE p.po_numero LIKE '%" . $filtros['po_numero'] . "%'";
+            }
+            if (isset($filtros['estado'])) {
+                $sql .= isset($filtros['po_numero']) ? " AND" : " WHERE";
+                $sql .= " p.po_estado = '" . $filtros['estado'] . "'";
+            }
+            if (isset($filtros['cliente'])) {
+                $sql .= (isset($filtros['po_numero']) || isset($filtros['estado'])) ? " AND" : " WHERE";
+                $sql .= " p.po_id_cliente = " . $filtros['cliente'];
+            }
+            if (isset($filtros['fecha_inicio']) && isset($filtros['fecha_fin'])) {
+                $sql .= (isset($filtros['po_numero']) || isset($filtros['estado']) || isset($filtros['cliente'])) ? " AND" : " WHERE";
+                $sql .= " p.po_fecha_creacion BETWEEN '" . $filtros['fecha_inicio'] . "' AND '" . $filtros['fecha_fin'] . "'";
+            }
+            if (isset($filtros['estados']) && is_array($filtros['estados'])) {
+                $sql .= (isset($filtros['po_numero']) || isset($filtros['estado']) || isset($filtros['cliente']) || (isset($filtros['fecha_inicio']) && isset($filtros['fecha_fin']))) ? " AND" : " WHERE";
+                $sql .= " p.po_estado IN ('" . implode("', '", $filtros['estados']) . "')";
+            }
         }
-        if (!empty($filtros['estado'])) {
-            $query .= " AND p.po_estado = :estado";
-        }
-        if (!empty($filtros['cliente'])) {
-            $query .= " AND c.cliente_empresa LIKE :cliente";
-        }
-        if (!empty($filtros['fecha_inicio']) && !empty($filtros['fecha_fin'])) {
-            $query .= " AND p.po_fecha_creacion BETWEEN :fecha_inicio AND :fecha_fin";
-        }
-
-        $query .= " ORDER BY p.id DESC";
-
-        $stmt = $this->conn->prepare($query);
-
-        if (!empty($filtros['po_numero'])) {
-            $stmt->bindValue(':po_numero', '%' . $filtros['po_numero'] . '%');
-        }
-        if (!empty($filtros['estado'])) {
-            $stmt->bindValue(':estado', $filtros['estado']);
-        }
-        if (!empty($filtros['cliente'])) {
-            $stmt->bindValue(':cliente', '%' . $filtros['cliente'] . '%');
-        }
-        if (!empty($filtros['fecha_inicio']) && !empty($filtros['fecha_fin'])) {
-            $stmt->bindValue(':fecha_inicio', $filtros['fecha_inicio']);
-            $stmt->bindValue(':fecha_fin', $filtros['fecha_fin']);
-        }
-
-        try {
-            $stmt->execute();
-            return $stmt;
-        } catch(PDOException $e) {
-            error_log("Error en Po::read(): " . $e->getMessage());
-            throw $e;
-        }
+        
+        return $this->conn->query($sql);
     }
 
     // Obtener una PO específica con todos sus detalles
@@ -110,6 +89,32 @@ class Po {
         } catch(PDOException $e) {
             error_log("Error en Po::readOne(): " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    // Obtener una PO por su ID
+    public function getById($id) {
+        try {
+            $query = "SELECT po.*, 
+                    c.cliente_nombre,
+                    u.usuario_nombre, u.usuario_apellido,
+                    (SELECT COUNT(*) FROM po_detalle pd WHERE pd.pd_id_po = po.id) as total_items,
+                    (SELECT COUNT(*) FROM po_detalle pd 
+                     JOIN ordenes_produccion op ON pd.id = op.op_id_pd 
+                     WHERE pd.pd_id_po = po.id AND op.op_estado = 'Completado') as items_completados
+                    FROM " . $this->table_name . " po
+                    LEFT JOIN clientes c ON po.po_id_cliente = c.id
+                    LEFT JOIN usuarios u ON po.po_id_usuario_creacion = u.id
+                    WHERE po.id = :id";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":id", $id);
+            $stmt->execute();
+
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en Po::getById: " . $e->getMessage());
+            throw new Exception("Error al obtener la PO", 0, $e);
         }
     }
 

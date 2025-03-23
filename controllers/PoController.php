@@ -12,7 +12,7 @@ class PoController {
 
     public function __construct() {
         $this->db = new Database();
-        $conn = $this->db->connect();
+        $conn = $this->db->getConnection();
         $this->po = new Po($conn);
         $this->poDetalle = new PoDetalle($conn);
         $this->cliente = new Cliente($conn);
@@ -29,7 +29,7 @@ class PoController {
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $action = isset($_POST['action']) ? $_POST['action'] : '';
+            $action = $_POST['action'] ?? '';
             
             switch ($action) {
                 case 'create':
@@ -53,28 +53,53 @@ class PoController {
                 case 'deleteDetail':
                     $this->deletePoDetail();
                     break;
+                case 'getPOs':
+                    $pos = $this->getPos();
+                    header('Content-Type: application/json');
+                    echo json_encode($pos);
+                    exit;
+                    break;
                 default:
                     echo json_encode(['success' => false, 'message' => 'Acción no válida']);
                     break;
             }
         } else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            if (isset($_GET['action'])) {
-                switch ($_GET['action']) {
-                    case 'getDetails':
-                        $this->getPoDetails();
-                        break;
+            $action = $_GET['action'] ?? '';
+            
+            switch ($action) {
+                case 'getDetails':
+                    $this->getPoDetails();
+                    break;
 
-                    case 'getPoInfo':
-                        $this->getPoInfo();
-                        break;
-                }
+                case 'getPoInfo':
+                    $this->getPoInfo();
+                    break;
+                    
+                case 'getActivePOs':
+                    $activePOs = $this->getActivePOs();
+                    echo json_encode($activePOs);
+                    break;
+
+                case 'getPOsPorModulo':
+                    $moduloId = $_GET['modulo_id'] ?? null;
+                    if ($moduloId) {
+                        $pos = $this->getPOsPorModulo($moduloId);
+                        echo json_encode($pos);
+                        return;
+                    }
+                    echo json_encode(['error' => 'Módulo no especificado']);
+                    return;
+
+                default:
+                    echo json_encode(['success' => false, 'message' => 'Acción no válida']);
+                    break;
             }
         }
     }
 
     private function createPo() {
         try {
-            $conn = $this->db->connect();
+            $conn = $this->db->getConnection();
             $conn->beginTransaction();
 
             // Validar datos básicos de la PO
@@ -173,7 +198,7 @@ class PoController {
 
             // Validar contraseña
             require_once __DIR__ . '/../models/Usuario.php';
-            $usuario = new Usuario($this->db->connect());
+            $usuario = new Usuario($this->db->getConnection());
             $passwordValid = $usuario->validatePassword(
                 $_SESSION['user']['id'],
                 $_POST['password']
@@ -197,7 +222,7 @@ class PoController {
     private function validatePassword() {
         try {
             require_once __DIR__ . '/../models/Usuario.php';
-            $usuario = new Usuario($this->db->connect());
+            $usuario = new Usuario($this->db->getConnection());
             $result = $usuario->validatePassword(
                 $_SESSION['user']['id'],
                 $_POST['password']
@@ -286,53 +311,22 @@ class PoController {
     }
 
     private function getPoDetails() {
-        try {
-            if (!isset($_GET['po_id'])) {
-                throw new Exception("ID de PO es requerido");
-            }
-
-            $result = $this->poDetalle->readByPo($_GET['po_id']);
-            $detalles = $result->fetchAll(PDO::FETCH_ASSOC);
-
-            echo json_encode(['success' => true, 'data' => $detalles]);
-
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        if (isset($_GET['id'])) {
+            $id = $_GET['id'];
+            $detalles = $this->poDetalle->readByPo($id);
+            echo json_encode($detalles->fetchAll(PDO::FETCH_ASSOC));
+        } else {
+            throw new Exception("ID de PO no especificado");
         }
     }
 
     private function getPoInfo() {
-        try {
-            if (!isset($_GET['id'])) {
-                throw new Exception("ID de PO es requerido");
-            }
-
-            $this->po->id = $_GET['id'];
-            $poInfo = $this->po->readOne();
-            
-            if (!$poInfo) {
-                throw new Exception("PO no encontrada");
-            }
-
-            // Obtener detalles
-            $result = $this->poDetalle->readByPo($_GET['id']);
-            $detalles = $result->fetchAll(PDO::FETCH_ASSOC);
-
-            // Calcular total
-            $total = $this->poDetalle->calculatePoTotal($_GET['id']);
-
-            $response = [
-                'success' => true,
-                'po' => $poInfo,
-                'detalles' => $detalles,
-                'total' => $total,
-                'progreso' => $this->po->getProgress()
-            ];
-
-            echo json_encode($response);
-
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        if (isset($_GET['id'])) {
+            $id = $_GET['id'];
+            $po = $this->po->getById($id);
+            echo json_encode($po);
+        } else {
+            throw new Exception("ID de PO no especificado");
         }
     }
 
@@ -346,7 +340,12 @@ class PoController {
     }
 
     public function getPos($filtros = []) {
-        return $this->po->read($filtros)->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            return $this->po->read($filtros)->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error al obtener POs: " . $e->getMessage());
+            return [];
+        }
     }
 
     public function getPoById($id) {
@@ -355,7 +354,40 @@ class PoController {
     }
 
     public function getPoDetalles($poId) {
+        if (!$poId) {
+            throw new Exception("ID de PO no especificado");
+        }
         return $this->poDetalle->readByPo($poId)->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Obtiene las POs activas (en estado Pendiente o En proceso)
+     * @return array Lista de POs activas
+     */
+    public function getActivePOs() {
+        try {
+            $filtros = [
+                'estados' => ['Pendiente', 'En proceso']
+            ];
+            $result = $this->po->read($filtros);
+            return $result->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error al obtener POs activas: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getPOsPorModulo($moduloId) {
+        $query = "SELECT p.*, 
+                  i.item_descripcion, i.item_talla, i.item_color, i.item_diseno, i.item_ubicacion
+                  FROM po p
+                  INNER JOIN items i ON p.po_item_id = i.id
+                  WHERE p.po_modulo_id = :modulo_id
+                  AND p.po_estado IN ('En Proceso', 'En Espera')
+                  ORDER BY p.po_fecha_envio_programada ASC";
+        
+        $params = [':modulo_id' => $moduloId];
+        return $this->modelo->custom_query($query, $params);
     }
 }
 

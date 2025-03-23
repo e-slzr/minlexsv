@@ -16,7 +16,7 @@ class Cliente {
 
     public function __construct() {
         $database = new Database();
-        $this->conn = $database->connect();
+        $this->conn = $database->getConnection();
     }
 
     public function getAll() {
