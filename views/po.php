@@ -164,9 +164,11 @@ $pos = $poController->getPos($filtros);
                         <td><?php echo htmlspecialchars($po['cliente_empresa']); ?></td>
                         <td><?php echo htmlspecialchars($po['usuario_creacion']); ?></td>
                         <td>
-                            <span class="badge bg-light" style="width: 100px; border: 1px solid #dee2e6; color: #000">
-                                <?php echo $po['progreso']; ?>%
-                            </span>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: <?php echo $po['progreso']; ?>%" aria-valuenow="<?php echo $po['progreso']; ?>" aria-valuemin="0" aria-valuemax="100">
+                                    <?php echo $po['progreso']; ?>%
+                                </div>
+                            </div>
                         </td>
                         <td>
                             <button type="button" class="btn btn-light view-po" 
