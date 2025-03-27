@@ -8,7 +8,7 @@ class ItemController {
 
     public function __construct() {
         $database = new Database();
-        $this->conn = $database->connect();
+        $this->conn = $database->getConnection();
         $this->item = new Item($this->conn);
     }
 
