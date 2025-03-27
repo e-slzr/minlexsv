@@ -331,6 +331,11 @@ $pos = $poController->getPos($filtros);
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="text-end mb-3">
+                        <button type="button" class="btn btn-primary" id="generatePdfBtn">
+                            <i class="fas fa-file-pdf"></i> Generar PDF
+                        </button>
+                    </div>
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Información General</h6>
@@ -342,50 +347,69 @@ $pos = $poController->getPos($filtros);
                                 <tr>
                                     <th>Cliente:</th>
                                     <td id="detailCliente"></td>
-            </tr>
-            <tr>
+                                </tr>
+                                <tr>
                                     <th>Estado:</th>
                                     <td id="detailEstado"></td>
-        </tr>
-        <tr>
+                                </tr>
+                                <tr>
                                     <th>Fecha Creación:</th>
                                     <td id="detailFechaCreacion"></td>
+                                </tr>
+                                <tr>
+                                    <th>Total Items:</th>
+                                    <td id="detailTotalItems"></td>
+                                </tr>
+                                <tr>
+                                    <th>Items Completados:</th>
+                                    <td id="detailItemsCompletados"></td>
+                                </tr>
+                                <tr>
+                                    <th>Valor Total:</th>
+                                    <td id="detailValorTotal"></td>
                                 </tr>
                             </table>
                         </div>
                         <div class="col-md-6">
-                            <h6>Fechas</h6>
+                            <h6>Fechas y Envío</h6>
                             <table class="table table-sm">
                                 <tr>
                                     <th>Inicio Producción:</th>
                                     <td id="detailFechaInicio"></td>
-        </tr>
-        <tr>
+                                </tr>
+                                <tr>
                                     <th>Fin Producción:</th>
                                     <td id="detailFechaFin"></td>
-        </tr>
-        <tr>
+                                </tr>
+                                <tr>
                                     <th>Envío Programado:</th>
                                     <td id="detailFechaEnvio"></td>
-        </tr>
-        <tr>
+                                </tr>
+                                <tr>
                                     <th>Tipo Envío:</th>
                                     <td id="detailTipoEnvio"></td>
-        </tr>
-        </table>
+                                </tr>
+                                <tr>
+                                    <th>Usuario Creación:</th>
+                                    <td id="detailUsuarioCreacion"></td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-12">
                             <h6>Detalles de Items</h6>
-                            <button type="button" class="btn btn-dark btn-sm mb-2" id="addDetailBtn">
-                                Agregar Item
-                            </button>
+                            
                             <div class="table-responsive">
                                 <table class="table table-sm table-bordered" id="detailsTable">
                                     <thead>
                                         <tr>
                                             <th>Item</th>
+                                            <th>Descripción</th>
+                                            <th>Talla</th>
+                                            <th>Color</th>
+                                            <th>Diseño</th>
+                                            <th>Ubicación</th>
                                             <th>Cantidad Total</th>
                                             <th>Pcs/Cartón</th>
                                             <th>Pcs/Poly</th>
@@ -393,13 +417,13 @@ $pos = $poController->getPos($filtros);
                                             <th>Subtotal</th>
                                             <th>Estado</th>
                                             <th>Progreso</th>
-                                            <th>Opciones</th>
+                                            <th>Procesos</th>
                                         </tr>
                                     </thead>
                                     <tbody id="detailsTableBody"></tbody>
                                     <tfoot>
                                         <tr>
-                                            <th colspan="5" class="text-end">Total:</th>
+                                            <th colspan="10" class="text-end">Total:</th>
                                             <th id="detailTotal"></th>
                                             <th colspan="3"></th>
                                         </tr>

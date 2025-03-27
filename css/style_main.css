@@ -151,6 +151,11 @@ main {
 }
 
 /* Modales */
+.modal-dialog {
+    max-width: 90%;
+    margin: 1.75rem auto;
+}
+
 .modal-content {
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);

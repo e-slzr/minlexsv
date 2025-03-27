@@ -252,7 +252,15 @@ class PoController {
             $this->poDetalle->pd_estado = 'Pendiente';
             $this->poDetalle->pd_precio_unitario = $_POST['pd_precio_unitario'];
 
-            $detalleId = $this->poDetalle->create();
+            $detalleId = $this->poDetalle->create([
+                'pd_id_po' => $this->poDetalle->pd_id_po,
+                'pd_item' => $this->poDetalle->pd_item,
+                'pd_cant_piezas_total' => $this->poDetalle->pd_cant_piezas_total,
+                'pd_pcs_carton' => $this->poDetalle->pd_pcs_carton,
+                'pd_pcs_poly' => $this->poDetalle->pd_pcs_poly,
+                'pd_estado' => $this->poDetalle->pd_estado,
+                'pd_precio_unitario' => $this->poDetalle->pd_precio_unitario
+            ]);
             if (!$detalleId) {
                 throw new Exception("Error al agregar el detalle");
             }
@@ -281,7 +289,13 @@ class PoController {
             $this->poDetalle->pd_estado = $_POST['pd_estado'];
             $this->poDetalle->pd_precio_unitario = $_POST['pd_precio_unitario'];
 
-            if ($this->poDetalle->update()) {
+            if ($this->poDetalle->update([
+                'pd_cant_piezas_total' => $this->poDetalle->pd_cant_piezas_total,
+                'pd_pcs_carton' => $this->poDetalle->pd_pcs_carton,
+                'pd_pcs_poly' => $this->poDetalle->pd_pcs_poly,
+                'pd_estado' => $this->poDetalle->pd_estado,
+                'pd_precio_unitario' => $this->poDetalle->pd_precio_unitario
+            ])) {
                 echo json_encode(['success' => true, 'message' => 'Detalle actualizado exitosamente']);
             } else {
                 throw new Exception("Error al actualizar el detalle");
@@ -310,13 +324,34 @@ class PoController {
         }
     }
 
-    private function getPoDetails() {
-        if (isset($_GET['id'])) {
-            $id = $_GET['id'];
-            $detalles = $this->poDetalle->readByPo($id);
-            echo json_encode($detalles->fetchAll(PDO::FETCH_ASSOC));
-        } else {
-            throw new Exception("ID de PO no especificado");
+    public function getPoDetails() {
+        try {
+            if (!isset($_GET['po_id'])) {
+                throw new Exception("ID de PO no especificado");
+            }
+            $id = $_GET['po_id'];
+            $detallesCompletos = $this->po->getDetallesCompletos($id);
+            if (!$detallesCompletos) {
+                throw new Exception("No se encontró la PO especificada");
+            }
+            
+            // Calcular totales y otros datos adicionales
+            $totalPiezas = 0;
+            $totalValor = 0;
+            foreach ($detallesCompletos['detalles'] as $detalle) {
+                $totalPiezas += $detalle['pd_cant_piezas_total'];
+                $totalValor += $detalle['pd_cant_piezas_total'] * $detalle['pd_precio_unitario'];
+            }
+            
+            $detallesCompletos['totales'] = [
+                'piezas' => $totalPiezas,
+                'valor' => $totalValor
+            ];
+            
+            echo json_encode(['success' => true, 'data' => $detallesCompletos]);
+        } catch (Exception $e) {
+            error_log("Error en PoController::getPoDetails: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 
@@ -387,7 +422,7 @@ class PoController {
                   ORDER BY p.po_fecha_envio_programada ASC";
         
         $params = [':modulo_id' => $moduloId];
-        return $this->modelo->custom_query($query, $params);
+        return $this->po->custom_query($query, $params);
     }
 }
 

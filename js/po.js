@@ -84,10 +84,10 @@ $(document).ready(function() {
         const poId = $(this).data('id');
         currentPoId = poId;
         
-        $.get(`../controllers/PoController.php?action=getPoInfo&id=${poId}`, function(response) {
-            if (response.success) {
-                const po = response.po;
-                const detalles = response.detalles;
+        $.get(`../controllers/PoController.php?action=getDetails&id=${poId}`, function(response) {
+            if (response.success && response.data) {
+                const po = response.data;
+                const detalles = response.data.detalles;
                 
                 // Información general
                 $('#detailPoNumero').text(po.po_numero);
@@ -100,50 +100,72 @@ $(document).ready(function() {
                 $('#detailTipoEnvio').text(po.po_tipo_envio);
                 $('#detailComentario').text(po.po_comentario || 'Sin comentarios');
                 $('#detailNotas').text(po.po_notas || 'Sin notas');
+                $('#detailTotalItems').text(po.total_items || '0');
+                $('#detailItemsCompletados').text(po.items_completados || '0');
+                $('#detailValorTotal').text('$' + (po.total_valor || '0.00'));
+                $('#detailUsuarioCreacion').text(po.usuario_nombre + ' ' + po.usuario_apellido);
                 
                 // Detalles de items
                 const tbody = $('#detailsTableBody');
                 tbody.empty();
                 
-                detalles.forEach(detalle => {
-                    const subtotal = (detalle.pd_cant_piezas_total * detalle.pd_precio_unitario).toFixed(2);
-                    tbody.append(`
-                        <tr>
-                            <td>${detalle.item_numero} - ${detalle.item_nombre}</td>
-                            <td>${detalle.pd_cant_piezas_total}</td>
-                            <td>${detalle.pd_pcs_carton || '-'}</td>
-                            <td>${detalle.pd_pcs_poly || '-'}</td>
-                            <td>$${detalle.pd_precio_unitario}</td>
-                            <td>$${subtotal}</td>
-                            <td><span class="badge ${getBadgeClass(detalle.pd_estado)}">${detalle.pd_estado}</span></td>
-                            <td>
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar" 
-                                         style="width: ${detalle.progreso}%"
-                                         aria-valuenow="${detalle.progreso}" 
-                                         aria-valuemin="0" 
-                                         aria-valuemax="100">
-                                        ${detalle.progreso}%
+                if (detalles && detalles.length > 0) {
+                    detalles.forEach(detalle => {
+                        const subtotal = (detalle.pd_cant_piezas_total * detalle.pd_precio_unitario).toFixed(2);
+                        tbody.append(`
+                            <tr>
+                                <td>${detalle.item_numero} - ${detalle.item_nombre}</td>
+                                <td>${detalle.item_descripcion || '-'}</td>
+                                <td>${detalle.item_talla || '-'}</td>
+                                <td>${detalle.item_color || '-'}</td>
+                                <td>${detalle.item_diseno || '-'}</td>
+                                <td>${detalle.item_ubicacion || '-'}</td>
+                                <td>${detalle.pd_cant_piezas_total}</td>
+                                <td>${detalle.pd_pcs_carton || '-'}</td>
+                                <td>${detalle.pd_pcs_poly || '-'}</td>
+                                <td>$${detalle.pd_precio_unitario}</td>
+                                <td>$${subtotal}</td>
+                                <td><span class="badge ${getBadgeClass(detalle.pd_estado)}">${detalle.pd_estado}</span></td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: ${detalle.progreso}%"
+                                             aria-valuenow="${detalle.progreso}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            ${detalle.progreso}%
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-success edit-detail" 
-                                        data-id="${detalle.id}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-danger delete-detail"
-                                        data-id="${detalle.id}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `);
-                });
+                                </td>
+                                <td>${detalle.procesos_asignados || '-'}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-success edit-detail" 
+                                            data-id="${detalle.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger delete-detail"
+                                            data-id="${detalle.id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                    
+                    const totalValor = po.total_valor || 0;
+                    $('#detailTotal').text('$' + totalValor.toFixed(2));
+                }
                 
-                $('#detailTotal').text('$' + response.total.toFixed(2));
+                // Actualizar el botón de generar PDF con el ID de la PO
+                $('#generatePdfBtn').data('id', poId);
             }
         });
+    });
+
+    // Generar PDF
+    $('#generatePdfBtn').on('click', function() {
+        const poId = $(this).data('id');
+        window.open(`../components/generar_pdf_po.php?id=${poId}`, '_blank');
     });
 
     // Evento para agregar detalle
@@ -161,8 +183,9 @@ $(document).ready(function() {
         $('#detailModalLabel').text('Editar Item');
         
         $.get(`../controllers/PoController.php?action=getPoDetails&po_id=${currentPoId}`, function(response) {
-            if (response.success) {
-                const detalle = response.data.find(d => d.id == detalleId);
+            if (response.success && response.data) {
+                const detalles = response.data.detalles;
+                const detalle = detalles.find(d => d.id == detalleId);
                 if (detalle) {
                     $('#detailId').val(detalle.id);
                     $('#detailPoId').val(detalle.pd_id_po);
@@ -172,9 +195,33 @@ $(document).ready(function() {
                     $('#detailPcsPoly').val(detalle.pd_pcs_poly);
                     $('#detailPrecio').val(detalle.pd_precio_unitario);
                     $('#detailEstado').val(detalle.pd_estado);
+                    
+                    // Actualizar información general de la PO
+                    $('#poNumero').text(response.data.po_numero);
+                    $('#poCliente').text(response.data.cliente_nombre);
+                    $('#poEstado').text(response.data.po_estado);
+                    $('#poFechaCreacion').text(response.data.po_fecha_creacion);
+                    $('#poFechaInicio').text(response.data.po_fecha_inicio_produccion || 'No definida');
+                    $('#poFechaFin').text(response.data.po_fecha_fin_produccion || 'No definida');
+                    $('#poFechaEnvio').text(response.data.po_fecha_envio_programada || 'No definida');
+                    $('#poTipoEnvio').text(response.data.po_tipo_envio);
+                    $('#poComentario').text(response.data.po_comentario || 'Sin comentarios');
+                    $('#poNotasInternas').text(response.data.po_notas || 'Sin notas');
+                    
+                    // Actualizar totales
+                    if (response.data.totales) {
+                        $('#poTotalPiezas').text(response.data.totales.piezas);
+                        $('#poTotalValor').text(response.data.totales.valor);
+                    }
+                    
                     $('#detailModal').modal('show');
                 }
+            } else {
+                alert('Error al cargar los detalles de la PO');
             }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error('Error:', errorThrown);
+            alert('Error al cargar los detalles de la PO');
         });
     });
 

@@ -80,20 +80,20 @@ $departamentos = [
                     <?php foreach ($usuarios as $usuario): ?>
                     <tr>
                         <td><?php echo htmlspecialchars($usuario['id']); ?></td>
-                        <td><?php echo htmlspecialchars($usuario['usuario_usuario']); ?></td>
+                        <td><?php echo htmlspecialchars($usuario['usuario_alias']); ?></td>
                         <td><?php echo htmlspecialchars($usuario['usuario_nombre']); ?></td>
                         <td><?php echo htmlspecialchars($usuario['usuario_apellido']); ?></td>
                         <td><?php echo htmlspecialchars($usuario['rol_nombre']); ?></td>
                         <td><?php echo htmlspecialchars($usuario['usuario_departamento']); ?></td>
-                        <td>
-                            <span class="badge <?php echo $usuario['estado'] === 'Activo' ? 'bg-success' : 'bg-danger'; ?>">
+                        <td style="color: black;">
+                            <span class="badge <?php echo $usuario['estado'] === 'Activo' ? 'badge-success' : 'badge-danger'; ?>">
                                 <?php echo htmlspecialchars($usuario['estado']); ?>
                             </span>
                         </td>
                         <td>
                             <button type="button" class="btn btn-success edit-user" 
                                     data-id="<?php echo $usuario['id']; ?>"
-                                    data-alias="<?php echo htmlspecialchars($usuario['usuario_usuario']); ?>"
+                                    data-alias="<?php echo htmlspecialchars($usuario['usuario_alias']); ?>"
                                     data-nombre="<?php echo htmlspecialchars($usuario['usuario_nombre']); ?>"
                                     data-apellido="<?php echo htmlspecialchars($usuario['usuario_apellido']); ?>"
                                     data-rol="<?php echo htmlspecialchars($usuario['usuario_rol_id']); ?>"
