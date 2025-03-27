@@ -76,6 +76,9 @@ $pos = $poController->getPos($filtros);
             <a href="crear_po.php" class="btn btn-dark" style="height: 40px;">
                 Crear nueva PO
             </a>
+            <a href="../components/descargar_excel.php" class="btn btn-success" style="height: 40px;">
+                Descargar Excel
+            </a>
         </div>
         
         <!-- Filtros -->
