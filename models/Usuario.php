@@ -163,7 +163,7 @@ class Usuario {
     public function getAll() {
         $query = "SELECT 
                     u.id,
-                    u.usuario_alias as usuario_usuario,
+                    u.usuario_alias as usuario_alias,
                     u.usuario_nombre,
                     u.usuario_apellido,
                     u.usuario_departamento,

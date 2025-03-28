@@ -1,20 +1,34 @@
 $(document).ready(function() {
     // Variables globales
     let currentItemId = null;
-    let currentSortColumn = '';
-    let currentSortDirection = 'asc';
     let currentPage = 1;
-    let rowsPerPage = 10;
+    let rowsPerPage = parseInt($('#registros-por-pagina').val()) || 10;
     let filteredRows = [];
+    let currentSortColumn = 'numero';
+    let currentSortDirection = 'asc';
+    });
+    
+    // O mejor aún, mover este código dentro del $(document).ready()
+    // y eliminar esta sección duplicada que está fuera
+    $('#itemForm').submit(function(e) {
+        e.preventDefault();
+        
+        // Validar campos requeridos
+        if (!$('#itemNumero').val().trim() || !$('#itemNombre').val().trim()) {
+            alert('Por favor, complete los campos obligatorios (Número y Nombre del Item)');
+            return;
+        }
 
-    // Inicializar paginación
-    initPagination();
-
-    // Evento para crear/editar Item
-    $('#saveItem').click(function() {
-        const formData = new FormData($('#itemForm')[0]);
+        const formData = new FormData(this);
         const action = currentItemId ? 'update' : 'create';
         formData.append('action', action);
+        if (currentItemId) {
+            formData.append('id', currentItemId);
+        }
+
+        // Mostrar indicador de carga
+        const submitButton = $('#saveItem');
+        submitButton.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
 
         $.ajax({
             url: '../controllers/ItemController.php',
@@ -23,15 +37,27 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
-                if (response.success) {
-                    alert(response.message);
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + response.message);
+                try {
+                    if (typeof response === 'string') {
+                        response = JSON.parse(response);
+                    }
+                    if (response.success) {
+                        alert(response.message);
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                        submitButton.prop('disabled', false).html('Guardar');
+                    }
+                } catch (e) {
+                    console.error('Error al procesar la respuesta:', e);
+                    alert('Error al procesar la respuesta del servidor');
+                    submitButton.prop('disabled', false).html('Guardar');
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
                 alert('Error al procesar la solicitud');
+                submitButton.prop('disabled', false).html('Guardar');
             }
         });
     });
@@ -53,7 +79,7 @@ $(document).ready(function() {
                 
                 // Mostrar imagen actual si existe
                 if (item.item_img) {
-                    $('#imagenPreview').html(`<img src="${item.item_img}" alt="Vista previa" style="max-width: 100px; max-height: 100px;">`);
+                    $('#imagenPreview').html(`<img src="..${item.item_img}" alt="Vista previa" style="max-width: 100px; max-height: 100px;">`);
                 } else {
                     $('#imagenPreview').empty();
                 }
@@ -93,14 +119,15 @@ $(document).ready(function() {
                 
                 // Imagen
                 if (item.item_img) {
-                    $('#detailItemImagen').html(`<img src="${item.item_img}" alt="Imagen del item" style="max-width: 100%; max-height: 300px;">`);
+                    $('#detailItemImagen').html(`<img src="..${item.item_img}" alt="Imagen del item" style="max-width: 100%; max-height: 300px;">`);
                 } else {
                     $('#detailItemImagen').html('<p class="text-muted">No hay imagen disponible</p>');
                 }
                 
                 // Especificaciones
                 if (item.item_dir_specs) {
-                    $('#detailItemSpecs').html(`<a href="${item.item_dir_specs}" target="_blank" class="btn btn-sm btn-primary"><i class="fas fa-file-pdf"></i> Ver especificaciones</a>`);
+                    const specsPath = item.item_dir_specs.replace('/uploads/specs/', '');
+                    $('#detailItemSpecs').html(`<a href="specs_viewer.php?dir=${encodeURIComponent(specsPath)}" target="_blank" class="btn btn-sm btn-primary"><i class="fas fa-folder-open"></i> Ver especificaciones</a>`);
                 } else {
                     $('#detailItemSpecs').html('<p class="text-muted">No hay especificaciones disponibles</p>');
                 }
@@ -143,17 +170,169 @@ $(document).ready(function() {
         });
     });
 
+    // Vista previa de archivos de especificaciones
+    $('#itemSpecs').change(function() {
+        const files = this.files;
+        let fileList = '';
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const fileSize = (file.size / 1024).toFixed(2) + ' KB';
+            const fileType = file.name.split('.').pop().toUpperCase();
+            const fileIcon = getFileIcon(fileType);
+            
+            fileList += `
+                <div class="file-preview-item d-flex align-items-center p-2 border-bottom">
+                    <i class="fas ${fileIcon} me-2"></i>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">${file.name}</div>
+                        <small class="text-muted">${fileType} - ${fileSize}</small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-file" data-index="${i}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>`;
+        }
+        
+        // Mostrar la lista de archivos
+        if (fileList) {
+            if (!$('#specsPreview').length) {
+                $('#itemSpecs').after('<div id="specsPreview" class="mt-2 border rounded"></div>');
+            }
+            $('#specsPreview').html(fileList);
+            
+            // Evento para eliminar archivos
+            $('.remove-file').click(function() {
+                const index = $(this).data('index');
+                const dt = new DataTransfer();
+                const input = document.getElementById('itemSpecs');
+                const { files } = input;
+                
+                for (let i = 0; i < files.length; i++) {
+                    if (i !== index) {
+                        dt.items.add(files[i]);
+                    }
+                }
+                
+                input.files = dt.files;
+                $(this).trigger('change');
+            });
+        } else {
+            $('#specsPreview').remove();
+        }
+    });
+    
+    // Función para obtener el ícono según el tipo de archivo
+    function getFileIcon(type) {
+        const icons = {
+            'PDF': 'fa-file-pdf text-danger',
+            'DOC': 'fa-file-word text-primary',
+            'DOCX': 'fa-file-word text-primary',
+            'XLS': 'fa-file-excel text-success',
+            'XLSX': 'fa-file-excel text-success',
+            'JPG': 'fa-file-image text-info',
+            'JPEG': 'fa-file-image text-info',
+            'PNG': 'fa-file-image text-info',
+            'GIF': 'fa-file-image text-info'
+        };
+        
+        return icons[type] || 'fa-file text-secondary';
+    }
+    
     // Vista previa de imagen al seleccionarla
     $('#itemImagen').change(function() {
         const file = this.files[0];
         if (file) {
+            // Validar tipo y tamaño de archivo
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            const maxSize = 2 * 1024 * 1024; // 2MB
+
+            if (!validTypes.includes(file.type)) {
+                alert('Por favor, seleccione un archivo de imagen válido (JPG, PNG o GIF)');
+                this.value = '';
+                $('#imagenPreview').html('<span class="text-muted">Vista previa de la imagen</span>');
+                return;
+            }
+
+            if (file.size > maxSize) {
+                alert('El archivo es demasiado grande. El tamaño máximo permitido es 2MB');
+                this.value = '';
+                $('#imagenPreview').html('<span class="text-muted">Vista previa de la imagen</span>');
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function(e) {
-                $('#imagenPreview').html(`<img src="${e.target.result}" alt="Vista previa" style="max-width: 100px; max-height: 100px;">`);
+                $('#imagenPreview').html(`
+                    <div class="position-relative">
+                        <img src="${e.target.result}" alt="Vista previa" class="img-fluid" style="max-height: 150px;">
+                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" id="removeImage">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `);
+
+                // Evento para remover imagen
+                $('#removeImage').click(function(e) {
+                    e.preventDefault();
+                    $('#itemImagen').val('');
+                    $('#imagenPreview').html('<span class="text-muted">Vista previa de la imagen</span>');
+                });
             }
             reader.readAsDataURL(file);
         } else {
-            $('#imagenPreview').empty();
+            $('#imagenPreview').html('<span class="text-muted">Vista previa de la imagen</span>');
+        }
+    });
+
+    // Manejar archivos de especificaciones
+    $('#itemSpecs').change(function() {
+        const files = this.files;
+        const maxSize = 5 * 1024 * 1024; // 5MB por archivo
+        const validTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'image/jpeg',
+            'image/png'
+        ];
+
+        let fileList = '';
+        let validFiles = true;
+
+        Array.from(files).forEach(file => {
+            if (!validTypes.includes(file.type)) {
+                alert(`El archivo ${file.name} no es de un tipo válido`);
+                validFiles = false;
+                return;
+            }
+
+            if (file.size > maxSize) {
+                alert(`El archivo ${file.name} excede el tamaño máximo permitido de 5MB`);
+                validFiles = false;
+                return;
+            }
+
+            fileList += `
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-truncate" style="max-width: 200px;">${file.name}</span>
+                    <span class="badge bg-primary">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                </div>
+            `;
+        });
+
+        if (!validFiles) {
+            this.value = '';
+            $('#specsList').html('<span class="text-muted">No hay archivos seleccionados</span>');
+            return;
+        }
+
+        if (fileList) {
+            $('#specsList').html(fileList);
+        } else {
+            $('#specsList').html('<span class="text-muted">No hay archivos seleccionados</span>');
         }
     });
 
@@ -309,28 +488,15 @@ $(document).ready(function() {
         // Actualizar contador de registros mostrados
         $('#registros-mostrados').text(totalRows === 0 ? 0 : `${startIndex + 1}-${endIndex}`);
         
-        // Mostrar filas de la página actual
-        for (let i = 0; i < filteredRows.length; i++) {
-            if (i >= startIndex && i < endIndex) {
-                filteredRows[i].show();
-            } else {
-                filteredRows[i].hide();
-            }
-        }
+        // Ocultar todas las filas primero
+        $('#tabla-items tbody tr').hide();
+        
+        // Mostrar solo las filas de la página actual
+        filteredRows.slice(startIndex, endIndex).forEach(row => row.show());
         
         // Generar botones de paginación
-        generatePaginationButtons(totalPages);
-    }
-    
-    // Generar botones de paginación
-    function generatePaginationButtons(totalPages) {
         const $pagination = $('#paginacion');
         $pagination.empty();
-        
-        // Si no hay páginas, no mostrar paginación
-        if (totalPages === 0) {
-            return;
-        }
         
         // Botón anterior
         $pagination.append(`
@@ -383,4 +549,64 @@ $(document).ready(function() {
     
     // Estilos para las columnas ordenables
     $('.sortable').css('cursor', 'pointer');
-});
+
+
+    // Asignar el evento submit del formulario
+    $('#itemForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    // Validar campos requeridos
+    if (!$('#itemNumero').val().trim() || !$('#itemNombre').val().trim()) {
+        alert('Por favor, complete los campos obligatorios (Número y Nombre del Item)');
+        return;
+    }
+
+    const formData = new FormData(this);
+    const action = currentItemId ? 'update' : 'create';
+    formData.append('action', action);
+    if (currentItemId) {
+        formData.append('id', currentItemId);
+    }
+
+    // Mostrar indicador de carga
+    const submitButton = $('#saveItem');
+    submitButton.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
+
+    $.ajax({
+        url: '../controllers/ItemController.php',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            try {
+                if (typeof response === 'string') {
+                    response = JSON.parse(response);
+                }
+                if (response.success) {
+                    alert(response.message);
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (response.message || 'Error desconocido'));
+                    submitButton.prop('disabled', false).html('Guardar');
+                }
+            } catch (e) {
+                console.error('Error al procesar la respuesta:', e);
+                alert('Error al procesar la respuesta del servidor');
+                submitButton.prop('disabled', false).html('Guardar');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            alert('Error al procesar la solicitud: ' + error);
+            submitButton.prop('disabled', false).html('Guardar');
+        }
+    });
+    });
+
+    // Asignar el evento click al botón guardar
+    $('#saveItem').click(function(e) {
+        e.preventDefault();
+        $('#itemForm').submit();
+    });
+

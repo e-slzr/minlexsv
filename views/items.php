@@ -41,18 +41,16 @@ $pageTitle = "Gestión de Items";
                     <i class="fas fa-filter"></i> Filtros
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-2">
+                    <div class="row align-items-end">
+                        <div class="col-md-4">
                             <label for="item_numero" class="form-label">Número de Item</label>
                             <input type="text" class="form-control filtro" id="item_numero" name="item_numero" value="<?php echo htmlspecialchars($itemNumero); ?>" placeholder="Buscar por número...">
                         </div>
-                        <div class="col-md-4 mb-2">
+                        <div class="col-md-4">
                             <label for="item_nombre" class="form-label">Nombre de Item</label>
                             <input type="text" class="form-control filtro" id="item_nombre" name="item_nombre" value="<?php echo htmlspecialchars($itemNombre); ?>" placeholder="Buscar por nombre...">
                         </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-12">
+                        <div class="col-md-4">
                             <button class="btn btn-secondary" id="limpiar-filtros">
                                 <i class="fas fa-eraser"></i> Limpiar filtros
                             </button>
@@ -96,8 +94,8 @@ $pageTitle = "Gestión de Items";
                                 echo '<td>' . htmlspecialchars($item['item_nombre']) . '</td>';
                                 echo '<td>' . htmlspecialchars($item['item_talla'] ?? 'N/A') . '</td>';
                                 echo '<td>' . htmlspecialchars(substr($item['item_descripcion'] ?? 'Sin descripción', 0, 50)) . (strlen($item['item_descripcion'] ?? '') > 50 ? '...' : '') . '</td>';
-                                echo '<td>' . (empty($item['item_img']) ? 'No disponible' : '<a href="' . htmlspecialchars($item['item_img']) . '" target="_blank"><i class="fas fa-image"></i> Ver</a>') . '</td>';
-                                echo '<td>' . (empty($item['item_dir_specs']) ? 'No disponible' : '<a href="' . htmlspecialchars($item['item_dir_specs']) . '" target="_blank"><i class="fas fa-file-pdf"></i> Ver</a>') . '</td>';
+                                echo '<td>' . (empty($item['item_img']) ? 'No disponible' : '<a href="..' . htmlspecialchars($item['item_img']) . '" target="_blank"><i class="fas fa-image"></i> Ver</a>') . '</td>';
+                                echo '<td>' . (empty($item['item_dir_specs']) ? 'No disponible' : '<a href="specs_viewer.php?dir=' . urlencode(str_replace('/uploads/specs/', '', $item['item_dir_specs'])) . '" target="_blank"><i class="fas fa-folder-open"></i> Ver</a>') . '</td>';
                                 echo '<td>';
                                 echo '<button type="button" class="btn btn-light view-item me-1" data-id="' . $item['id'] . '" data-bs-toggle="modal" data-bs-target="#itemDetailModal">';
                                 echo '<svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">';
@@ -190,14 +188,20 @@ $pageTitle = "Gestión de Items";
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="itemImagen" class="form-label">Imagen</label>
+                                <label for="itemImagen" class="form-label">Imagen del Item</label>
                                 <input type="file" class="form-control" id="itemImagen" name="item_img" accept="image/*">
-                                <div id="imagenPreview" class="mt-2"></div>
+                                <small class="form-text text-muted">Formatos aceptados: JPG, PNG, GIF. Tamaño máximo: 2MB</small>
+                                <div id="imagenPreview" class="mt-2 border rounded p-2 text-center" style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                                    <span class="text-muted">Vista previa de la imagen</span>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <label for="itemSpecs" class="form-label">Especificaciones (PDF)</label>
-                                <input type="file" class="form-control" id="itemSpecs" name="item_specs" accept=".pdf">
-                                <div id="specsInfo" class="mt-2"></div>
+                                <label for="itemSpecs" class="form-label">Archivos de Especificaciones</label>
+                                <input type="file" class="form-control" id="itemSpecs" name="item_specs[]" multiple>
+                                <small class="form-text text-muted">Formatos aceptados: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG. Tamaño máximo por archivo: 5MB</small>
+                                <div id="specsInfo" class="mt-2 border rounded p-2">
+                                    <div id="specsList"></div>
+                                </div>
                             </div>
                         </div>
                     </form>
