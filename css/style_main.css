@@ -11,6 +11,17 @@
     --dark-color: #212529;
 }
 
+/* Estilos específicos de usuarios.php */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 150vw !important;
+    height: 150vh !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    z-index: 1040;
+}
+
 /* Layout principal */
 body {
     min-height: 100vh;

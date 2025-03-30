@@ -198,6 +198,19 @@ class Usuario {
         return $stmt->execute();
     }
 
+    public function updatePassword() {
+        $query = "UPDATE " . $this->table_name . "
+                SET usuario_password = :usuario_password
+                WHERE id = :id";
+
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bindParam(":usuario_password", $this->usuario_password);
+        $stmt->bindParam(":id", $this->id);
+
+        return $stmt->execute();
+    }
+
     public function authenticate($username, $password) {
         $query = "SELECT u.*, r.rol_nombre 
                 FROM " . $this->table_name . " u 

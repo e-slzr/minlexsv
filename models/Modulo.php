@@ -43,22 +43,25 @@ class Modulo {
     }
 
     public function update($data) {
-        $query = "UPDATE {$this->table} 
-                 SET modulo_codigo = :codigo,
-                     modulo_nombre = :nombre,
-                     modulo_tipo = :tipo,
-                     modulo_descripcion = :descripcion
-                 WHERE id = :id";
-        
-        $stmt = $this->conn->prepare($query);
-        
-        return $stmt->execute([
-            ':id' => $data['id'],
-            ':codigo' => $data['modulo_codigo'],
-            ':nombre' => $data['modulo_nombre'],
-            ':tipo' => $data['modulo_tipo'],
-            ':descripcion' => $data['modulo_descripcion']
-        ]);
+        try {
+            $query = "UPDATE {$this->table} 
+                     SET modulo_codigo = :codigo,
+                         modulo_tipo = :tipo,
+                         modulo_descripcion = :descripcion
+                     WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            $stmt->bindParam(':id', $data['id']);
+            $stmt->bindParam(':codigo', $data['modulo_codigo']);
+            $stmt->bindParam(':tipo', $data['modulo_tipo']);
+            $stmt->bindParam(':descripcion', $data['modulo_descripcion']);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error en update: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function toggleStatus($id) {

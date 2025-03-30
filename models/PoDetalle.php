@@ -17,7 +17,7 @@ class PoDetalle {
         if ($db === null) {
             require_once __DIR__ . '/../config/Database.php';
             $database = new Database();
-            $this->conn = $database->connect();
+            $this->conn = $database->getConnection();
         } else {
             $this->conn = $db;
         }
