@@ -58,17 +58,44 @@ class Cliente {
                             cliente_telefono,
                             cliente_correo
                         FROM " . $this->table_name;
-                
                 $stmt = $this->conn->prepare($query);
                 $stmt->execute();
                 $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
-                // Agregamos manualmente el estado
+                // Agregar estado manualmente
                 foreach ($result as &$row) {
-                    $row['estado'] = 'Activo'; // Por defecto todos los clientes están activos
+                    $row['estado'] = 'Activo';
                 }
                 
                 return $result;
+            }
+            throw $e;
+        }
+    }
+    
+    public function getAllActive() {
+        $query = "SELECT 
+                    id,
+                    cliente_empresa,
+                    cliente_nombre,
+                    cliente_apellido,
+                    cliente_direccion,
+                    cliente_telefono,
+                    cliente_correo,
+                    estado
+                FROM " . $this->table_name . "
+                WHERE estado = 'Activo'";
+        
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en getAllActive: " . $e->getMessage());
+            // Si hay un error con la columna estado, intentamos una consulta alternativa
+            if (strpos($e->getMessage(), "Unknown column 'estado'") !== false) {
+                // Si la columna estado no existe, asumimos que todos están activos
+                return $this->getAll();
             }
             throw $e;
         }

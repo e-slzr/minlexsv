@@ -99,7 +99,20 @@ $(document).ready(function() {
                 $('#detailFechaEnvio').text(po.po_fecha_envio_programada || 'No definida');
                 $('#detailTipoEnvio').text(po.po_tipo_envio);
                 $('#detailComentario').text(po.po_comentario || 'Sin comentarios');
-                $('#detailNotas').text(po.po_notas || 'Sin notas');
+                
+                // Manejo de notas detalladas con vista previa y expansión
+                const notas = po.po_notas || 'Sin notas';
+                $('#notasCompletas').text(notas);
+                
+                if (notas && notas !== 'Sin notas' && notas.length > 100) {
+                    const notasPreview = notas.substring(0, 100) + '...';
+                    $('#notasPreview').text(notasPreview);
+                    $('#expandNotasBtn').show();
+                } else {
+                    $('#notasPreview').text(notas);
+                    $('#expandNotasBtn').hide();
+                }
+                
                 $('#detailTotalItems').text(po.total_items || '0');
                 $('#detailItemsCompletados').text(po.items_completados || '0');
                 $('#detailValorTotal').text('$' + (po.total_valor || '0.00'));
@@ -318,6 +331,18 @@ $(document).ready(function() {
         });
     });
 
+    // Evento para expandir notas detalladas
+    $(document).on('click', '#expandNotasBtn', function() {
+        const notasCompletas = $('#notasCompletas').text();
+        
+        Swal.fire({
+            title: 'Notas Detalladas',
+            html: `<div style="text-align: left; white-space: pre-wrap;">${notasCompletas}</div>`,
+            width: '600px',
+            confirmButtonText: 'Cerrar'
+        });
+    });
+    
     // Función auxiliar para obtener la clase de badge según el estado
     function getBadgeClass(estado) {
         switch(estado) {
@@ -328,7 +353,7 @@ $(document).ready(function() {
             default: return 'bg-secondary';
         }
     }
-    
+
     // Ordenamiento de columnas
     $('.sortable').click(function() {
         const column = $(this).data('column');

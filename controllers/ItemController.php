@@ -27,6 +27,9 @@ class ItemController {
                 case 'getItemInfo':
                     $this->getItemInfo();
                     break;
+                case 'search':
+                    $this->buscarItems();
+                    break;
                 default:
                     echo json_encode(['success' => false, 'message' => 'Acción GET no válida']);
                     break;
@@ -35,30 +38,35 @@ class ItemController {
         }
 
         // Manejar solicitudes POST
-        if (!isset($_POST['action'])) {
-            echo json_encode(['success' => false, 'message' => 'Acción no especificada']);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!isset($_POST['action'])) {
+                echo json_encode(['success' => false, 'message' => 'Acción no especificada']);
+                return;
+            }
+
+            $action = $_POST['action'];
+
+            switch ($action) {
+                case 'search':
+                    $this->buscarItems();
+                    break;
+                case 'create':
+                    $this->createItem();
+                    break;
+                case 'update':
+                    $this->updateItem();
+                    break;
+                case 'delete':
+                    $this->deleteItem();
+                    break;
+                default:
+                    echo json_encode(['success' => false, 'message' => 'Acción POST no válida']);
+                    break;
+            }
             return;
         }
 
-        $action = $_POST['action'];
-
-        switch ($action) {
-            case 'search':
-                $this->buscarItems();
-                break;
-            case 'create':
-                $this->createItem();
-                break;
-            case 'update':
-                $this->updateItem();
-                break;
-            case 'delete':
-                $this->deleteItem();
-                break;
-            default:
-                echo json_encode(['success' => false, 'message' => 'Acción no válida']);
-                break;
-        }
+        echo json_encode(['success' => false, 'message' => 'Método de solicitud no soportado']);
     }
 
     public function handleRequest() {
@@ -69,6 +77,18 @@ class ItemController {
             // Establecer encabezados para JSON
             header('Content-Type: application/json; charset=utf-8');
             header('Cache-Control: no-cache, must-revalidate');
+            
+            // Verificar si es una solicitud de búsqueda
+            if (isset($_POST['action']) && $_POST['action'] === 'search') {
+                $this->buscarItems();
+                return;
+            }
+            
+            // Verificar si es una solicitud GET de búsqueda
+            if (isset($_GET['action']) && $_GET['action'] === 'search') {
+                $this->buscarItems();
+                return;
+            }
             
             // Procesar la solicitud
             $this->processRequest();
@@ -91,8 +111,20 @@ class ItemController {
 
     private function buscarItems() {
         try {
-            $itemNumero = isset($_POST['item_numero']) ? trim($_POST['item_numero']) : '';
-            $itemNombre = isset($_POST['item_nombre']) ? trim($_POST['item_nombre']) : '';
+            // Obtener parámetros de búsqueda (soporta tanto GET como POST)
+            $itemNumero = '';
+            $itemNombre = '';
+            
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $itemNumero = isset($_POST['item_numero']) ? trim($_POST['item_numero']) : '';
+                $itemNombre = isset($_POST['item_nombre']) ? trim($_POST['item_nombre']) : '';
+            } else {
+                $itemNumero = isset($_GET['item_numero']) ? trim($_GET['item_numero']) : '';
+                $itemNombre = isset($_GET['item_nombre']) ? trim($_GET['item_nombre']) : '';
+            }
+
+            // Log para depuración
+            error_log("Búsqueda de items - Número: '$itemNumero', Nombre: '$itemNombre'");
 
             if (empty($itemNumero) && empty($itemNombre)) {
                 echo json_encode(['success' => false, 'message' => 'Ingrese al menos un criterio de búsqueda']);
@@ -100,6 +132,7 @@ class ItemController {
             }
 
             $items = $this->item->search($itemNumero, $itemNombre);
+            error_log("Items encontrados: " . count($items));
 
             echo json_encode([
                 'success' => true,

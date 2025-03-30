@@ -29,54 +29,18 @@ $pos = $poController->getPos($filtros);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MINLEX | Purchase Orders</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/style_main.css">
-    <style>
-        .progress {
-            height: 30px;
-        }
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 150vw !important;
-            height: 150vh !important;
-            background-color: rgba(0, 0, 0, 0.5) !important;
-            z-index: 1040;
-        }
-        .modal {
-            z-index: 1050;
-        }
-        /* Estilos para la tabla y paginación */
-        .sortable {
-            cursor: pointer;
-        }
-        .page-item.active .page-link {
-            background-color: #212529;
-            border-color: #212529;
-        }
-        .page-link {
-            color: #212529;
-        }
-        .page-link:hover {
-            color: #000;
-        }
-        .filtered-row {
-            display: table-row;
-        }
-    </style>
+    <?php include '../components/meta.php'; ?>
 </head>
 <body>
     <?php include '../components/menu_lateral.php'; ?>
     
     <main>
-        <div style="width: 100%;" class="border-bottom border-secondary titulo-vista">
+        <div class="border-bottom border-secondary titulo-vista">
             <h1><strong>PO (Purchase Orders)</strong></h1><br>
-            <a href="crear_po.php" class="btn btn-dark" style="height: 40px;">
+            <a href="crear_po.php" class="btn btn-dark">
                 Crear nueva PO
             </a>
-            <a href="../components/descargar_excel.php" class="btn btn-success" style="height: 40px;">
+            <a href="../components/descargar_excel.php" class="btn btn-success" style="margin-left: 10px;">
                 Descargar Excel
             </a>
         </div>
@@ -126,8 +90,8 @@ $pos = $poController->getPos($filtros);
         </div>
 
         <!-- Tabla de POs -->
-        <div class="table-responsive" style="width: 100%;">
-            <table class="table table-striped table-hover" id="tabla-pos" style="width: 100%;">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="tabla-pos">
                 <thead>
                     <tr>
                         <th class="sortable" data-column="id">ID <i class="fas fa-sort"></i></th>
@@ -137,9 +101,10 @@ $pos = $poController->getPos($filtros);
                         <th class="sortable" data-column="estado">Estado <i class="fas fa-sort"></i></th>
                         <th class="sortable" data-column="cliente">Cliente <i class="fas fa-sort"></i></th>
                         <th class="sortable" data-column="usuario">Usuario de ingreso <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-column="total_piezas">Total Piezas <i class="fas fa-sort"></i></th>
                         <th class="sortable" data-column="progreso">Progreso <i class="fas fa-sort"></i></th>
-                <th>Opciones</th>
-            </tr>
+                        <th>Opciones</th>
+                    </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($pos as $po): ?>
@@ -163,6 +128,7 @@ $pos = $poController->getPos($filtros);
                         </td>
                         <td><?php echo htmlspecialchars($po['cliente_empresa']); ?></td>
                         <td><?php echo htmlspecialchars($po['usuario_creacion']); ?></td>
+                        <td><?php echo htmlspecialchars($po['total_piezas']); ?></td>
                         <td>
                             <div class="progress">
                                 <div class="progress-bar" role="progressbar" style="width: <?php echo $po['progreso']; ?>%" aria-valuenow="<?php echo $po['progreso']; ?>" aria-valuemin="0" aria-valuemax="100">
@@ -180,15 +146,12 @@ $pos = $poController->getPos($filtros);
                                           stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
                                 </svg>
                             </button>
-                            <button type="button" class="btn btn-success edit-po"
-                                    data-id="<?php echo $po['id']; ?>"
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#poModal">
+                            <a href="editar_po.php?id=<?php echo $po['id']; ?>" class="btn btn-warning">
                                 <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M14 6L16.2929 3.70711C16.6834 3.31658 17.3166 3.31658 17.7071 3.70711L20.2929 6.29289C20.6834 6.68342 20.6834 7.31658 20.2929 7.70711L18 10M14 6L4.29289 15.7071C4.10536 15.8946 4 16.149 4 16.4142V19C4 19.5523 4.44772 20 5 20H7.58579C7.851 20 8.10536 19.8946 8.29289 19.7071L18 10M14 6L18 10" 
                                           stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
                                 </svg>
-                            </button>
+                            </a>
                             <button type="button" class="btn btn-danger delete-po"
                                     data-id="<?php echo $po['id']; ?>"
                                     data-po-numero="<?php echo htmlspecialchars($po['po_numero']); ?>"
@@ -199,7 +162,7 @@ $pos = $poController->getPos($filtros);
                                           stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
                                 </svg>
                             </button>
-                </td>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -235,92 +198,6 @@ $pos = $poController->getPos($filtros);
     </main>
 
     <?php include '../components/footer.php'; ?>
-
-    <!-- Modal para Crear/Editar PO -->
-    <div class="modal fade" id="poModal" tabindex="-1" role="dialog" aria-labelledby="poModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="poModalLabel">Nueva PO</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="poForm">
-                        <input type="hidden" id="poId" name="id">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="poNumero">Número de PO*</label>
-                                <input type="text" class="form-control" id="poNumero" name="po_numero" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="poCliente">Cliente*</label>
-                                <select class="form-control" id="poCliente" name="po_id_cliente" required>
-                                    <option value="">Seleccione un cliente...</option>
-                                    <?php
-                                    $clientes = $clienteController->getClientes();
-                                    foreach ($clientes as $cliente) {
-                                        echo "<option value='" . $cliente['id'] . "'>" . htmlspecialchars($cliente['cliente_empresa']) . "</option>";
-                                    }
-                                    ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label for="poFechaInicio">Fecha Inicio Producción</label>
-                                <input type="date" class="form-control" id="poFechaInicio" name="po_fecha_inicio_produccion">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="poFechaFin">Fecha Fin Producción</label>
-                                <input type="date" class="form-control" id="poFechaFin" name="po_fecha_fin_produccion">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="poFechaEnvio">Fecha Envío Programada</label>
-                                <input type="date" class="form-control" id="poFechaEnvio" name="po_fecha_envio_programada">
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="poEstado">Estado</label>
-                                <select class="form-control" id="poEstado" name="po_estado">
-                                    <option value="Pendiente">Pendiente</option>
-                                    <option value="En proceso">En proceso</option>
-                                    <option value="Completada">Completada</option>
-                                    <option value="Cancelada">Cancelada</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="poTipoEnvio">Tipo de Envío</label>
-                                <select class="form-control" id="poTipoEnvio" name="po_tipo_envio">
-                                    <option value="Tipo 1">Tipo 1</option>
-                                    <option value="Tipo 2">Tipo 2</option>
-                                    <option value="Tipo 3">Tipo 3</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label for="poComentario">Comentario</label>
-                                <textarea class="form-control" id="poComentario" name="po_comentario" rows="2"></textarea>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label for="poNotas">Notas Internas</label>
-                                <textarea class="form-control" id="poNotas" name="po_notas" rows="2"></textarea>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary" id="savePo">Guardar</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal para Ver Detalles de PO -->
     <div class="modal fade" id="poDetailModal" tabindex="-1" aria-labelledby="poDetailModalLabel" aria-hidden="true">
@@ -397,6 +274,24 @@ $pos = $poController->getPos($filtros);
                         </div>
                     </div>
                     <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6>Comentario</h6>
+                            <p id="detailComentario"></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Notas Internas</h6>
+                            <div class="card">
+                                <div class="card-body p-2">
+                                    <div id="notasPreview" class="mb-2"></div>
+                                    <button type="button" class="btn btn-sm btn-link" id="expandNotasBtn" style="display:none;">
+                                        <i class="fas fa-expand-alt"></i> Ver completo
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="notasCompletas" style="display:none;"></div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
                         <div class="col-md-12">
                             <h6>Detalles de Items</h6>
                             
@@ -432,71 +327,9 @@ $pos = $poController->getPos($filtros);
                             </div>
                         </div>
                     </div>
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <h6>Comentario</h6>
-                            <p id="detailComentario"></p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Notas Internas</h6>
-                            <p id="detailNotas"></p>
-                        </div>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para Agregar/Editar Detalle -->
-    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="detailModalLabel">Agregar Item</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="detailForm">
-                        <input type="hidden" id="detailId" name="id">
-                        <input type="hidden" id="detailPoId" name="pd_id_po">
-                        <div class="form-group">
-                            <label for="detailItem">Item*</label>
-                            <select class="form-control" id="detailItem" name="pd_item" required>
-                                <option value="">Seleccione un item...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="detailCantidad">Cantidad Total*</label>
-                            <input type="number" class="form-control" id="detailCantidad" name="pd_cant_piezas_total" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="detailPcsCarton">Piezas por Cartón</label>
-                            <input type="number" class="form-control" id="detailPcsCarton" name="pd_pcs_carton">
-                        </div>
-                        <div class="form-group">
-                            <label for="detailPcsPoly">Piezas por Poly</label>
-                            <input type="number" class="form-control" id="detailPcsPoly" name="pd_pcs_poly">
-                        </div>
-                        <div class="form-group">
-                            <label for="detailPrecio">Precio Unitario*</label>
-                            <input type="number" step="0.01" class="form-control" id="detailPrecio" name="pd_precio_unitario" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="detailEstado">Estado</label>
-                            <select class="form-control" id="detailEstado" name="pd_estado">
-                                <option value="Pendiente">Pendiente</option>
-                                <option value="En proceso">En proceso</option>
-                                <option value="Completado">Completado</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-dark" id="saveDetail">Guardar</button>
                 </div>
             </div>
         </div>
@@ -529,31 +362,78 @@ $pos = $poController->getPos($filtros);
         </div>
     </div>
 
-    <!-- Modal para Eliminar Detalle -->
-    <div class="modal fade" id="deleteDetailModal" tabindex="-1" aria-labelledby="deleteDetailModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteDetailModalLabel">Eliminar Item</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>¿Está seguro que desea eliminar este item de la PO?</p>
-                    <p class="text-danger">Esta acción no se puede deshacer.</p>
-                    <form id="deleteDetailForm">
-                        <input type="hidden" id="deleteDetailId" name="id">
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteDetail">Eliminar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/po.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Inicializar Select2 para todos los selectores
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: $('#poModal')
+            });
+            
+            // Variables globales
+            let itemsArray = [];
+            let totalGeneral = 0;
+            
+            // Configurar modal para eliminar PO
+            $('.delete-po').on('click', function() {
+                const poId = $(this).data('id');
+                const poNumero = $(this).data('po-numero');
+                $('#deletePoId').val(poId);
+                $('#deletePoNumero').text(poNumero);
+            });
+            
+            // Eliminar PO
+            $('#confirmDelete').on('click', function() {
+                if (!$('#deletePassword').val()) {
+                    alert('Debe ingresar su contraseña para confirmar');
+                    return;
+                }
+                
+                const formData = new FormData(document.getElementById('deletePoForm'));
+                formData.append('action', 'delete');
+                
+                const $btn = $(this);
+                const originalText = $btn.html();
+                $btn.html('<i class="fas fa-spinner fa-spin"></i> Eliminando...').prop('disabled', true);
+                
+                $.ajax({
+                    url: '../controllers/PoController.php',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            window.location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                            $btn.html(originalText).prop('disabled', false);
+                        }
+                    },
+                    error: function() {
+                        alert('Error al eliminar la PO');
+                        $btn.html(originalText).prop('disabled', false);
+                    }
+                });
+            });
+            
+            // Limpiar filtros
+            $('#limpiar-filtros').on('click', function() {
+                $('.filtro').val('');
+                $('#filtroForm').submit();
+            });
+            
+            // Ordenar tabla
+            $('.sortable').on('click', function() {
+                const column = $(this).data('column');
+                // Implementar lógica de ordenamiento aquí
+            });
+        });
+    </script>
 </body>
 </html>

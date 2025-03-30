@@ -1,4 +1,65 @@
 $(document).ready(function() {
+    // Inicializar Select2 con búsqueda habilitada
+    $('.select2').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "No se encontraron resultados";
+            },
+            searching: function() {
+                return "Buscando...";
+            },
+            inputTooShort: function() {
+                return "Ingrese al menos un carácter para buscar";
+            }
+        },
+        placeholder: "Seleccione una opción",
+        allowClear: true,
+        minimumInputLength: 0,
+        minimumResultsForSearch: 5 // Mostrar búsqueda solo si hay más de 5 opciones
+    });
+    
+    // Variable para almacenar las notas
+    let poNotas = '';
+    
+    // Evento para expandir notas detalladas
+    $('#expandNotasBtn').on('click', function() {
+        const notasCompletas = $('#poNotas').val();
+        
+        Swal.fire({
+            title: 'Notas Detalladas',
+            html: `<div style="text-align: left; white-space: pre-wrap;">${notasCompletas}</div>`,
+            width: '600px',
+            confirmButtonText: 'Cerrar'
+        });
+    });
+    
+    // Guardar notas cuando se haga clic en el botón
+    $('#saveNotas').on('click', function() {
+        poNotas = $('#notasDetalladas').val();
+        $('#poNotas').val(poNotas);
+        
+        // Actualizar la vista previa de las notas
+        if (poNotas.trim() !== '') {
+            // Mostrar vista previa con texto truncado si es necesario
+            if (poNotas.length > 100) {
+                const notasPreview = poNotas.substring(0, 100) + '...';
+                $('#notasPreview').text(notasPreview);
+                $('#expandNotasBtn').show();
+            } else {
+                $('#notasPreview').text(poNotas);
+                $('#expandNotasBtn').hide();
+            }
+        } else {
+            $('#notasPreview').html('<em class="text-muted">No hay notas detalladas</em>');
+            $('#expandNotasBtn').hide();
+        }
+        
+        // Cerrar el modal
+        $('#notasModal').modal('hide');
+    });
+    
     // Función para realizar la búsqueda
     function searchItems() {
         const itemNumero = $('#searchItemNumero').val().trim();
@@ -102,10 +163,15 @@ $(document).ready(function() {
 
     // Manejar clic en el botón de agregar item
     $(document).on('click', '.add-item-btn', function() {
-        const $row = $(this).closest('tr');
         const itemId = $(this).data('id');
         const itemNumero = $(this).data('numero');
         const itemNombre = $(this).data('nombre');
+
+        // Verificar si el item ya está en la tabla
+        if ($(`#itemsTableBody tr[data-item-id="${itemId}"]`).length > 0) {
+            alert('Este item ya ha sido agregado a la PO');
+            return;
+        }
 
         // Agregar nueva fila a la tabla de items
         const newRow = `
@@ -114,15 +180,15 @@ $(document).ready(function() {
                 <td>${itemNombre}</td>
                 <td>
                     <input type="number" class="form-control form-control-sm cant-total" 
-                           min="1" step="1" value="0" required>
+                           min="1" step="1" value="1" required>
                 </td>
                 <td>
                     <input type="number" class="form-control form-control-sm pcs-carton" 
-                           min="1" step="1" value="0" required>
+                           min="0" step="1" value="0">
                 </td>
                 <td>
                     <input type="number" class="form-control form-control-sm pcs-poly" 
-                           min="1" step="1" value="0" required>
+                           min="0" step="1" value="0">
                 </td>
                 <td>
                     <input type="number" class="form-control form-control-sm precio-unitario" 
@@ -137,6 +203,12 @@ $(document).ready(function() {
             </tr>
         `;
         $('#itemsTableBody').append(newRow);
+        
+        // Trigger input event para calcular el subtotal
+        $(`#itemsTableBody tr[data-item-id="${itemId}"] .cant-total`).trigger('input');
+        
+        // Mostrar mensaje de éxito
+        // alert('Item agregado correctamente. Puede seguir agregando más items o cerrar el modal cuando termine.');
     });
 
     // Calcular subtotal cuando cambie la cantidad o precio
@@ -175,17 +247,16 @@ $(document).ready(function() {
         }
 
         // Crear objeto con los datos del formulario
-        const formData = {
-            action: 'create',
-            proveedor_id: $('#proveedorId').val(),
-            fecha_entrega: $('#fechaEntrega').val(),
-            items: []
-        };
-
+        const formData = new FormData(this);
+        
+        // Agregar las notas al formulario
+        formData.append('po_notas', poNotas);
+        
         // Agregar los items de la tabla
+        const items = [];
         $('#itemsTableBody tr').each(function() {
             const $row = $(this);
-            formData.items.push({
+            items.push({
                 id: $row.data('item-id'),
                 cant_piezas_total: $row.find('.cant-total').val(),
                 pcs_carton: $row.find('.pcs-carton').val(),
@@ -193,30 +264,53 @@ $(document).ready(function() {
                 precio_unitario: $row.find('.precio-unitario').val()
             });
         });
+        
+        formData.append('items', JSON.stringify(items));
+
+        // Mostrar indicador de carga
+        const $submitBtn = $(this).find('button[type="submit"]');
+        const originalBtnText = $submitBtn.html();
+        $submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...').prop('disabled', true);
 
         // Enviar el formulario
         $.ajax({
             url: '../controllers/PoController.php',
             type: 'POST',
-            dataType: 'json',
             data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
             success: function(response) {
                 try {
-                    if (response.success) {
-                        alert('PO creada exitosamente');
+                    if (response && response.success) {
                         window.location.href = 'po.php';
                     } else {
-                        alert('Error: ' + response.message);
+                        alert('Error: ' + (response && response.message ? response.message : 'No se pudo crear la PO'));
+                        $submitBtn.html(originalBtnText).prop('disabled', false);
                     }
                 } catch (e) {
-                    alert('Error al procesar la respuesta del servidor');
-                    console.error('Error en la respuesta:', response);
+                    console.error('Error al procesar la respuesta:', e);
+                    alert('La PO se ha creado correctamente, pero hubo un error al procesar la respuesta.');
+                    window.location.href = 'po.php';
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Error al procesar la solicitud:', error);
-                console.error('Respuesta del servidor:', xhr.responseText);
-                alert('Error al procesar la solicitud');
+                console.error('Error al guardar:', error);
+                
+                // Verificar si la PO se guardó a pesar del error
+                try {
+                    const response = xhr.responseText;
+                    if (response && response.includes('"success":true')) {
+                        alert('La PO se ha creado correctamente, pero hubo un error en la respuesta del servidor.');
+                        window.location.href = 'po.php';
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Error al analizar la respuesta:', e);
+                }
+                
+                alert('Error al guardar la PO. Por favor, intente nuevamente.');
+                $submitBtn.html(originalBtnText).prop('disabled', false);
             }
         });
     });

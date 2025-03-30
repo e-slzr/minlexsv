@@ -17,6 +17,15 @@ class ClienteController {
         }
     }
 
+    public function getClientesActivos() {
+        try {
+            return $this->cliente->getAllActive();
+        } catch (Exception $e) {
+            error_log("Error al obtener clientes activos: " . $e->getMessage());
+            return [];
+        }
+    }
+
     public function handleRequest() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action = $_POST['action'] ?? '';
