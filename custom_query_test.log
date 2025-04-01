@@ -1,0 +1,132 @@
+=== Custom Query Test Results ===
+2025-03-30 11:03:02
+
+Running query: SELECT * FROM po LIMIT 5
+Test custom_query method - Result count: 4
+Array
+(
+    [0] => Array
+        (
+            [id] => 1
+            [po_numero] => D-13219-M
+            [po_fecha_creacion] => 2025-03-15
+            [po_fecha_inicio_produccion] => 2025-03-20
+            [po_fecha_fin_produccion] => 
+            [po_fecha_envio_programada] => 2025-04-14
+            [po_estado] => En proceso
+            [po_id_cliente] => 1
+            [po_id_usuario_creacion] => 1
+            [po_tipo_envio] => Tipo 1
+            [po_comentario] => PO confirmada por el cliente XTB
+            [po_notas] => Entregar antes del 25/02/2025
+            [po_fecha_modificacion] => 2025-03-30 01:16:17
+        )
+
+    [1] => Array
+        (
+            [id] => 80
+            [po_numero] => PO-000001
+            [po_fecha_creacion] => 2025-03-29
+            [po_fecha_inicio_produccion] => 
+            [po_fecha_fin_produccion] => 
+            [po_fecha_envio_programada] => 2025-04-30
+            [po_estado] => Pendiente
+            [po_id_cliente] => 2
+            [po_id_usuario_creacion] => 1
+            [po_tipo_envio] => Tipo 1
+            [po_comentario] => Comentario de prueba para la PO-000001
+            [po_notas] => Aliquam erat volutpat. Nullam scelerisque auctor libero, id volutpat est dignissim vitae. Aliquam erat volutpat. Integer laoreet, nisi a tincidunt tincidunt, odio nisl commodo libero, id ultricies sapien purus non odio. Phasellus ac ultricies ex, vel scelerisque libero.
+
+Nullam vehicula magna sit amet magna ullamcorper, at dictum est gravida. Morbi nec magna at quam malesuada accumsan. Suspendisse potenti. Vivamus feugiat massa ut tortor scelerisque, non dapibus nulla consectetur. Aliquam erat volutpat.
+
+Donec et urna vel risus feugiat pharetra. Proin id lacus vitae velit accumsan venenatis. Aenean non mi vel nisi lacinia maximus. Duis efficitur, sapien quis bibendum auctor, lectus risus feugiat sapien, ac pulvinar orci est a arcu. Integer id augue vitae urna tristique tempus.
+
+In hac habitasse platea dictumst. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam eu nunc non augue tincidunt suscipit. Suspendisse potenti. Aliquam erat volutpat. Integer vel turpis sed purus scelerisque euismod.
+
+Sed vehicula magna at lacus interdum, quis laoreet nulla condimentum. Aliquam erat volutpat. Cras et nulla in turpis consectetur suscipit. Vivamus lobortis, risus sit amet cursus tincidunt, erat turpis placerat ex, ut placerat justo lorem vel ligula. Fusce non diam feliz.
+            [po_fecha_modificacion] => 2025-03-30 02:52:47
+        )
+
+    [2] => Array
+        (
+            [id] => 84
+            [po_numero] => PO-000002
+            [po_fecha_creacion] => 2025-03-30
+            [po_fecha_inicio_produccion] => 
+            [po_fecha_fin_produccion] => 
+            [po_fecha_envio_programada] => 2025-06-30
+            [po_estado] => Pendiente
+            [po_id_cliente] => 3
+            [po_id_usuario_creacion] => 1
+            [po_tipo_envio] => Tipo 1
+            [po_comentario] => Texto de prueba.
+            [po_notas] => In hac habitasse platea dictumst. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam eu nunc non augue tincidunt suscipit. Suspendisse potenti. Aliquam erat volutpat. Integer vel turpis sed purus scelerisque euismod.
+
+Phasellus ac eros at urna condimentum lacinia. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed bibendum, sapien a venenatis fermentum, mauris augue cursus turpis, vitae elementum massa orci sit amet massa. In hac habitasse platea dictumst.
+
+Fusce at nisi arcu. Quisque sed dolor nec dui scelerisque dapibus. Sed at purus at sem aliquet luctus. Sed non massa sit amet sapien porttitor ornare. Vivamus pretium, tortor at tempus ullamcorper, diam ligula lobortis quam, at scelerisque libero lectus ut risus.
+
+Vivamus lacinia lacus vel neque egestas, vitae volutpat purus dapibus. Nullam nec ultricies erat. Etiam ac urna metus. Sed cursus libero id ullamcorper interdum. Donec non urna et erat vehicula porttitor. Vivamus a sagittis dolor. Nulla facilisi. Cras euismod orci at felis cursus, vel vulputate sapien suscipit.
+
+Curabitur at felis non libero suscipit fermentum. Duis volutpat, ante et scelerisque luctus, sem nulla placerat leo, at aliquet libero justo id nulla. Integer at dui nec magna posuere fringilla. Nunc euismod bibendum augue. Cras nec ligula velit. Donec in laoreet leo.
+            [po_fecha_modificacion] => 2025-03-30 01:16:17
+        )
+
+    [3] => Array
+        (
+            [id] => 85
+            [po_numero] => PO-000003
+            [po_fecha_creacion] => 2025-03-30
+            [po_fecha_inicio_produccion] => 
+            [po_fecha_fin_produccion] => 
+            [po_fecha_envio_programada] => 2025-04-25
+            [po_estado] => Pendiente
+            [po_id_cliente] => 5
+            [po_id_usuario_creacion] => 1
+            [po_tipo_envio] => Tipo 2
+            [po_comentario] => N/A
+            [po_notas] => In hac habitasse platea dictumst. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam eu nunc non augue tincidunt suscipit. Suspendisse potenti. Aliquam erat volutpat. Integer vel turpis sed purus scelerisque euismod.
+
+Phasellus ac eros at urna condimentum lacinia. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed bibendum, sapien a venenatis fermentum, mauris augue cursus turpis, vitae elementum massa orci sit amet massa. In hac habitasse platea dictumst.
+
+Fusce at nisi arcu. Quisque sed dolor nec dui scelerisque dapibus. Sed at purus at sem aliquet luctus. Sed non massa sit amet sapien porttitor ornare. Vivamus pretium, tortor at tempus ullamcorper, diam ligula lobortis quam, at scelerisque libero lectus ut risus.
+
+Vivamus lacinia lacus vel neque egestas, vitae volutpat purus dapibus. Nullam nec ultricies erat. Etiam ac urna metus. Sed cursus libero id ullamcorper interdum. Donec non urna et erat vehicula porttitor. Vivamus a sagittis dolor. Nulla facilisi. Cras euismod orci at felis cursus, vel vulputate sapien suscipit.
+
+Curabitur at felis non libero suscipit fermentum. Duis volutpat, ante et scelerisque luctus, sem nulla placerat leo, at aliquet libero justo id nulla. Integer at dui nec magna posuere fringilla. Nunc euismod bibendum augue. Cras nec ligula velit. Donec in laoreet leo.
+            [po_fecha_modificacion] => 2025-03-30 01:16:17
+        )
+
+)
+
+
+Running query with parameters: SELECT * FROM po WHERE id = :id
+Parameters: Array
+(
+    [:id] => 1
+)
+
+Test custom_query method with parameters - Result count: 1
+Array
+(
+    [0] => Array
+        (
+            [id] => 1
+            [po_numero] => D-13219-M
+            [po_fecha_creacion] => 2025-03-15
+            [po_fecha_inicio_produccion] => 2025-03-20
+            [po_fecha_fin_produccion] => 
+            [po_fecha_envio_programada] => 2025-04-14
+            [po_estado] => En proceso
+            [po_id_cliente] => 1
+            [po_id_usuario_creacion] => 1
+            [po_tipo_envio] => Tipo 1
+            [po_comentario] => PO confirmada por el cliente XTB
+            [po_notas] => Entregar antes del 25/02/2025
+            [po_fecha_modificacion] => 2025-03-30 01:16:17
+        )
+
+)
+
+
+Test completed successfully!

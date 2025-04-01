@@ -356,5 +356,25 @@ class Po {
             return 'PO-' . date('ymdHis');
         }
     }
+
+    // Ejecutar consulta personalizada con parámetros
+    public function custom_query($query, $params = []) {
+        try {
+            $stmt = $this->conn->prepare($query);
+            
+            // Bind parameters if they exist
+            if (!empty($params)) {
+                foreach ($params as $param => $value) {
+                    $stmt->bindValue($param, $value);
+                }
+            }
+            
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en Po::custom_query: " . $e->getMessage());
+            throw new Exception("Error al ejecutar consulta personalizada", 0, $e);
+        }
+    }
 }
 ?>
