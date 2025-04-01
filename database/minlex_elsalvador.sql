@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 30-03-2025 a las 09:46:05
+-- Tiempo de generación: 01-04-2025 a las 05:55:19
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -204,7 +204,7 @@ CREATE TABLE `po` (
 
 INSERT INTO `po` (`id`, `po_numero`, `po_fecha_creacion`, `po_fecha_inicio_produccion`, `po_fecha_fin_produccion`, `po_fecha_envio_programada`, `po_estado`, `po_id_cliente`, `po_id_usuario_creacion`, `po_tipo_envio`, `po_comentario`, `po_notas`, `po_fecha_modificacion`) VALUES
 (1, 'D-13219-M', '2025-03-15', '2025-03-20', NULL, '2025-04-14', 'En proceso', 1, 1, 'Tipo 1', 'PO confirmada por el cliente XTB', 'Entregar antes del 25/02/2025', '2025-03-30 07:16:17'),
-(80, 'PO-000001', '2025-03-29', NULL, NULL, '2025-04-30', 'Pendiente', 2, 1, 'Tipo 1', 'Comentario de prueba para la PO-000001', NULL, '2025-03-30 07:16:17'),
+(80, 'PO-000001', '2025-03-29', NULL, NULL, '2025-04-30', 'Pendiente', 2, 1, 'Tipo 1', 'Comentario de prueba para la PO-000001', 'Aliquam erat volutpat. Nullam scelerisque auctor libero, id volutpat est dignissim vitae. Aliquam erat volutpat. Integer laoreet, nisi a tincidunt tincidunt, odio nisl commodo libero, id ultricies sapien purus non odio. Phasellus ac ultricies ex, vel scelerisque libero.\r\n\r\nNullam vehicula magna sit amet magna ullamcorper, at dictum est gravida. Morbi nec magna at quam malesuada accumsan. Suspendisse potenti. Vivamus feugiat massa ut tortor scelerisque, non dapibus nulla consectetur. Aliquam erat volutpat.\r\n\r\nDonec et urna vel risus feugiat pharetra. Proin id lacus vitae velit accumsan venenatis. Aenean non mi vel nisi lacinia maximus. Duis efficitur, sapien quis bibendum auctor, lectus risus feugiat sapien, ac pulvinar orci est a arcu. Integer id augue vitae urna tristique tempus.\r\n\r\nIn hac habitasse platea dictumst. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam eu nunc non augue tincidunt suscipit. Suspendisse potenti. Aliquam erat volutpat. Integer vel turpis sed purus scelerisque euismod.\r\n\r\nSed vehicula magna at lacus interdum, quis laoreet nulla condimentum. Aliquam erat volutpat. Cras et nulla in turpis consectetur suscipit. Vivamus lobortis, risus sit amet cursus tincidunt, erat turpis placerat ex, ut placerat justo lorem vel ligula. Fusce non diam feliz.', '2025-03-30 08:52:47'),
 (84, 'PO-000002', '2025-03-30', NULL, NULL, '2025-06-30', 'Pendiente', 3, 1, 'Tipo 1', 'Texto de prueba.', 'In hac habitasse platea dictumst. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam eu nunc non augue tincidunt suscipit. Suspendisse potenti. Aliquam erat volutpat. Integer vel turpis sed purus scelerisque euismod.\r\n\r\nPhasellus ac eros at urna condimentum lacinia. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed bibendum, sapien a venenatis fermentum, mauris augue cursus turpis, vitae elementum massa orci sit amet massa. In hac habitasse platea dictumst.\r\n\r\nFusce at nisi arcu. Quisque sed dolor nec dui scelerisque dapibus. Sed at purus at sem aliquet luctus. Sed non massa sit amet sapien porttitor ornare. Vivamus pretium, tortor at tempus ullamcorper, diam ligula lobortis quam, at scelerisque libero lectus ut risus.\r\n\r\nVivamus lacinia lacus vel neque egestas, vitae volutpat purus dapibus. Nullam nec ultricies erat. Etiam ac urna metus. Sed cursus libero id ullamcorper interdum. Donec non urna et erat vehicula porttitor. Vivamus a sagittis dolor. Nulla facilisi. Cras euismod orci at felis cursus, vel vulputate sapien suscipit.\r\n\r\nCurabitur at felis non libero suscipit fermentum. Duis volutpat, ante et scelerisque luctus, sem nulla placerat leo, at aliquet libero justo id nulla. Integer at dui nec magna posuere fringilla. Nunc euismod bibendum augue. Cras nec ligula velit. Donec in laoreet leo.', '2025-03-30 07:16:17'),
 (85, 'PO-000003', '2025-03-30', NULL, NULL, '2025-04-25', 'Pendiente', 5, 1, 'Tipo 2', 'N/A', 'In hac habitasse platea dictumst. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam eu nunc non augue tincidunt suscipit. Suspendisse potenti. Aliquam erat volutpat. Integer vel turpis sed purus scelerisque euismod.\r\n\r\nPhasellus ac eros at urna condimentum lacinia. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed bibendum, sapien a venenatis fermentum, mauris augue cursus turpis, vitae elementum massa orci sit amet massa. In hac habitasse platea dictumst.\r\n\r\nFusce at nisi arcu. Quisque sed dolor nec dui scelerisque dapibus. Sed at purus at sem aliquet luctus. Sed non massa sit amet sapien porttitor ornare. Vivamus pretium, tortor at tempus ullamcorper, diam ligula lobortis quam, at scelerisque libero lectus ut risus.\r\n\r\nVivamus lacinia lacus vel neque egestas, vitae volutpat purus dapibus. Nullam nec ultricies erat. Etiam ac urna metus. Sed cursus libero id ullamcorper interdum. Donec non urna et erat vehicula porttitor. Vivamus a sagittis dolor. Nulla facilisi. Cras euismod orci at felis cursus, vel vulputate sapien suscipit.\r\n\r\nCurabitur at felis non libero suscipit fermentum. Duis volutpat, ante et scelerisque luctus, sem nulla placerat leo, at aliquet libero justo id nulla. Integer at dui nec magna posuere fringilla. Nunc euismod bibendum augue. Cras nec ligula velit. Donec in laoreet leo.', '2025-03-30 07:16:17');
 
@@ -230,10 +230,11 @@ CREATE TABLE `po_detalle` (
 --
 
 INSERT INTO `po_detalle` (`id`, `pd_id_po`, `pd_item`, `pd_cant_piezas_total`, `pd_pcs_carton`, `pd_pcs_poly`, `pd_estado`, `pd_precio_unitario`) VALUES
-(4, 80, 4, 1000, 12, 1, 'Pendiente', 1.75),
+(4, 80, 4, 2000, 12, 1, 'Pendiente', 1.75),
 (5, 80, 3, 1000, 12, 1, 'Pendiente', 1.50),
 (6, 84, 8, 5000, 12, 1, 'Pendiente', 2.50),
-(7, 85, 3, 1500, 12, 1, 'Pendiente', 1.25);
+(7, 85, 3, 1500, 12, 1, 'Pendiente', 1.25),
+(8, 84, 3, 3500, 12, 1, 'Pendiente', 1.75);
 
 -- --------------------------------------------------------
 
@@ -557,7 +558,7 @@ ALTER TABLE `po`
 -- AUTO_INCREMENT de la tabla `po_detalle`
 --
 ALTER TABLE `po_detalle`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `po_detalle_cantidades`
