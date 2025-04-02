@@ -102,7 +102,7 @@ $roles = $rolController->getRoles() ?? [];
 
         <!-- Modal Nuevo Rol -->
         <div class="modal fade" id="nuevoRolModal" tabindex="-1" aria-labelledby="nuevoRolModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog" style="width: 700px;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="nuevoRolModalLabel">Nuevo Rol</h5>
@@ -133,7 +133,7 @@ $roles = $rolController->getRoles() ?? [];
 
         <!-- Modal Editar Rol -->
         <div class="modal fade" id="editarRolModal" tabindex="-1" aria-labelledby="editarRolModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog" style="width: 700px;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editarRolModalLabel">Editar Rol</h5>
@@ -165,7 +165,7 @@ $roles = $rolController->getRoles() ?? [];
 
         <!-- Modal Confirmación de Cambio de Estado -->
         <div class="modal fade" id="confirmStatusModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog" style="width: 700px;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Confirmar Cambio de Estado</h5>
@@ -184,7 +184,7 @@ $roles = $rolController->getRoles() ?? [];
 
         <!-- Modal de Confirmación -->
         <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog" style="width: 700px;" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Confirmación</h5>
@@ -202,7 +202,7 @@ $roles = $rolController->getRoles() ?? [];
 
         <!-- Modal de Error -->
         <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog" style="width: 700px;" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Error</h5>

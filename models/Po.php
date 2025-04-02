@@ -248,10 +248,7 @@ class Po {
                 i.item_numero,
                 i.item_nombre,
                 i.item_descripcion,
-                i.item_talla,
-                i.item_color,
-                i.item_diseno,
-                i.item_ubicacion
+                i.item_talla
             FROM po_detalle pd
             LEFT JOIN items i ON pd.pd_item = i.id
             WHERE pd.pd_id_po = :id";

@@ -195,7 +195,7 @@ if (empty($clientes)) {
 
         <!-- Modal para Nuevo Cliente -->
         <div class="modal fade" id="nuevoClienteModal" tabindex="-1" aria-labelledby="nuevoClienteModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog" style="width: 700px;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="nuevoClienteModalLabel">Nuevo Cliente</h5>
@@ -230,8 +230,8 @@ if (empty($clientes)) {
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <button type="button" class="btn btn-primary" id="guardar-nuevo">Guardar</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-dark" id="guardar-nuevo">Guardar</button>
                     </div>
                 </div>
             </div>
@@ -239,7 +239,7 @@ if (empty($clientes)) {
 
         <!-- Modal para Editar Cliente -->
         <div class="modal fade" id="editarClienteModal" tabindex="-1" aria-labelledby="editarClienteModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog" style="width: 700px;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editarClienteModalLabel">Editar Cliente</h5>
@@ -275,8 +275,8 @@ if (empty($clientes)) {
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <button type="button" class="btn btn-primary" id="guardar-edicion">Guardar</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-dark" id="guardar-edicion">Guardar</button>
                     </div>
                 </div>
             </div>
@@ -284,7 +284,7 @@ if (empty($clientes)) {
 
         <!-- Modal para Confirmar Cambio de Estado -->
         <div class="modal fade" id="confirmStatusModal" tabindex="-1" aria-labelledby="confirmStatusModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog" style="width: 700px;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="confirmStatusModalLabel">Confirmar Cambio de Estado</h5>
@@ -298,8 +298,8 @@ if (empty($clientes)) {
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" id="confirmar-estado">Confirmar</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-dark" id="confirmar-estado">Confirmar</button>
                     </div>
                 </div>
             </div>

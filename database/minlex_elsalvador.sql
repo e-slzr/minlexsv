@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 01-04-2025 a las 05:55:19
+-- Tiempo de generación: 02-04-2025 a las 09:51:52
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -164,7 +164,9 @@ CREATE TABLE `ordenes_produccion` (
   `op_id_pd` int(11) NOT NULL,
   `op_operador_asignado` int(11) NOT NULL,
   `op_id_proceso` int(11) NOT NULL,
+  `op_usuario_aprobacion` int(11) NOT NULL,
   `op_fecha_aprobacion` date DEFAULT NULL,
+  `op_estado_aprobacion` enum('Aprobado','Pendiente','Rechazado','') NOT NULL,
   `op_fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
   `op_fecha_modificacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `op_fecha_inicio` date DEFAULT NULL,
@@ -175,6 +177,13 @@ CREATE TABLE `ordenes_produccion` (
   `op_comentario` text DEFAULT NULL,
   `op_modulo_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Volcado de datos para la tabla `ordenes_produccion`
+--
+
+INSERT INTO `ordenes_produccion` (`id`, `op_id_pd`, `op_operador_asignado`, `op_id_proceso`, `op_usuario_aprobacion`, `op_fecha_aprobacion`, `op_estado_aprobacion`, `op_fecha_creacion`, `op_fecha_modificacion`, `op_fecha_inicio`, `op_fecha_fin`, `op_estado`, `op_cantidad_asignada`, `op_cantidad_completada`, `op_comentario`, `op_modulo_id`) VALUES
+(3, 5, 5, 1, 0, NULL, 'Aprobado', '2025-04-02 06:56:11', '2025-04-02 06:56:11', NULL, NULL, 'Pendiente', 750, 0, 'Comentario de prueba.', NULL);
 
 -- --------------------------------------------------------
 
@@ -385,7 +394,7 @@ INSERT INTO `usuarios` (`id`, `usuario_alias`, `usuario_nombre`, `usuario_apelli
 (9, 'user3', 'Miguel', 'Hernandez', 'hashedpassword5', 5, 'Logística', 'Inactivo', '2025-03-18 06:38:39', '2025-03-30 00:19:05', NULL),
 (10, 'test', 'usuario', 'test', '$2y$10$0uO5Z5YGZemnXKbHF4hsK.95CqwLslPyxmhZlD6ukYo906Q78M6lC', 1, 'Corte', 'Inactivo', '2025-03-21 05:11:02', '2025-03-30 00:21:36', NULL),
 (11, 'jessica.salazar', 'Jessica', 'Salazar', '$2y$10$IzOhfgRBGmEnS1GBocwV6.J.EkbjcSdH6nvWkqUUiu0Lk2dSH47We', 2, 'Produccion', 'Inactivo', '2025-03-21 05:12:10', '2025-03-30 03:10:39', 2),
-(12, 'fede.valverde', 'Federico', 'Valverde', '$2y$10$ltH3o7epBz1.I3I58sdQUeq5E2jVaHplCTcRBgX6IpeiwG0g88FAe', 1, 'Calidad', 'Inactivo', '2025-03-30 00:13:09', '2025-03-30 02:46:59', 1),
+(12, 'fede.valverde', 'Federico', 'Valverde', '$2y$10$ltH3o7epBz1.I3I58sdQUeq5E2jVaHplCTcRBgX6IpeiwG0g88FAe', 1, 'Calidad', 'Inactivo', '2025-03-30 00:13:09', '2025-04-02 06:35:09', 1),
 (13, 'allison.cartagena', 'Allison', 'Cartagena', '$2y$10$Q6K99rOfu9q8uQfk9ek5IOVhmvW4nZtuLjQRFvtvG.0000ED8f44O', 2, 'Compras', 'Inactivo', '2025-03-30 00:23:05', '2025-03-30 00:39:59', 1);
 
 --
@@ -546,7 +555,7 @@ ALTER TABLE `modulos`
 -- AUTO_INCREMENT de la tabla `ordenes_produccion`
 --
 ALTER TABLE `ordenes_produccion`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `po`

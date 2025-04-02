@@ -129,7 +129,7 @@ $departamentos = [
 
         <!-- Modal para Nuevo Usuario -->
         <div class="modal fade" id="newUserModal" tabindex="-1" role="dialog" aria-labelledby="newUserModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog" style="width: 700px;" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="newUserModalLabel">Nuevo Usuario</h5>
@@ -232,7 +232,7 @@ $departamentos = [
 
         <!-- Modal para Editar Usuario -->
         <div class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog" style="width: 700px;" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editUserModalLabel">Editar Usuario</h5>
@@ -317,7 +317,7 @@ $departamentos = [
 
         <!-- Modal para Cambiar Contraseña -->
         <div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog" style="width: 700px;" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="changePasswordModalLabel">Cambiar Contraseña</h5>
@@ -364,7 +364,7 @@ $departamentos = [
 
         <!-- Modal para Cambiar Estado -->
         <div class="modal fade" id="toggleStatusModal" tabindex="-1" role="dialog" aria-labelledby="toggleStatusModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog" style="width: 700px;" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="toggleStatusModalLabel">Confirmar Cambio de Estado</h5>
@@ -386,7 +386,7 @@ $departamentos = [
 
         <!-- Modal de Confirmación -->
         <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog" style="width: 700px;" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="confirmationModalLabel">Operación Exitosa</h5>
@@ -410,7 +410,7 @@ $departamentos = [
 
         <!-- Modal de Error -->
         <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog" style="width: 700px;" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="errorModalLabel">Error</h5>

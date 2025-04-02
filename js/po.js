@@ -84,96 +84,188 @@ $(document).ready(function() {
         const poId = $(this).data('id');
         currentPoId = poId;
         
-        $.get(`../controllers/PoController.php?action=getDetails&id=${poId}`, function(response) {
-            if (response.success && response.data) {
-                const po = response.data;
-                const detalles = response.data.detalles;
+        // Limpiar datos previos
+        $('#detailPoNumero, #detailCliente, #detailEstado, #detailFechaCreacion, #detailTotalItems, #detailItemsCompletados, #detailValorTotal').text('');
+        $('#detailFechaInicio, #detailFechaFin, #detailFechaEnvio, #detailTipoEnvio, #detailUsuarioCreacion').text('');
+        $('#detailComentario, #notasPreview, #notasCompletas').text('');
+        $('#detailsTableBody').empty();
+        $('#detailTotal').text('');
+        
+        // Mostrar indicador de carga
+        $('#poDetailModal .modal-body').prepend('<div id="loadingIndicator" class="text-center my-3"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Cargando detalles...</p></div>');
+        
+        // Realizar petición AJAX
+        $.ajax({
+            url: '../controllers/PoController.php',
+            type: 'GET',
+            data: {
+                action: 'getDetails',
+                po_id: poId
+            },
+            dataType: 'json',
+            success: function(response) {
+                // Eliminar indicador de carga
+                $('#loadingIndicator').remove();
                 
-                // Información general
-                $('#detailPoNumero').text(po.po_numero);
-                $('#detailCliente').text(po.cliente_empresa);
-                $('#detailEstado').html(`<span class="badge ${getBadgeClass(po.po_estado)}">${po.po_estado}</span>`);
-                $('#detailFechaCreacion').text(po.po_fecha_creacion);
-                $('#detailFechaInicio').text(po.po_fecha_inicio_produccion || 'No definida');
-                $('#detailFechaFin').text(po.po_fecha_fin_produccion || 'No definida');
-                $('#detailFechaEnvio').text(po.po_fecha_envio_programada || 'No definida');
-                $('#detailTipoEnvio').text(po.po_tipo_envio);
-                $('#detailComentario').text(po.po_comentario || 'Sin comentarios');
-                
-                // Manejo de notas detalladas con vista previa y expansión
-                const notas = po.po_notas || 'Sin notas';
-                $('#notasCompletas').text(notas);
-                
-                if (notas && notas !== 'Sin notas' && notas.length > 100) {
-                    const notasPreview = notas.substring(0, 100) + '...';
-                    $('#notasPreview').text(notasPreview);
-                    $('#expandNotasBtn').show();
-                } else {
-                    $('#notasPreview').text(notas);
-                    $('#expandNotasBtn').hide();
-                }
-                
-                $('#detailTotalItems').text(po.total_items || '0');
-                $('#detailItemsCompletados').text(po.items_completados || '0');
-                $('#detailValorTotal').text('$' + (po.total_valor || '0.00'));
-                $('#detailUsuarioCreacion').text(po.usuario_nombre + ' ' + po.usuario_apellido);
-                
-                // Detalles de items
-                const tbody = $('#detailsTableBody');
-                tbody.empty();
-                
-                if (detalles && detalles.length > 0) {
-                    detalles.forEach(detalle => {
-                        const subtotal = (detalle.pd_cant_piezas_total * detalle.pd_precio_unitario).toFixed(2);
-                        tbody.append(`
-                            <tr>
-                                <td>${detalle.item_numero} - ${detalle.item_nombre}</td>
-                                <td>${detalle.item_descripcion || '-'}</td>
-                                <td>${detalle.item_talla || '-'}</td>
-                                <td>${detalle.item_color || '-'}</td>
-                                <td>${detalle.item_diseno || '-'}</td>
-                                <td>${detalle.item_ubicacion || '-'}</td>
-                                <td>${detalle.pd_cant_piezas_total}</td>
-                                <td>${detalle.pd_pcs_carton || '-'}</td>
-                                <td>${detalle.pd_pcs_poly || '-'}</td>
-                                <td>$${detalle.pd_precio_unitario}</td>
-                                <td>$${subtotal}</td>
-                                <td><span class="badge ${getBadgeClass(detalle.pd_estado)}">${detalle.pd_estado}</span></td>
-                                <td>
-                                    <div class="progress">
-                                        <div class="progress-bar" role="progressbar" 
-                                             style="width: ${detalle.progreso}%"
-                                             aria-valuenow="${detalle.progreso}" 
-                                             aria-valuemin="0" 
-                                             aria-valuemax="100">
-                                            ${detalle.progreso}%
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>${detalle.procesos_asignados || '-'}</td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-success edit-detail" 
-                                            data-id="${detalle.id}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-danger delete-detail"
-                                            data-id="${detalle.id}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        `);
-                    });
+                if (response.success) {
+                    const data = response.data;
+                    const po = data.po;
+                    const detalles = data.detalles;
                     
-                    const totalValor = po.total_valor || 0;
-                    $('#detailTotal').text('$' + totalValor.toFixed(2));
+                    // Llenar información general
+                    $('#detailPoNumero').text(po.po_numero || 'N/A');
+                    $('#detailCliente').text(po.cliente_empresa || 'N/A');
+                    $('#detailEstado').html(`<span class="badge ${getBadgeClass(po.po_estado)}">${po.po_estado}</span>`);
+                    $('#detailFechaCreacion').text(po.po_fecha_creacion || 'N/A');
+                    $('#detailTotalItems').text(detalles.length || '0');
+                    
+                    // Calcular items completados
+                    const itemsCompletados = detalles.filter(item => item.pd_estado === 'Completado').length;
+                    $('#detailItemsCompletados').text(itemsCompletados + ' / ' + detalles.length);
+                    
+                    // Llenar fechas y envío
+                    $('#detailFechaInicio').text(po.po_fecha_inicio_produccion || 'No iniciada');
+                    $('#detailFechaFin').text(po.po_fecha_fin_produccion || 'No finalizada');
+                    $('#detailFechaEnvio').text(po.po_fecha_envio_programada || 'No definida');
+                    $('#detailTipoEnvio').text(po.po_tipo_envio || 'N/A');
+                    $('#detailUsuarioCreacion').text(po.usuario_nombre + ' ' + po.usuario_apellido || 'N/A');
+                    
+                    // Llenar comentario y notas
+                    $('#detailComentario').text(po.po_comentario || 'Sin comentarios');
+                    
+                    if (po.po_notas) {
+                        // Obtener solo la primera línea de las notas
+                        const primeraLinea = po.po_notas.split('\n')[0];
+                        const notasPreview = primeraLinea + (po.po_notas.length > primeraLinea.length ? '...' : '');
+                        
+                        $('#notasPreview').text(notasPreview);
+                        // Formatear las notas completas reemplazando saltos de línea con <br>
+                        $('#notasCompletas').html(po.po_notas.replace(/\n/g, '<br>'));
+                        
+                        // Mostrar el botón "Ver completo" si hay más de una línea
+                        if (po.po_notas.length > primeraLinea.length) {
+                            $('#expandNotasBtn').show();
+                        } else {
+                            $('#expandNotasBtn').hide();
+                        }
+                    } else {
+                        $('#notasPreview').text('Sin notas');
+                        $('#expandNotasBtn').hide();
+                    }
+                    
+                    // Llenar tabla de detalles
+                    let totalGeneral = 0;
+                    
+                    if (detalles && detalles.length > 0) {
+                        detalles.forEach(function(detalle) {
+                            const subtotal = parseFloat(detalle.pd_cant_piezas_total) * parseFloat(detalle.pd_precio_unitario);
+                            totalGeneral += subtotal;
+                            
+                            // Crear fila para el detalle
+                            const row = `
+                                <tr>
+                                    <td>${detalle.item_numero || 'N/A'}</td>
+                                    <td>${detalle.item_nombre || 'N/A'}</td>
+                                    <td>${detalle.item_talla || 'N/A'}</td>
+                                    <td>${detalle.pd_color || 'N/A'}</td>
+                                    <td>${detalle.pd_diseno || 'N/A'}</td>
+                                    <td>${detalle.pd_ubicacion || 'N/A'}</td>
+                                    <td>${detalle.pd_cant_piezas_total || '0'}</td>
+                                    <td>${detalle.pd_pcs_carton || '0'}</td>
+                                    <td>${detalle.pd_pcs_poly || '0'}</td>
+                                    <td>$${parseFloat(detalle.pd_precio_unitario).toFixed(2)}</td>
+                                    <td>$${subtotal.toFixed(2)}</td>
+                                    <td>
+                                        <span class="badge ${
+                                            detalle.pd_estado === 'Completado' ? 'bg-success' :
+                                            detalle.pd_estado === 'En proceso' ? 'bg-primary' :
+                                            'bg-warning'
+                                        }">
+                                            ${detalle.pd_estado || 'Pendiente'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar" role="progressbar" 
+                                                style="width: ${detalle.progreso || 0}%" 
+                                                aria-valuenow="${detalle.progreso || 0}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                                ${detalle.progreso || 0}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-info view-procesos"
+                                                data-id="${detalle.id}">
+                                            <i class="fas fa-tasks"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            
+                            $('#detailsTableBody').append(row);
+                        });
+                        
+                        // Mostrar total general
+                        $('#detailTotal').text('$' + totalGeneral.toFixed(2));
+                        $('#detailValorTotal').text('$' + totalGeneral.toFixed(2));
+                    } else {
+                        $('#detailsTableBody').html('<tr><td colspan="14" class="text-center">No hay items para esta PO</td></tr>');
+                        $('#detailTotal').text('$0.00');
+                        $('#detailValorTotal').text('$0.00');
+                    }
+                    
+                    // Guardar ID para el botón de generar PDF
+                    $('#generatePdfBtn').data('id', poId);
+                } else {
+                    // Mostrar mensaje de error
+                    $('#poDetailModal .modal-body').html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> 
+                            Error al cargar los detalles: ${response.message || 'Error desconocido'}
+                        </div>
+                    `);
                 }
+            },
+            error: function(xhr, status, error) {
+                // Eliminar indicador de carga
+                $('#loadingIndicator').remove();
                 
-                // Actualizar el botón de generar PDF con el ID de la PO
-                $('#generatePdfBtn').data('id', poId);
+                // Mostrar mensaje de error
+                $('#poDetailModal .modal-body').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Error de conexión: No se pudieron cargar los detalles de la PO
+                    </div>
+                `);
+                console.error('Error AJAX:', error);
             }
         });
     });
+
+    // Expandir notas
+    $('#expandNotasBtn').on('click', function() {
+        $('#notasPreviewContainer').hide();
+        $('#notasCompletasContainer').show();
+    });
+    
+    // Contraer notas
+    $('#collapseNotasBtn').on('click', function() {
+        $('#notasCompletasContainer').hide();
+        $('#notasPreviewContainer').show();
+    });
+    
+    // Función auxiliar para obtener la clase de badge según el estado
+    function getBadgeClass(estado) {
+        switch(estado) {
+            case 'Pendiente': return 'bg-warning';
+            case 'En proceso': return 'bg-primary';
+            case 'Completada': case 'Completado': return 'bg-success';
+            case 'Cancelada': return 'bg-danger';
+            default: return 'bg-secondary';
+        }
+    }
 
     // Generar PDF
     $('#generatePdfBtn').on('click', function() {
@@ -330,29 +422,6 @@ $(document).ready(function() {
             }
         });
     });
-
-    // Evento para expandir notas detalladas
-    $(document).on('click', '#expandNotasBtn', function() {
-        const notasCompletas = $('#notasCompletas').text();
-        
-        Swal.fire({
-            title: 'Notas Detalladas',
-            html: `<div style="text-align: left; white-space: pre-wrap;">${notasCompletas}</div>`,
-            width: '600px',
-            confirmButtonText: 'Cerrar'
-        });
-    });
-    
-    // Función auxiliar para obtener la clase de badge según el estado
-    function getBadgeClass(estado) {
-        switch(estado) {
-            case 'Pendiente': return 'bg-warning';
-            case 'En proceso': return 'bg-primary';
-            case 'Completada': case 'Completado': return 'bg-success';
-            case 'Cancelada': return 'bg-danger';
-            default: return 'bg-secondary';
-        }
-    }
 
     // Ordenamiento de columnas
     $('.sortable').click(function() {

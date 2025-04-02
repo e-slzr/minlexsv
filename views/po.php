@@ -218,31 +218,31 @@ $pos = $poController->getPos($filtros);
                             <h6>Información General</h6>
                             <table class="table table-sm">
                                 <tr>
-                                    <th>Número PO:</th>
+                                    <th style="width: 40%;">Número PO:</th>
                                     <td id="detailPoNumero"></td>
                                 </tr>
                                 <tr>
-                                    <th>Cliente:</th>
+                                    <th style="width: 40%;">Cliente:</th>
                                     <td id="detailCliente"></td>
                                 </tr>
                                 <tr>
-                                    <th>Estado:</th>
+                                    <th style="width: 40%;">Estado:</th>
                                     <td id="detailEstado"></td>
                                 </tr>
                                 <tr>
-                                    <th>Fecha Creación:</th>
+                                    <th style="width: 40%;">Fecha Creación:</th>
                                     <td id="detailFechaCreacion"></td>
                                 </tr>
                                 <tr>
-                                    <th>Total Items:</th>
+                                    <th style="width: 40%;">Total Items:</th>
                                     <td id="detailTotalItems"></td>
                                 </tr>
                                 <tr>
-                                    <th>Items Completados:</th>
+                                    <th style="width: 40%;">Items Completados:</th>
                                     <td id="detailItemsCompletados"></td>
                                 </tr>
                                 <tr>
-                                    <th>Valor Total:</th>
+                                    <th style="width: 40%;">Valor Total:</th>
                                     <td id="detailValorTotal"></td>
                                 </tr>
                             </table>
@@ -251,23 +251,23 @@ $pos = $poController->getPos($filtros);
                             <h6>Fechas y Envío</h6>
                             <table class="table table-sm">
                                 <tr>
-                                    <th>Inicio Producción:</th>
+                                    <th style="width: 40%;">Inicio Producción:</th>
                                     <td id="detailFechaInicio"></td>
                                 </tr>
                                 <tr>
-                                    <th>Fin Producción:</th>
+                                    <th style="width: 40%;">Fin Producción:</th>
                                     <td id="detailFechaFin"></td>
                                 </tr>
                                 <tr>
-                                    <th>Envío Programado:</th>
+                                    <th style="width: 40%;">Envío Programado:</th>
                                     <td id="detailFechaEnvio"></td>
                                 </tr>
                                 <tr>
-                                    <th>Tipo Envío:</th>
+                                    <th style="width: 40%;">Tipo Envío:</th>
                                     <td id="detailTipoEnvio"></td>
                                 </tr>
                                 <tr>
-                                    <th>Usuario Creación:</th>
+                                    <th style="width: 40%;">Usuario Creación:</th>
                                     <td id="detailUsuarioCreacion"></td>
                                 </tr>
                             </table>
@@ -282,13 +282,20 @@ $pos = $poController->getPos($filtros);
                             <h6>Notas Internas</h6>
                             <div class="card">
                                 <div class="card-body p-2">
-                                    <div id="notasPreview" class="mb-2"></div>
-                                    <button type="button" class="btn btn-sm btn-link" id="expandNotasBtn" style="display:none;">
-                                        <i class="fas fa-expand-alt"></i> Ver completo
-                                    </button>
+                                    <div id="notasPreviewContainer">
+                                        <div id="notasPreview" class="mb-2"></div>
+                                        <button type="button" class="btn btn-sm btn-link" id="expandNotasBtn">
+                                            <i class="fas fa-expand-alt"></i> Ver completo
+                                        </button>
+                                    </div>
+                                    <div id="notasCompletasContainer" style="display:none;">
+                                        <div id="notasCompletas" class="mb-2"></div>
+                                        <button type="button" class="btn btn-sm btn-link" id="collapseNotasBtn">
+                                            <i class="fas fa-compress-alt"></i> Ver menos
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div id="notasCompletas" style="display:none;"></div>
                         </div>
                     </div>
                     <div class="row mt-3">
@@ -337,7 +344,7 @@ $pos = $poController->getPos($filtros);
 
     <!-- Modal para Eliminar PO -->
     <div class="modal fade" id="deletePoModal" tabindex="-1" aria-labelledby="deletePoModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog"  style="width: 700px;">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="deletePoModalLabel">Confirmar Eliminación</h5>
@@ -361,79 +368,10 @@ $pos = $poController->getPos($filtros);
             </div>
         </div>
     </div>
-
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Inicializar Select2 para todos los selectores
-            $('.select2').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                dropdownParent: $('#poModal')
-            });
-            
-            // Variables globales
-            let itemsArray = [];
-            let totalGeneral = 0;
-            
-            // Configurar modal para eliminar PO
-            $('.delete-po').on('click', function() {
-                const poId = $(this).data('id');
-                const poNumero = $(this).data('po-numero');
-                $('#deletePoId').val(poId);
-                $('#deletePoNumero').text(poNumero);
-            });
-            
-            // Eliminar PO
-            $('#confirmDelete').on('click', function() {
-                if (!$('#deletePassword').val()) {
-                    alert('Debe ingresar su contraseña para confirmar');
-                    return;
-                }
-                
-                const formData = new FormData(document.getElementById('deletePoForm'));
-                formData.append('action', 'delete');
-                
-                const $btn = $(this);
-                const originalText = $btn.html();
-                $btn.html('<i class="fas fa-spinner fa-spin"></i> Eliminando...').prop('disabled', true);
-                
-                $.ajax({
-                    url: '../controllers/PoController.php',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            window.location.reload();
-                        } else {
-                            alert('Error: ' + response.message);
-                            $btn.html(originalText).prop('disabled', false);
-                        }
-                    },
-                    error: function() {
-                        alert('Error al eliminar la PO');
-                        $btn.html(originalText).prop('disabled', false);
-                    }
-                });
-            });
-            
-            // Limpiar filtros
-            $('#limpiar-filtros').on('click', function() {
-                $('.filtro').val('');
-                $('#filtroForm').submit();
-            });
-            
-            // Ordenar tabla
-            $('.sortable').on('click', function() {
-                const column = $(this).data('column');
-                // Implementar lógica de ordenamiento aquí
-            });
-        });
-    </script>
+    <script src="../js/po.js"></script>
 </body>
 </html>

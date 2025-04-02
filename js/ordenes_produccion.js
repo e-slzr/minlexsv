@@ -6,6 +6,177 @@ $(document).ready(function() {
     let sortColumn = 'id';
     let sortDirection = 'desc';
 
+    // Solucionar problema de modal backdrop
+    $(document).on('hidden.bs.modal', '.modal', function () {
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open');
+        $('body').css('padding-right', '');
+    });
+
+    // Inicializar Select2 para los selectores
+    $('.select2').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        dropdownParent: $('#ordenModal')
+    });
+
+    // Inicializar Select2 para los selectores del modal de edición
+    $('.select2').each(function() {
+        let parentModal = $(this).closest('.modal');
+        if (parentModal.length) {
+            $(this).select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: parentModal
+            });
+        }
+    });
+
+    // Variables para control de cantidades
+    let cantidadTotal = 0;
+    let cantidadAsignada = 0;
+    let cantidadRestante = 0;
+
+    // Evento para cuando cambia el detalle de PO seleccionado
+    $('#poDetalle').on('change', function() {
+        const poDetalleId = $(this).val();
+        if (poDetalleId) {
+            // Desbloquear campo de cantidad cuando se selecciona un item
+            $('#cantidadAsignada').prop('disabled', false);
+            $('#asignarCompleto').prop('disabled', false);
+            
+            // Obtener información del detalle de PO
+            $.ajax({
+                url: '../controllers/OrdenProduccionController.php',
+                type: 'GET',
+                data: {
+                    action: 'getPoDetalleInfo',
+                    id: poDetalleId,
+                    proceso: $('#proceso').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        cantidadTotal = parseInt(response.cantidadTotal) || 0;
+                        cantidadAsignada = parseInt(response.cantidadAsignada) || 0;
+                        cantidadRestante = cantidadTotal - cantidadAsignada;
+                        
+                        // Actualizar la información en la interfaz
+                        $('#cantidadInfo').text(cantidadAsignada + '/' + cantidadTotal);
+                        $('#cantidadRestante').text('Pendiente por asignar: ' + cantidadRestante);
+                        
+                        // Establecer el valor máximo para el campo de cantidad
+                        $('#cantidadAsignada').attr('max', cantidadRestante);
+                        
+                        // Si no hay cantidad restante, desactivar campos
+                        if (cantidadRestante <= 0) {
+                            $('#cantidadAsignada').prop('disabled', true);
+                            $('#asignarCompleto').prop('disabled', true);
+                            alert('No hay cantidad disponible para asignar a este proceso');
+                        }
+                    } else {
+                        alert('Error al obtener información del detalle de PO: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error al conectar con el servidor');
+                }
+            });
+        } else {
+            // Restablecer valores si no hay detalle seleccionado
+            cantidadTotal = 0;
+            cantidadAsignada = 0;
+            cantidadRestante = 0;
+            $('#cantidadInfo').text('0/0');
+            $('#cantidadRestante').text('Pendiente por asignar: 0');
+            $('#cantidadAsignada').val('').prop('disabled', true);
+            $('#asignarCompleto').prop('checked', false).prop('disabled', true);
+        }
+    });
+
+    // Evento para cuando cambia el proceso seleccionado
+    $('#proceso').on('change', function() {
+        // Si ya hay un detalle de PO seleccionado, actualizar la información
+        if ($('#poDetalle').val()) {
+            $('#poDetalle').trigger('change');
+        }
+    });
+
+    // Evento para cuando cambia la cantidad asignada
+    $('#cantidadAsignada').on('input', function() {
+        const valor = parseInt($(this).val()) || 0;
+        
+        // Validar que no exceda la cantidad restante
+        if (valor > cantidadRestante) {
+            $(this).val(cantidadRestante);
+        }
+        
+        // Actualizar la información en tiempo real
+        const nuevaAsignada = cantidadAsignada + parseInt($(this).val() || 0);
+        $('#cantidadInfo').text(nuevaAsignada + '/' + cantidadTotal);
+    });
+
+    // Evento para el checkbox de asignar cantidad completa
+    $('#asignarCompleto').on('change', function() {
+        if ($(this).is(':checked')) {
+            // Asignar la cantidad restante y hacerlo readonly (no disabled)
+            $('#cantidadAsignada').val(cantidadRestante);
+            $('#cantidadAsignada').prop('readonly', true);
+            
+            // Actualizar la información en tiempo real
+            const nuevaAsignada = cantidadAsignada + cantidadRestante;
+            $('#cantidadInfo').text(nuevaAsignada + '/' + cantidadTotal);
+        } else {
+            // Quitar readonly y limpiar valor
+            $('#cantidadAsignada').prop('readonly', false).val('');
+            
+            // Restablecer la información
+            $('#cantidadInfo').text(cantidadAsignada + '/' + cantidadTotal);
+        }
+    });
+
+    // Evento para el checkbox de asignar cantidad completa en el modal de edición
+    $('#editAsignarCompleto').on('change', function() {
+        if ($(this).is(':checked')) {
+            // Obtener la cantidad total y la cantidad ya asignada
+            const cantidadTotal = parseInt($('#editCantidadInfo').text().split('/')[1]) || 0;
+            const cantidadAsignada = parseInt($('#editCantidadCompletada').val()) || 0;
+            const cantidadRestante = cantidadTotal - cantidadAsignada;
+            
+            // Asignar la cantidad restante y hacerlo readonly (no disabled)
+            $('#editCantidadAsignada').val(cantidadRestante);
+            $('#editCantidadAsignada').prop('readonly', true);
+            
+            // Actualizar el mensaje de cantidad restante
+            $('#editCantidadRestante').text('Pendiente por asignar: 0');
+        } else {
+            // Quitar readonly y limpiar valor
+            $('#editCantidadAsignada').prop('readonly', false).val('');
+            
+            // Restablecer el mensaje de cantidad restante
+            const cantidadTotal = parseInt($('#editCantidadInfo').text().split('/')[1]) || 0;
+            const cantidadAsignada = parseInt($('#editCantidadCompletada').val()) || 0;
+            const cantidadRestante = cantidadTotal - cantidadAsignada;
+            $('#editCantidadRestante').text('Pendiente por asignar: ' + cantidadRestante);
+        }
+    });
+
+    // Validación del formulario antes de enviar
+    $('#ordenForm').on('submit', function(e) {
+        // Verificar que todos los campos requeridos estén llenos
+        const poDetalleSelected = $('#poDetalle').val() !== '' && $('#poDetalle').val() !== null;
+        const procesoSelected = $('#proceso').val() !== '' && $('#proceso').val() !== null;
+        const operadorSelected = $('#operador').val() !== '' && $('#operador').val() !== null;
+        const cantidadValid = $('#cantidadAsignada').val() > 0;
+        
+        if (!poDetalleSelected || !procesoSelected || !operadorSelected || !cantidadValid) {
+            e.preventDefault();
+            alert('Por favor complete todos los campos requeridos: Item, Proceso, Operador y Cantidad Asignada.');
+            return false;
+        }
+        
+        return true;
+    });
+
     // Función para cargar las órdenes
     function loadOrdenes(page = 1) {
         const filters = {
@@ -44,7 +215,7 @@ $(document).ready(function() {
         tbody.empty();
 
         if (ordenes.length === 0) {
-            tbody.append('<tr><td colspan="10" class="text-center">No se encontraron órdenes de producción</td></tr>');
+            tbody.append('<tr><td colspan="12" class="text-center">No se encontraron órdenes de producción</td></tr>');
             return;
         }
 
@@ -52,52 +223,97 @@ $(document).ready(function() {
             const row = $('<tr>');
             
             // Formatear fechas
-            const fechaInicio = new Date(orden.op_fecha_inicio).toLocaleDateString('es-ES');
-            const fechaFin = orden.op_fecha_fin ? new Date(orden.op_fecha_fin).toLocaleDateString('es-ES') : 'No definida';
+            const fechaInicio = orden.op_fecha_inicio ? new Date(orden.op_fecha_inicio).toLocaleDateString('es-ES') : 'No iniciada';
+            const fechaFin = orden.op_fecha_fin ? new Date(orden.op_fecha_fin).toLocaleDateString('es-ES') : 'No finalizada';
             
-            // Determinar clase de badge para el estado
-            let badgeClass = '';
-            switch (orden.op_estado) {
-                case 'Pendiente':
-                    badgeClass = 'bg-warning';
-                    break;
-                case 'En proceso':
-                    badgeClass = 'bg-primary';
-                    break;
-                case 'Completado':
-                    badgeClass = 'bg-success';
-                    break;
+            // Calcular porcentaje completado
+            let completado = 0;
+            if (orden.op_cantidad_asignada > 0) {
+                completado = Math.round((orden.op_cantidad_completada / orden.op_cantidad_asignada) * 100);
             }
-
-            row.html(`
-                <td>${orden.id}</td>
-                <td>${orden.item_numero} - ${orden.item_nombre}</td>
-                <td>${orden.proceso_nombre}</td>
-                <td>${orden.usuario_nombre} ${orden.usuario_apellido}</td>
-                <td>${orden.op_cantidad_asignada}</td>
-                <td>${orden.op_cantidad_completada}</td>
-                <td>${fechaInicio}</td>
-                <td>${fechaFin}</td>
-                <td><span class="badge ${badgeClass}">${orden.op_estado}</span></td>
+            
+            // Determinar clases para badges
+            let estadoClass = '';
+            switch (orden.op_estado) {
+                case 'Pendiente': estadoClass = 'bg-warning'; break;
+                case 'En proceso': estadoClass = 'bg-primary'; break;
+                case 'Completado': estadoClass = 'bg-success'; break;
+            }
+            
+            let aprobacionClass = '';
+            switch (orden.op_estado_aprobacion) {
+                case 'Pendiente': aprobacionClass = 'bg-warning'; break;
+                case 'Aprobado': aprobacionClass = 'bg-success'; break;
+                case 'Rechazado': aprobacionClass = 'bg-danger'; break;
+            }
+            
+            // Construir la fila
+            row.append(`<td>${orden.id}</td>`);
+            row.append(`<td>${orden.po_numero}</td>`);
+            row.append(`<td>${orden.item_numero} - ${orden.item_nombre}</td>`);
+            row.append(`<td>${orden.pp_nombre}</td>`);
+            row.append(`<td>${orden.usuario_nombre} ${orden.usuario_apellido}</td>`);
+            row.append(`<td>${orden.modulo_codigo || 'No asignado'}</td>`);
+            row.append(`<td><span class="badge ${estadoClass}">${orden.op_estado}</span></td>`);
+            row.append(`<td>${fechaInicio}</td>`);
+            row.append(`<td>${fechaFin}</td>`);
+            row.append(`<td><span class="badge ${aprobacionClass}">${orden.op_estado_aprobacion}</span></td>`);
+            
+            // Barra de progreso para completado
+            row.append(`
                 <td>
-                    <button type="button" class="btn btn-light view-orden me-1" data-id="${orden.id}" data-bs-toggle="modal" data-bs-target="#ordenDetailModal">
-                        <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2 12C2 12 5.63636 5 12 5C18.3636 5 22 12 22 12C22 12 18.3636 19 12 19C5.63636 19 2 12 2 12Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                            <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                        </svg>
-                    </button>
-                    <button type="button" class="btn btn-light edit-orden me-1" data-id="${orden.id}" data-bs-toggle="modal" data-bs-target="#ordenModal">
-                        <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14 6L16.2929 3.70711C16.6834 3.31658 17.3166 3.31658 17.7071 3.70711L20.2929 6.29289C20.6834 6.68342 20.6834 7.31658 20.2929 7.70711L18 10M14 6L4.29289 15.7071C4.10536 15.8946 4 16.149 4 16.4142V19C4 19.5523 4.44772 20 5 20H7.58579C7.851 20 8.10536 19.8946 8.29289 19.7071L18 10M14 6L18 10" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                        </svg>
-                    </button>
-                    <button type="button" class="btn btn-light delete-orden" data-id="${orden.id}" data-bs-toggle="modal" data-bs-target="#deleteOrdenModal">
-                        <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#FF0000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                        </svg>
-                    </button>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                            style="width: ${completado}%;" 
+                            aria-valuenow="${completado}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                            ${completado}%
+                        </div>
+                    </div>
                 </td>
             `);
+            
+            // Botones de acción
+            let botonesAccion = '<td class="text-center">';
+            
+            // Botones Aprobar/Rechazar (solo si está pendiente)
+            if (orden.op_estado_aprobacion === 'Pendiente') {
+                botonesAccion += `
+                    <button type="button" class="btn btn-sm btn-success me-1 gestionar-aprobacion" 
+                        data-id="${orden.id}" title="Gestionar Aprobación">
+                        <i class="fas fa-check"></i>
+                    </button>
+                `;
+            }
+            
+            // Botón Ver detalles
+            botonesAccion += `
+                <button type="button" class="btn btn-sm btn-info me-1 ver-orden" 
+                    data-id="${orden.id}" data-bs-toggle="modal" data-bs-target="#ordenDetailModal" title="Ver Detalles">
+                    <i class="fas fa-eye"></i>
+                </button>
+            `;
+            
+            // Botón Editar
+            botonesAccion += `
+                <button type="button" class="btn btn-sm btn-primary me-1 editar-orden" 
+                    data-id="${orden.id}" data-bs-toggle="modal" data-bs-target="#editOrdenModal" title="Editar Orden">
+                    <i class="fas fa-edit"></i>
+                </button>
+            `;
+            
+            // Botón Eliminar
+            botonesAccion += `
+                <button type="button" class="btn btn-sm btn-danger eliminar-orden" 
+                    data-id="${orden.id}" data-bs-toggle="modal" data-bs-target="#deleteOrdenModal" title="Eliminar Orden">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            
+            botonesAccion += '</td>';
+            row.append(botonesAccion);
+            
             tbody.append(row);
         });
     }
@@ -105,169 +321,104 @@ $(document).ready(function() {
     // Función para actualizar la paginación
     function updatePagination(total, currentPage) {
         const totalPages = Math.ceil(total / recordsPerPage);
-        const pagination = $('#paginacion');
+        const pagination = $('#pagination');
         pagination.empty();
-
-        // Actualizar información de registros
-        $('#registros-mostrados').text(Math.min(recordsPerPage, total));
-        $('#registros-totales').text(total);
-
-        // Botón anterior
-        pagination.append(`
-            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${currentPage - 1}">Anterior</a>
-            </li>
-        `);
-
+        
+        if (totalPages <= 1) {
+            return;
+        }
+        
+        // Botón Anterior
+        const prevBtn = $('<li class="page-item">').append(
+            $('<a class="page-link" href="#" aria-label="Previous">').append(
+                $('<span aria-hidden="true">').html('&laquo;')
+            )
+        );
+        
+        if (currentPage === 1) {
+            prevBtn.addClass('disabled');
+        } else {
+            prevBtn.on('click', function(e) {
+                e.preventDefault();
+                loadOrdenes(currentPage - 1);
+            });
+        }
+        
+        pagination.append(prevBtn);
+        
         // Páginas
         for (let i = 1; i <= totalPages; i++) {
-            if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                pagination.append(`
-                    <li class="page-item ${i === currentPage ? 'active' : ''}">
-                        <a class="page-link" href="#" data-page="${i}">${i}</a>
-                    </li>
-                `);
-            } else if (i === currentPage - 3 || i === currentPage + 3) {
-                pagination.append('<li class="page-item disabled"><a class="page-link">...</a></li>');
+            const pageItem = $('<li class="page-item">').append(
+                $('<a class="page-link" href="#">').text(i)
+            );
+            
+            if (i === currentPage) {
+                pageItem.addClass('active');
             }
+            
+            pageItem.on('click', function(e) {
+                e.preventDefault();
+                loadOrdenes(i);
+            });
+            
+            pagination.append(pageItem);
         }
-
-        // Botón siguiente
-        pagination.append(`
-            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${currentPage + 1}">Siguiente</a>
-            </li>
-        `);
+        
+        // Botón Siguiente
+        const nextBtn = $('<li class="page-item">').append(
+            $('<a class="page-link" href="#" aria-label="Next">').append(
+                $('<span aria-hidden="true">').html('&raquo;')
+            )
+        );
+        
+        if (currentPage === totalPages) {
+            nextBtn.addClass('disabled');
+        } else {
+            nextBtn.on('click', function(e) {
+                e.preventDefault();
+                loadOrdenes(currentPage + 1);
+            });
+        }
+        
+        pagination.append(nextBtn);
     }
 
     // Event Listeners
     
     // Cambio en los filtros
     $('.filtro').on('change', function() {
-        currentPage = 1;
-        loadOrdenes(currentPage);
+        loadOrdenes(1);
     });
-
+    
     // Limpiar filtros
     $('#limpiar-filtros').on('click', function() {
-        $('#item_numero').val('');
-        $('#operador').val('');
-        $('#estado').val('');
-        $('#fecha_inicio').val('');
-        $('#fecha_fin').val('');
-        currentPage = 1;
-        loadOrdenes(currentPage);
+        $('.filtro').val('');
+        loadOrdenes(1);
     });
-
-    // Cambio en registros por página
-    $('#registros-por-pagina').on('change', function() {
-        recordsPerPage = parseInt($(this).val());
-        currentPage = 1;
-        loadOrdenes(currentPage);
-    });
-
-    // Paginación
-    $(document).on('click', '.page-link', function(e) {
-        e.preventDefault();
-        const page = $(this).data('page');
-        if (page) {
-            currentPage = page;
-            loadOrdenes(currentPage);
-        }
-    });
-
+    
     // Ordenamiento de columnas
     $('.sortable').on('click', function() {
         const column = $(this).data('column');
-        if (column === sortColumn) {
+        
+        if (sortColumn === column) {
             sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
             sortColumn = column;
             sortDirection = 'asc';
         }
-        loadOrdenes(currentPage);
-    });
-
-    // Modal de Nueva/Editar Orden
-    $('#ordenModal').on('show.bs.modal', function(e) {
-        const button = $(e.relatedTarget);
-        const id = button.data('id');
-        const modal = $(this);
         
-        // Limpiar el formulario
-        $('#ordenForm')[0].reset();
+        // Actualizar indicadores visuales
+        $('.sortable i').removeClass('fa-sort-up fa-sort-down').addClass('fa-sort');
+        $(this).find('i').removeClass('fa-sort').addClass(sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
         
-        if (id) {
-            // Modo edición
-            modal.find('.modal-title').text('Editar Orden de Producción');
-            
-            // Cargar datos de la orden
-            $.ajax({
-                url: '../controllers/OrdenProduccionController.php',
-                type: 'GET',
-                data: {
-                    action: 'getOrdenInfo',
-                    id: id
-                },
-                success: function(response) {
-                    if (response.success) {
-                        const orden = response.orden;
-                        $('#ordenId').val(orden.id);
-                        $('#poDetalle').val(orden.op_id_pd);
-                        $('#proceso').val(orden.op_id_proceso);
-                        $('#operadorAsignado').val(orden.op_operador_asignado);
-                        $('#ordenEstado').val(orden.op_estado);
-                        $('#cantidadAsignada').val(orden.op_cantidad_asignada);
-                        $('#cantidadCompletada').val(orden.op_cantidad_completada);
-                        $('#fechaInicio').val(orden.op_fecha_inicio);
-                        $('#fechaFin').val(orden.op_fecha_fin);
-                        $('#comentario').val(orden.op_comentario);
-                    } else {
-                        alert('Error al cargar la información de la orden: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('Error al conectar con el servidor');
-                }
-            });
-        } else {
-            // Modo creación
-            modal.find('.modal-title').text('Nueva Orden de Producción');
-            $('#ordenId').val('');
-        }
+        loadOrdenes(1);
     });
-
-    // Guardar Orden
-    $('#saveOrden').on('click', function() {
-        const formData = new FormData($('#ordenForm')[0]);
-        const id = $('#ordenId').val();
-        formData.append('action', id ? 'update' : 'create');
-
-        $.ajax({
-            url: '../controllers/OrdenProduccionController.php',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    $('#ordenModal').modal('hide');
-                    loadOrdenes(currentPage);
-                } else {
-                    alert('Error al guardar la orden: ' + response.message);
-                }
-            },
-            error: function() {
-                alert('Error al conectar con el servidor');
-            }
-        });
-    });
-
+    
     // Modal de Ver Detalles
-    $('#ordenDetailModal').on('show.bs.modal', function(e) {
-        const button = $(e.relatedTarget);
-        const id = button.data('id');
+    $(document).on('click', '.ver-orden', function() {
+        const id = $(this).data('id');
         
+        // Cargar detalles de la orden
         $.ajax({
             url: '../controllers/OrdenProduccionController.php',
             type: 'GET',
@@ -278,15 +429,62 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     const orden = response.orden;
-                    $('#detailItem').text(`${orden.item_numero} - ${orden.item_nombre}`);
-                    $('#detailProceso').text(orden.proceso_nombre);
-                    $('#detailOperador').text(`${orden.usuario_nombre} ${orden.usuario_apellido}`);
-                    $('#detailEstado').text(orden.op_estado);
+                    
+                    // Llenar el modal con la información
+                    $('#ordenDetailTitle').text('Detalles de Orden #' + orden.id);
+                    
+                    // Información básica
+                    $('#detailPoNumero').text(orden.po_numero);
+                    $('#detailItem').text(orden.item_numero + ' - ' + orden.item_nombre);
+                    $('#detailProceso').text(orden.pp_nombre);
+                    $('#detailOperador').text(orden.usuario_nombre + ' ' + orden.usuario_apellido);
+                    $('#detailModulo').text(orden.modulo_codigo || 'No asignado');
+                    
+                    // Fechas
+                    $('#detailFechaCreacion').text(new Date(orden.op_fecha_creacion).toLocaleDateString('es-ES'));
+                    $('#detailFechaInicio').text(orden.op_fecha_inicio ? new Date(orden.op_fecha_inicio).toLocaleDateString('es-ES') : 'No iniciada');
+                    $('#detailFechaFin').text(orden.op_fecha_fin ? new Date(orden.op_fecha_fin).toLocaleDateString('es-ES') : 'No finalizada');
+                    
+                    // Estado y progreso
+                    $('#detailEstado').html(`<span class="badge ${getEstadoClass(orden.op_estado)}">${orden.op_estado}</span>`);
+                    
+                    let completado = 0;
+                    if (orden.op_cantidad_asignada > 0) {
+                        completado = Math.round((orden.op_cantidad_completada / orden.op_cantidad_asignada) * 100);
+                    }
+                    
+                    $('#detailProgreso').html(`
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                style="width: ${completado}%;" 
+                                aria-valuenow="${completado}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                                ${completado}%
+                            </div>
+                        </div>
+                    `);
+                    
+                    // Cantidades
                     $('#detailCantidadAsignada').text(orden.op_cantidad_asignada);
                     $('#detailCantidadCompletada').text(orden.op_cantidad_completada);
-                    $('#detailFechaInicio').text(new Date(orden.op_fecha_inicio).toLocaleDateString('es-ES'));
-                    $('#detailFechaFin').text(orden.op_fecha_fin ? new Date(orden.op_fecha_fin).toLocaleDateString('es-ES') : 'No definida');
+                    
+                    // Aprobación
+                    $('#detailEstadoAprobacion').html(`<span class="badge ${getAprobacionClass(orden.op_estado_aprobacion)}">${orden.op_estado_aprobacion}</span>`);
+                    
+                    // Comentarios
                     $('#detailComentario').text(orden.op_comentario || 'Sin comentarios');
+                    
+                    // Motivo de rechazo (solo se muestra si la orden está rechazada)
+                    if (orden.op_estado_aprobacion === 'Rechazado' && orden.op_motivo_rechazo) {
+                        $('#detailMotivoRechazoRow').show();
+                        $('#detailMotivoRechazo').text(orden.op_motivo_rechazo);
+                    } else {
+                        $('#detailMotivoRechazoRow').hide();
+                    }
+                    
+                    // Mostrar el modal
+                    $('#ordenDetailModal').modal('show');
                 } else {
                     alert('Error al cargar los detalles de la orden: ' + response.message);
                 }
@@ -296,28 +494,299 @@ $(document).ready(function() {
             }
         });
     });
-
-    // Modal de Eliminar
-    $('#deleteOrdenModal').on('show.bs.modal', function(e) {
-        const button = $(e.relatedTarget);
-        const id = button.data('id');
-        $('#deleteOrdenId').val(id);
+    
+    // Modal de Editar Orden
+    $(document).on('click', '.editar-orden', function() {
+        const id = $(this).data('id');
+        
+        // Cargar detalles de la orden para editar
+        $.ajax({
+            url: '../controllers/OrdenProduccionController.php',
+            type: 'GET',
+            data: {
+                action: 'getOrdenInfo',
+                id: id
+            },
+            success: function(response) {
+                if (response.success) {
+                    const orden = response.orden;
+                    
+                    // Llenar el formulario con los datos
+                    $('#editOrdenId').val(orden.id);
+                    $('#editPoDetalle').val(orden.op_id_pd).trigger('change');
+                    $('#editProceso').val(orden.op_id_proceso).trigger('change');
+                    $('#editOperador').val(orden.op_operador_asignado).trigger('change');
+                    $('#editFechaInicio').val(orden.op_fecha_inicio || '');
+                    $('#editFechaFin').val(orden.op_fecha_fin || '');
+                    
+                    // Actualizar el estado con badge
+                    $('#editEstadoSelect').val(orden.op_estado);
+                    updateEditEstadoBadge(orden.op_estado);
+                    
+                    // Actualizar campos de cantidad
+                    $('#editCantidadAsignada').val(orden.op_cantidad_asignada);
+                    $('#editCantidadCompletada').val(orden.op_cantidad_completada);
+                    
+                    // Actualizar información de cantidad
+                    const cantidadTotal = parseInt(orden.pd_cant_piezas_total) || 0;
+                    const cantidadAsignada = parseInt(orden.op_cantidad_asignada) || 0;
+                    $('#editCantidadInfo').text(cantidadAsignada + '/' + cantidadTotal);
+                    
+                    $('#editComentario').val(orden.op_comentario || '');
+                    
+                    // Mostrar fechas de creación y modificación
+                    $('#editFechaCreacion').text(orden.op_fecha_creacion ? formatDate(orden.op_fecha_creacion) : '-');
+                    $('#editFechaModificacion').text(orden.op_fecha_modificacion ? formatDate(orden.op_fecha_modificacion) : '-');
+                    
+                    // Mostrar el modal
+                    $('#editOrdenModal').modal('show');
+                } else {
+                    alert('Error al cargar los detalles de la orden: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Error al conectar con el servidor');
+            }
+        });
     });
-
-    // Confirmar Eliminación
-    $('#confirmDelete').on('click', function() {
-        const formData = new FormData($('#deleteOrdenForm')[0]);
-        formData.append('action', 'delete');
-
+    
+    // Función para actualizar el badge de estado en el modal de edición
+    function updateEditEstadoBadge(estado) {
+        let badgeClass = '';
+        switch (estado) {
+            case 'Pendiente':
+                badgeClass = 'bg-warning';
+                break;
+            case 'En proceso':
+                badgeClass = 'bg-primary';
+                break;
+            case 'Completado':
+                badgeClass = 'bg-success';
+                break;
+        }
+        
+        $('#editEstadoBadge').html(`<span class="badge ${badgeClass}">${estado}</span>`);
+    }
+    
+    // Función para formatear fechas
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES') + ' ' + date.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
+    }
+    
+    // Evento para cuando cambia el estado en el modal de edición
+    $('#editEstadoSelect').on('change', function() {
+        updateEditEstadoBadge($(this).val());
+    });
+    
+    // Gestionar Aprobación (reemplaza los métodos aprobar-orden y rechazar-orden)
+    $(document).on('click', '.gestionar-aprobacion', function() {
+        const id = $(this).data('id');
+        $('#aprobacionOrdenId').val(id);
+        $('#aprobacionOrdenModal').modal('show');
+    });
+    
+    // Confirmar Aprobación
+    $('#confirmarAprobacion').on('click', function() {
+        const id = $('#aprobacionOrdenId').val();
+        
+        // Mostrar indicador de carga
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Procesando...');
+        
         $.ajax({
             url: '../controllers/OrdenProduccionController.php',
             type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
+            dataType: 'json',
+            data: {
+                action: 'aprobarOrden',
+                id: id
+            },
             success: function(response) {
                 if (response.success) {
+                    alert(response.message);
+                    $('#aprobacionOrdenModal').modal('hide');
+                    loadOrdenes(currentPage);
+                } else {
+                    alert('Error al aprobar la orden: ' + (response.message || 'Error desconocido'));
+                    console.error('Error al aprobar orden:', response);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error AJAX:', xhr, status, error);
+                let errorMsg = 'Error al conectar con el servidor';
+                
+                try {
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = 'Error al aprobar la orden: ' + xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            errorMsg = 'Error al aprobar la orden: ' + response.message;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error al procesar respuesta:', e);
+                }
+                
+                alert(errorMsg);
+            },
+            complete: function() {
+                // Restaurar el botón
+                $('#confirmarAprobacion').prop('disabled', false).html('<i class="fas fa-check-circle me-2"></i> Aprobar Orden');
+            }
+        });
+    });
+    
+    // Confirmar Rechazo
+    $('#confirmarRechazo').on('click', function() {
+        const id = $('#aprobacionOrdenId').val();
+        const motivo = $('#motivoRechazo').val();
+        
+        if (!motivo) {
+            alert('Por favor, ingrese un motivo para el rechazo');
+            return;
+        }
+        
+        // Mostrar indicador de carga
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Procesando...');
+        
+        $.ajax({
+            url: '../controllers/OrdenProduccionController.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'rechazarOrden',
+                id: id,
+                motivo: motivo
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert(response.message);
+                    $('#aprobacionOrdenModal').modal('hide');
+                    $('#motivoRechazo').val('');
+                    loadOrdenes(currentPage);
+                } else {
+                    alert('Error al rechazar la orden: ' + (response.message || 'Error desconocido'));
+                    console.error('Error al rechazar orden:', response);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error AJAX:', xhr, status, error);
+                let errorMsg = 'Error al conectar con el servidor';
+                
+                try {
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = 'Error al rechazar la orden: ' + xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            errorMsg = 'Error al rechazar la orden: ' + response.message;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error al procesar respuesta:', e);
+                }
+                
+                alert(errorMsg);
+            },
+            complete: function() {
+                // Restaurar el botón
+                $('#confirmarRechazo').prop('disabled', false).html('<i class="fas fa-times-circle me-2"></i> Rechazar Orden');
+            }
+        });
+    });
+    
+    // Guardar Orden (Nueva)
+    $('#saveOrden').on('click', function() {
+        if ($('#ordenForm')[0].checkValidity()) {
+            const formData = new FormData($('#ordenForm')[0]);
+            formData.append('action', 'create');
+            
+            $.ajax({
+                url: '../controllers/OrdenProduccionController.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        alert('Orden de producción creada correctamente');
+                        $('#ordenModal').modal('hide');
+                        $('#ordenForm')[0].reset();
+                        loadOrdenes(1);
+                    } else {
+                        alert('Error al crear la orden: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error al conectar con el servidor');
+                }
+            });
+        } else {
+            $('#ordenForm')[0].reportValidity();
+        }
+    });
+    
+    // Actualizar Orden (Editar)
+    $('#updateOrden').on('click', function() {
+        if ($('#editOrdenForm')[0].checkValidity()) {
+            const formData = new FormData($('#editOrdenForm')[0]);
+            formData.append('action', 'update');
+            
+            $.ajax({
+                url: '../controllers/OrdenProduccionController.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        alert('Orden de producción actualizada correctamente');
+                        $('#editOrdenModal').modal('hide');
+                        loadOrdenes(currentPage);
+                    } else {
+                        alert('Error al actualizar la orden: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error al conectar con el servidor');
+                }
+            });
+        } else {
+            $('#editOrdenForm')[0].reportValidity();
+        }
+    });
+
+    // Modal de Eliminar
+    $(document).on('click', '.eliminar-orden', function() {
+        const id = $(this).data('id');
+        $('#deleteOrdenId').val(id);
+        $('#deleteOrdenModal').modal('show');
+    });
+    
+    // Confirmar Eliminación
+    $('#confirmDelete').on('click', function() {
+        const id = $('#deleteOrdenId').val();
+        const password = $('#deletePassword').val();
+        
+        if (!password) {
+            alert('Por favor ingrese su contraseña para confirmar la eliminación');
+            return;
+        }
+        
+        $.ajax({
+            url: '../controllers/OrdenProduccionController.php',
+            type: 'POST',
+            data: {
+                action: 'delete',
+                id: id,
+                password: password
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Orden de producción eliminada correctamente');
                     $('#deleteOrdenModal').modal('hide');
+                    $('#deletePassword').val('');
                     loadOrdenes(currentPage);
                 } else {
                     alert('Error al eliminar la orden: ' + response.message);
@@ -328,6 +797,25 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Funciones auxiliares
+    function getEstadoClass(estado) {
+        switch (estado) {
+            case 'Pendiente': return 'bg-warning';
+            case 'En proceso': return 'bg-primary';
+            case 'Completado': return 'bg-success';
+            default: return 'bg-secondary';
+        }
+    }
+    
+    function getAprobacionClass(estado) {
+        switch (estado) {
+            case 'Pendiente': return 'bg-warning';
+            case 'Aprobado': return 'bg-success';
+            case 'Rechazado': return 'bg-danger';
+            default: return 'bg-secondary';
+        }
+    }
 
     // Cargar órdenes inicialmente
     loadOrdenes();

@@ -16,6 +16,15 @@ class UsuarioController {
             return null;
         }
     }
+    
+    public function getUsuariosActivos() {
+        try {
+            return $this->usuario->getAllActive();
+        } catch (Exception $e) {
+            error_log("Error al obtener usuarios activos: " . $e->getMessage());
+            return null;
+        }
+    }
 
     public function handleRequest() {
         header('Content-Type: application/json');
@@ -66,6 +75,7 @@ class UsuarioController {
                                     'apellido' => $user['usuario_apellido'],
                                     'nombre_completo' => $nombreCompleto,
                                     'usuario' => $user['usuario_usuario'],
+                                    'usuario_alias' => $user['usuario_alias'],
                                     'rol_id' => $user['usuario_rol_id'],
                                     'rol_nombre' => $rolNombre,
                                     'departamento' => $user['usuario_departamento']

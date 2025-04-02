@@ -140,6 +140,7 @@ class Usuario {
     public function getByUsername($username) {
         $query = "SELECT 
                     id,
+                    usuario_alias,
                     usuario_alias as usuario_usuario,
                     usuario_nombre,
                     usuario_apellido,
@@ -182,6 +183,30 @@ class Usuario {
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
 
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getAllActive() {
+        $query = "SELECT 
+                    u.id,
+                    u.usuario_alias as usuario_usuario,
+                    u.usuario_nombre,
+                    u.usuario_apellido,
+                    u.usuario_departamento,
+                    u.usuario_rol_id,
+                    u.usuario_modulo_id,
+                    r.rol_nombre,
+                    m.modulo_codigo,
+                    u.estado
+                FROM " . $this->table_name . " u
+                LEFT JOIN roles r ON u.usuario_rol_id = r.id
+                LEFT JOIN modulos m ON u.usuario_modulo_id = m.id
+                WHERE u.estado = 'Activo'
+                ORDER BY u.usuario_nombre ASC, u.usuario_apellido ASC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

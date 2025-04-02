@@ -116,7 +116,7 @@ $modulos = $moduloController->getModulos();
 
         <!-- Modal Nuevo Módulo -->
         <div class="modal fade" id="nuevoModuloModal" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog" style="width: 700px;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Nuevo Módulo</h5>
@@ -148,8 +148,8 @@ $modulos = $moduloController->getModulos();
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" id="guardarModulo">Guardar</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-dark" id="guardarModulo">Guardar</button>
                     </div>
                 </div>
             </div>
@@ -157,7 +157,7 @@ $modulos = $moduloController->getModulos();
 
         <!-- Modal Editar Módulo -->
         <div class="modal fade" id="editarModuloModal" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog" style="width: 700px;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Editar Módulo</h5>
@@ -205,8 +205,8 @@ $modulos = $moduloController->getModulos();
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" id="actualizarModulo">Actualizar</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-dark" id="actualizarModulo">Actualizar</button>
                     </div>
                 </div>
             </div>

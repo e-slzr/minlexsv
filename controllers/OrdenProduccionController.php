@@ -7,6 +7,11 @@ class OrdenProduccionController {
     private $db;
 
     public function __construct() {
+        // Asegurarse de que la sesión esté iniciada
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $database = new Database();
         $this->db = $database->getConnection();
         $this->ordenProduccion = new OrdenProduccion($this->db);
@@ -53,11 +58,54 @@ class OrdenProduccionController {
                     }
                     break;
 
+                case 'getPoDetalleInfo':
+                    if (!isset($_GET['id'])) {
+                        throw new Exception('ID de detalle de PO no proporcionado');
+                    }
+                    
+                    $poDetalleId = $_GET['id'];
+                    $procesoId = $_GET['proceso'] ?? null;
+                    
+                    // Obtener la cantidad total del detalle de PO
+                    $query = "SELECT pd_cant_piezas_total FROM po_detalle WHERE id = :id";
+                    $stmt = $this->db->prepare($query);
+                    $stmt->bindParam(':id', $poDetalleId, PDO::PARAM_INT);
+                    $stmt->execute();
+                    
+                    if ($stmt->rowCount() === 0) {
+                        throw new Exception('Detalle de PO no encontrado');
+                    }
+                    
+                    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $cantidadTotal = $row['pd_cant_piezas_total'];
+                    
+                    // Obtener la cantidad ya asignada a este proceso
+                    $cantidadAsignada = 0;
+                    
+                    if ($procesoId) {
+                        $query = "SELECT SUM(op_cantidad_asignada) as total_asignado 
+                                FROM ordenes_produccion 
+                                WHERE op_id_pd = :pd_id AND op_id_proceso = :proceso_id";
+                        $stmt = $this->db->prepare($query);
+                        $stmt->bindParam(':pd_id', $poDetalleId, PDO::PARAM_INT);
+                        $stmt->bindParam(':proceso_id', $procesoId, PDO::PARAM_INT);
+                        $stmt->execute();
+                        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                        $cantidadAsignada = $row['total_asignado'] ?: 0;
+                    }
+                    
+                    $response = [
+                        'success' => true,
+                        'cantidadTotal' => $cantidadTotal,
+                        'cantidadAsignada' => $cantidadAsignada
+                    ];
+                    break;
+
                 case 'create':
                 case 'update':
                     // Validar datos requeridos
                     $requiredFields = ['op_id_pd', 'op_operador_asignado', 'op_id_proceso', 
-                                     'op_fecha_inicio', 'op_cantidad_asignada'];
+                                     'op_cantidad_asignada'];
                     foreach ($requiredFields as $field) {
                         if (!isset($_POST[$field]) || empty($_POST[$field])) {
                             throw new Exception("El campo {$field} es requerido");
@@ -68,12 +116,13 @@ class OrdenProduccionController {
                         'op_id_pd' => $_POST['op_id_pd'],
                         'op_operador_asignado' => $_POST['op_operador_asignado'],
                         'op_id_proceso' => $_POST['op_id_proceso'],
-                        'op_fecha_inicio' => $_POST['op_fecha_inicio'],
+                        'op_fecha_inicio' => $_POST['op_fecha_inicio'] ?? null,
                         'op_fecha_fin' => $_POST['op_fecha_fin'] ?? null,
                         'op_estado' => $_POST['op_estado'] ?? 'Pendiente',
                         'op_cantidad_asignada' => $_POST['op_cantidad_asignada'],
                         'op_cantidad_completada' => $_POST['op_cantidad_completada'] ?? 0,
-                        'op_comentario' => $_POST['op_comentario'] ?? null
+                        'op_comentario' => $_POST['op_comentario'] ?? null,
+                        'op_modulo_id' => $_POST['op_modulo_id'] ?? null
                     ];
 
                     if ($action === 'update') {
@@ -166,19 +215,106 @@ class OrdenProduccionController {
                     ];
                     break;
 
+                case 'aprobarOrden':
+                    if (!isset($_POST['id'])) {
+                        throw new Exception('ID de orden no proporcionado');
+                    }
+                    
+                    $id = $_POST['id'];
+                    
+                    // Verificar que el usuario esté autenticado
+                    if (!isset($_SESSION['user']) || !isset($_SESSION['user']['id'])) {
+                        error_log("Error de autenticación: SESSION = " . print_r($_SESSION, true));
+                        throw new Exception('Usuario no autenticado');
+                    }
+                    
+                    $usuarioId = $_SESSION['user']['id'];
+                    
+                    // Verificar que el alias del usuario esté disponible
+                    if (!isset($_SESSION['user']['usuario_alias'])) {
+                        error_log("Error: usuario_alias no disponible en la sesión. SESSION['user'] = " . print_r($_SESSION['user'], true));
+                        $usuarioAlias = $_SESSION['user']['usuario'] ?? 'Usuario';
+                    } else {
+                        $usuarioAlias = $_SESSION['user']['usuario_alias'];
+                    }
+                    
+                    $data = [
+                        'id' => $id,
+                        'op_usuario_aprobacion' => $usuarioId,
+                        'op_fecha_aprobacion' => date('Y-m-d'),
+                        'op_estado_aprobacion' => 'Aprobado'
+                    ];
+                    
+                    $result = $this->ordenProduccion->updateAprobacion($data);
+                    
+                    $response = [
+                        'success' => true,
+                        'message' => 'Orden aprobada correctamente por ' . $usuarioAlias
+                    ];
+                    break;
+                    
+                case 'rechazarOrden':
+                    if (!isset($_POST['id'])) {
+                        throw new Exception('ID de orden no proporcionado');
+                    }
+                    
+                    $id = $_POST['id'];
+                    $motivo = $_POST['motivo'] ?? '';
+                    
+                    // Verificar que el usuario esté autenticado
+                    if (!isset($_SESSION['user']) || !isset($_SESSION['user']['id'])) {
+                        error_log("Error de autenticación en rechazarOrden: SESSION = " . print_r($_SESSION, true));
+                        throw new Exception('Usuario no autenticado');
+                    }
+                    
+                    $usuarioId = $_SESSION['user']['id'];
+                    
+                    // Verificar que el alias del usuario esté disponible
+                    if (!isset($_SESSION['user']['usuario_alias'])) {
+                        error_log("Error: usuario_alias no disponible en la sesión. SESSION['user'] = " . print_r($_SESSION['user'], true));
+                        $usuarioAlias = $_SESSION['user']['usuario'] ?? 'Usuario';
+                    } else {
+                        $usuarioAlias = $_SESSION['user']['usuario_alias'];
+                    }
+                    
+                    $data = [
+                        'id' => $id,
+                        'op_usuario_aprobacion' => $usuarioId,
+                        'op_fecha_aprobacion' => date('Y-m-d'),
+                        'op_estado_aprobacion' => 'Rechazado',
+                        'op_motivo_rechazo' => 'Rechazado por ' . $usuarioAlias . ': ' . $motivo
+                    ];
+                    
+                    $result = $this->ordenProduccion->updateAprobacion($data);
+                    
+                    $response = [
+                        'success' => true,
+                        'message' => 'Orden rechazada correctamente por ' . $usuarioAlias
+                    ];
+                    break;
+
                 default:
                     throw new Exception('Acción no válida');
             }
+            
+            echo json_encode($response);
+            
         } catch (Exception $e) {
-            error_log("Error en OrdenProduccionController: " . $e->getMessage());
-            $response = [
+            // Limpiar cualquier salida previa
+            ob_clean();
+            
+            // Asegurarse de que el encabezado Content-Type esté configurado correctamente
+            header('Content-Type: application/json');
+            
+            // Enviar respuesta de error
+            echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
-            ];
+            ]);
+            
+            // Terminar la ejecución
+            exit();
         }
-
-        echo json_encode($response);
-        exit();
     }
 
     // Métodos auxiliares para uso desde PHP
@@ -207,6 +343,7 @@ class OrdenProduccionController {
                         pd.pd_item,
                         i.item_numero,
                         i.item_nombre,
+                        i.item_talla,
                         po.po_numero,
                         pp.pp_nombre as proceso_nombre,
                         m.modulo_codigo
