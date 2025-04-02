@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 02-04-2025 a las 09:51:52
+-- Tiempo de generación: 02-04-2025 a las 11:12:14
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -164,9 +164,9 @@ CREATE TABLE `ordenes_produccion` (
   `op_id_pd` int(11) NOT NULL,
   `op_operador_asignado` int(11) NOT NULL,
   `op_id_proceso` int(11) NOT NULL,
-  `op_usuario_aprobacion` int(11) NOT NULL,
+  `op_usuario_aprobacion` int(4) DEFAULT NULL,
   `op_fecha_aprobacion` date DEFAULT NULL,
-  `op_estado_aprobacion` enum('Aprobado','Pendiente','Rechazado','') NOT NULL,
+  `op_estado_aprobacion` enum('Aprobado','Pendiente','Rechazado','') DEFAULT 'Pendiente',
   `op_fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
   `op_fecha_modificacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `op_fecha_inicio` date DEFAULT NULL,
@@ -175,6 +175,7 @@ CREATE TABLE `ordenes_produccion` (
   `op_cantidad_asignada` int(11) NOT NULL,
   `op_cantidad_completada` int(11) DEFAULT 0,
   `op_comentario` text DEFAULT NULL,
+  `op_motivo_rechazo` text DEFAULT NULL,
   `op_modulo_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
@@ -182,8 +183,9 @@ CREATE TABLE `ordenes_produccion` (
 -- Volcado de datos para la tabla `ordenes_produccion`
 --
 
-INSERT INTO `ordenes_produccion` (`id`, `op_id_pd`, `op_operador_asignado`, `op_id_proceso`, `op_usuario_aprobacion`, `op_fecha_aprobacion`, `op_estado_aprobacion`, `op_fecha_creacion`, `op_fecha_modificacion`, `op_fecha_inicio`, `op_fecha_fin`, `op_estado`, `op_cantidad_asignada`, `op_cantidad_completada`, `op_comentario`, `op_modulo_id`) VALUES
-(3, 5, 5, 1, 0, NULL, 'Aprobado', '2025-04-02 06:56:11', '2025-04-02 06:56:11', NULL, NULL, 'Pendiente', 750, 0, 'Comentario de prueba.', NULL);
+INSERT INTO `ordenes_produccion` (`id`, `op_id_pd`, `op_operador_asignado`, `op_id_proceso`, `op_usuario_aprobacion`, `op_fecha_aprobacion`, `op_estado_aprobacion`, `op_fecha_creacion`, `op_fecha_modificacion`, `op_fecha_inicio`, `op_fecha_fin`, `op_estado`, `op_cantidad_asignada`, `op_cantidad_completada`, `op_comentario`, `op_motivo_rechazo`, `op_modulo_id`) VALUES
+(3, 5, 5, 1, 1, '2025-04-02', 'Pendiente', '2025-04-02 06:56:11', '2025-04-02 08:38:15', NULL, NULL, 'Pendiente', 750, 0, '', '', NULL),
+(7, 5, 1, 1, NULL, NULL, 'Pendiente', '2025-04-02 09:06:55', '2025-04-02 09:08:09', NULL, NULL, 'Pendiente', 150, 0, '', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -555,7 +557,7 @@ ALTER TABLE `modulos`
 -- AUTO_INCREMENT de la tabla `ordenes_produccion`
 --
 ALTER TABLE `ordenes_produccion`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `po`
