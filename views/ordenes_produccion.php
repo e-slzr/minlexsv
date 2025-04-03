@@ -129,7 +129,6 @@ $pageTitle = "Órdenes de Producción";
                             <th class="sortable" data-column="fecha_fin">Fecha Fin <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-column="aprobacion">Aprobación <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-column="completado">Completado <i class="fas fa-sort"></i></th>
-                            <th class="sortable" data-column="fecha_modificacion">Últ. Modificación <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-column="opciones">Opciones <i class="fas fa-sort"></i></th>
                         </tr>
                     </thead>
@@ -197,41 +196,6 @@ $pageTitle = "Órdenes de Producción";
                                 if ($orden['op_cantidad_asignada'] > 0) {
                                     $completado = round(($orden['op_cantidad_completada'] / $orden['op_cantidad_asignada']) * 100);
                                 }
-                                echo '<td>';
-                                echo '<div class="progress" style="height: 20px;">';
-                                echo '<div class="progress-bar bg-success" role="progressbar" style="width: ' . $completado . '%;" aria-valuenow="' . $completado . '" aria-valuemin="0" aria-valuemax="100">' . $completado . '%</div>';
-                                echo '</div>';
-                                echo '</td>';
-                                
-                                // Fecha de modificación
-                                echo '<td>' . ($orden['op_fecha_modificacion'] ? htmlspecialchars(date('d/m/Y H:i', strtotime($orden['op_fecha_modificacion']))) : '-') . '</td>';
-                                
-                                // Botones de acción
-                                echo '<td class="text-center">';
-                                
-                                // Botón para aprobar/rechazar orden (solo si está pendiente)
-                                if ($orden['op_estado_aprobacion'] == 'Pendiente') {
-                                    echo '<button type="button" class="btn btn-sm btn-outline-primary me-1 gestionar-aprobacion" data-id="' . $orden['id'] . '" title="Gestionar Aprobación">';
-                                    echo '<i class="fas fa-check-circle"></i>';
-                                    echo '</button>';
-                                }
-                                
-                                // Botón Ver detalles
-                                echo '<button type="button" class="btn btn-sm btn-info me-1 ver-orden" data-id="' . $orden['id'] . '" title="Ver Detalles">';
-                                echo '<i class="fas fa-eye"></i>';
-                                echo '</button>';
-                                
-                                // Botón Editar
-                                echo '<button type="button" class="btn btn-sm btn-primary me-1 editar-orden" data-id="' . $orden['id'] . '" title="Editar Orden">';
-                                echo '<i class="fas fa-edit"></i>';
-                                echo '</button>';
-                                
-                                // Botón Eliminar
-                                echo '<button type="button" class="btn btn-sm btn-danger eliminar-orden" data-id="' . $orden['id'] . '" title="Eliminar Orden">';
-                                echo '<i class="fas fa-trash"></i>';
-                                echo '</button>';
-                                
-                                echo '</td>';
                                 echo '</tr>';
                             }
                         }
@@ -391,7 +355,7 @@ $pageTitle = "Órdenes de Producción";
                 </div>
                 <div class="modal-body">
                     <form id="editOrdenForm">
-                        <input type="hidden" id="editOrdenId" name="id">
+                        <input type="hidden" id="editOrdenId" name="id" value="0">
                         
                         <div class="row">
                             <!-- Información General - Lado Izquierdo -->
@@ -407,6 +371,7 @@ $pageTitle = "Órdenes de Producción";
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
+                                    <input type="hidden" id="editPoDetalleHidden" name="op_id_pd">
                                     <small class="text-muted">El PO Detalle no se puede cambiar después de crear la orden</small>
                                 </div>
                                 
@@ -419,6 +384,7 @@ $pageTitle = "Órdenes de Producción";
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
+                                    <input type="hidden" id="editProcesoHidden" name="op_id_proceso">
                                     <small class="text-muted">El proceso no se puede cambiar después de crear la orden</small>
                                 </div>
                                 
@@ -509,7 +475,7 @@ $pageTitle = "Órdenes de Producción";
 
     <!-- Modal para Ver Detalles de Orden -->
     <div class="modal fade" id="ordenDetailModal" tabindex="-1" aria-labelledby="ordenDetailModalLabel" aria-hidden="true">
-        <div class="modal-dialog" style="max-width: 1000px;">
+        <div class="modal-dialog" style="max-width: 1250px;">
             <div class="modal-content">
                 <div class="modal-header bg-dark text-white">
                     <h5 class="modal-title" id="ordenDetailModalLabel">Detalles de la Orden de Producción</h5>
@@ -521,7 +487,7 @@ $pageTitle = "Órdenes de Producción";
                         <div class="col-md-6">
                             <table class="table table-sm">
                                 <tr>
-                                    <th style="width: 40%">PO:</th>
+                                    <th style="width: 40%">Número de PO:</th>
                                     <td id="detailPO"></td>
                                 </tr>
                                 <tr>
@@ -530,7 +496,7 @@ $pageTitle = "Órdenes de Producción";
                                 </tr>
                                 <tr>
                                     <th>Proceso:</th>
-                                    <td id="detailProceso"></td>
+                                    <td id="detailProcesoContainer"></td>
                                 </tr>
                                 <tr>
                                     <th>Operador:</th>
@@ -540,27 +506,28 @@ $pageTitle = "Órdenes de Producción";
                                     <th>Módulo:</th>
                                     <td id="detailModulo"></td>
                                 </tr>
+                                <tr>
+                                    <th>Estado de la Orden:</th>
+                                    <td id="detailEstadoContainer"></td>
+                                </tr>
                             </table>
                         </div>
                         <div class="col-md-6">
+                            <!-- <h5 class="border-bottom pb-2 mb-2">Información de Aprobación</h5> -->
                             <table class="table table-sm">
                                 <tr>
-                                    <th style="width: 40%">Estado:</th>
-                                    <td id="detailEstadoContainer"></td>
+                                    <th style="width: 40%">Aprobación:</th>
+                                    <td id="detailEstadoAprobacionContainer"></td>
                                 </tr>
                                 <tr>
-                                    <th>Aprobada por:</th>
+                                    <th>Por:</th>
                                     <td id="detailAprobadoPor"></td>
                                 </tr>
                                 <tr>
-                                    <th>Fecha Aprobación:</th>
+                                    <th>Fecha:</th>
                                     <td id="detailFechaAprobacion"></td>
                                 </tr>
-                                <tr>
-                                    <th>Comentario:</th>
-                                    <td id="detailComentario"></td>
-                                </tr>
-                                <tr id="detailMotivoRechazoRow" style="display: none;">
+                                <tr id="detailMotivoRechazoRow">
                                     <th>Motivo de Rechazo:</th>
                                     <td id="detailMotivoRechazo"></td>
                                 </tr>
@@ -580,6 +547,10 @@ $pageTitle = "Órdenes de Producción";
                                     <th>Cantidad Completada:</th>
                                     <td id="detailCantidadCompletada"></td>
                                 </tr>
+                                <tr>
+                                    <th>Comentario:</th>
+                                    <td id="detailComentario"></td>
+                                </tr>
                             </table>
                         </div>
                         <div class="col-md-6">
@@ -596,8 +567,19 @@ $pageTitle = "Órdenes de Producción";
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                <div class="modal-footer d-flex justify-content-between">
+                    <div>
+                        <small class="text-muted">
+                            <span>Creado: <span id="detailFechaCreacion"></span></span> | 
+                            <span>Última modificación: <span id="detailFechaModificacion"></span></span>
+                        </small>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary me-2" id="exportarPDF">
+                            <i class="fas fa-file-pdf"></i> Exportar a PDF
+                        </button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
                 </div>
             </div>
         </div>

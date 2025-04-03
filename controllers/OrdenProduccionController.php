@@ -58,6 +58,56 @@ class OrdenProduccionController {
                     }
                     break;
 
+                case 'readOne':
+                    if (!isset($_GET['id'])) {
+                        throw new Exception('ID de orden no proporcionado');
+                    }
+                    
+                    $id = $_GET['id'];
+                    
+                    // Obtener los datos de la orden con información adicional
+                    $query = "SELECT op.*, 
+                            u.usuario_nombre, u.usuario_apellido,
+                            pp.pp_nombre,
+                            pd.pd_item, pd.pd_cant_piezas_total,
+                            i.item_numero, i.item_nombre, i.item_talla,
+                            m.modulo_codigo,
+                            p.po_numero,
+                            ua.usuario_nombre as aprobador_nombre, 
+                            ua.usuario_apellido as aprobador_apellido
+                            FROM ordenes_produccion op
+                            LEFT JOIN usuarios u ON op.op_operador_asignado = u.id
+                            LEFT JOIN procesos_produccion pp ON op.op_id_proceso = pp.id
+                            LEFT JOIN po_detalle pd ON op.op_id_pd = pd.id
+                            LEFT JOIN items i ON pd.pd_item = i.id
+                            LEFT JOIN po p ON pd.pd_id_po = p.id
+                            LEFT JOIN modulos m ON op.op_modulo_id = m.id
+                            LEFT JOIN usuarios ua ON op.op_usuario_aprobacion = ua.id
+                            WHERE op.id = :id";
+                    
+                    $stmt = $this->db->prepare($query);
+                    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+                    $stmt->execute();
+                    
+                    if ($stmt->rowCount() === 0) {
+                        throw new Exception('Orden no encontrada');
+                    }
+                    
+                    $orden = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    // Formatear fechas para mejor visualización
+                    $orden['op_fecha_creacion_formatted'] = $orden['op_fecha_creacion'] ? date('d/m/Y H:i', strtotime($orden['op_fecha_creacion'])) : '';
+                    $orden['op_fecha_modificacion_formatted'] = $orden['op_fecha_modificacion'] ? date('d/m/Y H:i', strtotime($orden['op_fecha_modificacion'])) : '';
+                    $orden['op_fecha_inicio_formatted'] = $orden['op_fecha_inicio'] ? date('d/m/Y', strtotime($orden['op_fecha_inicio'])) : '';
+                    $orden['op_fecha_fin_formatted'] = $orden['op_fecha_fin'] ? date('d/m/Y', strtotime($orden['op_fecha_fin'])) : '';
+                    $orden['op_fecha_aprobacion_formatted'] = $orden['op_fecha_aprobacion'] ? date('d/m/Y', strtotime($orden['op_fecha_aprobacion'])) : '';
+                    
+                    $response = [
+                        'success' => true,
+                        'orden' => $orden
+                    ];
+                    break;
+
                 case 'getPoDetalleInfo':
                     if (!isset($_GET['id'])) {
                         throw new Exception('ID de detalle de PO no proporcionado');
@@ -282,7 +332,7 @@ class OrdenProduccionController {
                         'op_usuario_aprobacion' => $usuarioId,
                         'op_fecha_aprobacion' => date('Y-m-d'),
                         'op_estado_aprobacion' => 'Rechazado',
-                        'op_motivo_rechazo' => 'Rechazado por ' . $usuarioAlias . ': ' . $motivo
+                        'op_motivo_rechazo' => $motivo
                     ];
                     
                     $result = $this->ordenProduccion->updateAprobacion($data);

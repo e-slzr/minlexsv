@@ -149,7 +149,8 @@ class OrdenProduccion {
                     pd.pd_item,
                     i.item_numero, i.item_nombre,
                     p.po_numero,
-                    m.modulo_codigo
+                    m.modulo_codigo,
+                    DATE_FORMAT(op.op_fecha_modificacion, '%Y-%m-%d %H:%i:%s') as op_fecha_modificacion_formatted
                     FROM " . $this->table_name . " op
                     LEFT JOIN usuarios u ON op.op_operador_asignado = u.id
                     LEFT JOIN procesos_produccion pp ON op.op_id_proceso = pp.id
@@ -292,13 +293,15 @@ class OrdenProduccion {
                     pp.pp_nombre,
                     pd.pd_item,
                     i.item_numero, i.item_nombre,
-                    po.po_numero
+                    po.po_numero,
+                    m.modulo_codigo
                     FROM " . $this->table_name . " op
                     LEFT JOIN usuarios u ON op.op_operador_asignado = u.id
                     LEFT JOIN procesos_produccion pp ON op.op_id_proceso = pp.id
                     LEFT JOIN po_detalle pd ON op.op_id_pd = pd.id
                     LEFT JOIN items i ON pd.pd_item = i.id
                     LEFT JOIN po po ON pd.pd_id_po = po.id
+                    LEFT JOIN modulos m ON op.op_modulo_id = m.id
                     WHERE 1=1";
             
             $params = [];

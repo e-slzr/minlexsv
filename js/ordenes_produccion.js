@@ -275,12 +275,12 @@ $(document).ready(function() {
             `);
             
             // Botones de acción
-            let botonesAccion = '<td class="text-center">';
+            let botonesAccion = '<td class="text-end">';
             
             // Botones Aprobar/Rechazar (solo si está pendiente)
-            if (orden.op_estado_aprobacion === 'Pendiente') {
+            if (orden.op_estado_aprobacion === 'Pendiente' || orden.op_estado_aprobacion === 'Rechazado' || orden.op_estado_aprobacion === 'Aprobado') {
                 botonesAccion += `
-                    <button type="button" class="btn btn-sm btn-success me-1 gestionar-aprobacion" 
+                    <button type="button" class="btn btn-sm btn-light me-1 gestionar-aprobacion" 
                         data-id="${orden.id}" title="Gestionar Aprobación">
                         <i class="fas fa-check"></i>
                     </button>
@@ -289,7 +289,7 @@ $(document).ready(function() {
             
             // Botón Ver detalles
             botonesAccion += `
-                <button type="button" class="btn btn-sm btn-info me-1 ver-orden" 
+                <button type="button" class="btn btn-sm btn-light me-1 ver-orden" 
                     data-id="${orden.id}" data-bs-toggle="modal" data-bs-target="#ordenDetailModal" title="Ver Detalles">
                     <i class="fas fa-eye"></i>
                 </button>
@@ -297,7 +297,7 @@ $(document).ready(function() {
             
             // Botón Editar
             botonesAccion += `
-                <button type="button" class="btn btn-sm btn-primary me-1 editar-orden" 
+                <button type="button" class="btn btn-sm btn-light me-1 editar-orden" 
                     data-id="${orden.id}" data-bs-toggle="modal" data-bs-target="#editOrdenModal" title="Editar Orden">
                     <i class="fas fa-edit"></i>
                 </button>
@@ -414,74 +414,66 @@ $(document).ready(function() {
         loadOrdenes(1);
     });
     
-    // Modal de Ver Detalles
+    // Ver detalles de orden
     $(document).on('click', '.ver-orden', function() {
         const id = $(this).data('id');
         
-        // Cargar detalles de la orden
         $.ajax({
             url: '../controllers/OrdenProduccionController.php',
             type: 'GET',
             data: {
-                action: 'getOrdenInfo',
+                action: 'readOne',
                 id: id
             },
             success: function(response) {
                 if (response.success) {
                     const orden = response.orden;
                     
-                    // Llenar el modal con la información
-                    $('#ordenDetailTitle').text('Detalles de Orden #' + orden.id);
-                    
-                    // Información básica
-                    $('#detailPoNumero').text(orden.po_numero);
+                    // Información General
+                    $('#detailPO').text(orden.po_numero || 'No asignado');
                     $('#detailItem').text(orden.item_numero + ' - ' + orden.item_nombre);
-                    $('#detailProceso').text(orden.pp_nombre);
+                    
+                    // Proceso con badge
+                    const procesoBadge = '<span class="badge bg-info">' + orden.pp_nombre + '</span>';
+                    $('#detailProcesoContainer').html(procesoBadge);
+                    
                     $('#detailOperador').text(orden.usuario_nombre + ' ' + orden.usuario_apellido);
                     $('#detailModulo').text(orden.modulo_codigo || 'No asignado');
                     
-                    // Fechas
-                    $('#detailFechaCreacion').text(new Date(orden.op_fecha_creacion).toLocaleDateString('es-ES'));
-                    $('#detailFechaInicio').text(orden.op_fecha_inicio ? new Date(orden.op_fecha_inicio).toLocaleDateString('es-ES') : 'No iniciada');
-                    $('#detailFechaFin').text(orden.op_fecha_fin ? new Date(orden.op_fecha_fin).toLocaleDateString('es-ES') : 'No finalizada');
+                    // Estado con badge
+                    const estadoClass = getEstadoClass(orden.op_estado);
+                    const estadoBadge = '<span class="badge ' + estadoClass + '">' + orden.op_estado + '</span>';
+                    $('#detailEstadoContainer').html(estadoBadge);
                     
-                    // Estado y progreso
-                    $('#detailEstado').html(`<span class="badge ${getEstadoClass(orden.op_estado)}">${orden.op_estado}</span>`);
-                    
-                    let completado = 0;
-                    if (orden.op_cantidad_asignada > 0) {
-                        completado = Math.round((orden.op_cantidad_completada / orden.op_cantidad_asignada) * 100);
-                    }
-                    
-                    $('#detailProgreso').html(`
-                        <div class="progress" style="height: 20px;">
-                            <div class="progress-bar bg-success" role="progressbar" 
-                                style="width: ${completado}%;" 
-                                aria-valuenow="${completado}" 
-                                aria-valuemin="0" 
-                                aria-valuemax="100">
-                                ${completado}%
-                            </div>
-                        </div>
-                    `);
-                    
-                    // Cantidades
-                    $('#detailCantidadAsignada').text(orden.op_cantidad_asignada);
-                    $('#detailCantidadCompletada').text(orden.op_cantidad_completada);
+                    // Estado de aprobación con badge
+                    const aprobacionClass = getAprobacionClass(orden.op_estado_aprobacion);
+                    const aprobacionBadge = '<span class="badge ' + aprobacionClass + '">' + orden.op_estado_aprobacion + '</span>';
+                    $('#detailEstadoAprobacionContainer').html(aprobacionBadge);
                     
                     // Aprobación
-                    $('#detailEstadoAprobacion').html(`<span class="badge ${getAprobacionClass(orden.op_estado_aprobacion)}">${orden.op_estado_aprobacion}</span>`);
+                    $('#detailAprobadoPor').text(orden.aprobador_nombre ? (orden.aprobador_nombre + ' ' + orden.aprobador_apellido) : 'Pendiente');
+                    $('#detailFechaAprobacion').text(orden.op_fecha_aprobacion ? formatDate(orden.op_fecha_aprobacion) : 'Pendiente');
                     
-                    // Comentarios
-                    $('#detailComentario').text(orden.op_comentario || 'Sin comentarios');
-                    
-                    // Motivo de rechazo (solo se muestra si la orden está rechazada)
+                    // Motivo de rechazo (mostrar/ocultar según corresponda)
                     if (orden.op_estado_aprobacion === 'Rechazado' && orden.op_motivo_rechazo) {
                         $('#detailMotivoRechazoRow').show();
                         $('#detailMotivoRechazo').text(orden.op_motivo_rechazo);
                     } else {
                         $('#detailMotivoRechazoRow').hide();
                     }
+                    
+                    // Cantidades
+                    $('#detailCantidadAsignada').text(orden.op_cantidad_asignada);
+                    $('#detailCantidadCompletada').text(orden.op_cantidad_completada);
+                    $('#detailComentario').text(orden.op_comentario || 'Sin comentarios');
+                    
+                    // Fechas
+                    $('#detailFechaInicio').text(orden.op_fecha_inicio ? formatDate(orden.op_fecha_inicio) : 'No iniciada');
+                    $('#detailFechaFin').text(orden.op_fecha_fin ? formatDate(orden.op_fecha_fin) : 'No finalizada');
+                    
+                    // Fechas de creación y modificación
+                    $('#detailFechaCreacion').text(formatDate(orden.op_fecha_creacion));
+                    $('#detailFechaModificacion').text(formatDate(orden.op_fecha_modificacion));
                     
                     // Mostrar el modal
                     $('#ordenDetailModal').modal('show');
@@ -493,6 +485,12 @@ $(document).ready(function() {
                 alert('Error al conectar con el servidor');
             }
         });
+    });
+    
+    // Exportar a PDF
+    $('#exportarPDF').on('click', function() {
+        alert('La funcionalidad de exportar a PDF será implementada próximamente.');
+        // Aquí se implementará la funcionalidad de exportar a PDF en el futuro
     });
     
     // Modal de Editar Orden
@@ -518,6 +516,10 @@ $(document).ready(function() {
                     $('#editOperador').val(orden.op_operador_asignado).trigger('change');
                     $('#editFechaInicio').val(orden.op_fecha_inicio || '');
                     $('#editFechaFin').val(orden.op_fecha_fin || '');
+                    
+                    // Llenar los campos ocultos para los campos deshabilitados
+                    $('#editPoDetalleHidden').val(orden.op_id_pd);
+                    $('#editProcesoHidden').val(orden.op_id_proceso);
                     
                     // Actualizar el estado con badge
                     $('#editEstadoSelect').val(orden.op_estado);
@@ -579,11 +581,41 @@ $(document).ready(function() {
         updateEditEstadoBadge($(this).val());
     });
     
-    // Gestionar Aprobación (reemplaza los métodos aprobar-orden y rechazar-orden)
+    // Modal de Gestionar Aprobación
     $(document).on('click', '.gestionar-aprobacion', function() {
         const id = $(this).data('id');
         $('#aprobacionOrdenId').val(id);
-        $('#aprobacionOrdenModal').modal('show');
+        
+        // Obtener el estado actual de la orden
+        $.ajax({
+            url: '../controllers/OrdenProduccionController.php',
+            type: 'GET',
+            data: {
+                action: 'readOne',
+                id: id
+            },
+            success: function(response) {
+                if (response.success) {
+                    const orden = response.orden;
+                    
+                    // Si la orden ya está en proceso, deshabilitar la opción de rechazo
+                    if (orden.op_estado === 'En proceso') {
+                        $('#confirmarRechazo').prop('disabled', true);
+                        $('.card-header h6').html('Rechazar Orden <small class="text-danger">(No disponible para órdenes en proceso)</small>');
+                    } else {
+                        $('#confirmarRechazo').prop('disabled', false);
+                        $('.card-header h6').html('Rechazar Orden');
+                    }
+                    
+                    $('#aprobacionOrdenModal').modal('show');
+                } else {
+                    alert('Error al cargar los detalles de la orden: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Error al conectar con el servidor');
+            }
+        });
     });
     
     // Confirmar Aprobación
@@ -733,6 +765,12 @@ $(document).ready(function() {
             const formData = new FormData($('#editOrdenForm')[0]);
             formData.append('action', 'update');
             
+            // Asegurarse de que el ID se envíe correctamente
+            const ordenId = $('#editOrdenId').val();
+            if (!formData.has('id') || formData.get('id') === '') {
+                formData.set('id', ordenId);
+            }
+            
             $.ajax({
                 url: '../controllers/OrdenProduccionController.php',
                 type: 'POST',
@@ -748,8 +786,9 @@ $(document).ready(function() {
                         alert('Error al actualizar la orden: ' + response.message);
                     }
                 },
-                error: function() {
-                    alert('Error al conectar con el servidor');
+                error: function(xhr, status, error) {
+                    console.error('Error en la solicitud AJAX:', xhr.responseText);
+                    alert('Error al conectar con el servidor: ' + error);
                 }
             });
         } else {
