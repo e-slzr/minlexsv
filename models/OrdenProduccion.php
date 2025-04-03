@@ -40,13 +40,15 @@ class OrdenProduccion {
             $query = "SELECT op.*, 
                     u.usuario_nombre, u.usuario_apellido,
                     pp.pp_nombre,
-                    pd.pd_item,
-                    i.item_numero, i.item_nombre
+                    pd.pd_item, pd.pd_cant_piezas_total,
+                    i.item_numero, i.item_nombre, i.item_talla,
+                    m.modulo_codigo
                     FROM " . $this->table_name . " op
                     LEFT JOIN usuarios u ON op.op_operador_asignado = u.id
                     LEFT JOIN procesos_produccion pp ON op.op_id_proceso = pp.id
                     LEFT JOIN po_detalle pd ON op.op_id_pd = pd.id
                     LEFT JOIN items i ON pd.pd_item = i.id
+                    LEFT JOIN modulos m ON op.op_modulo_id = m.id
                     WHERE op.id = :id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindValue(':id', $id);
@@ -54,7 +56,7 @@ class OrdenProduccion {
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             error_log("Error en OrdenProduccion::getById: " . $e->getMessage());
-            throw new Exception("Error al obtener la orden de producción", 0, $e);
+            throw new Exception("Error al obtener la orden de producción: " . $e->getMessage(), 0, $e);
         }
     }
 
@@ -62,10 +64,12 @@ class OrdenProduccion {
         try {
             $query = "INSERT INTO " . $this->table_name . " 
                     (op_id_pd, op_operador_asignado, op_id_proceso, op_fecha_inicio, 
-                     op_fecha_fin, op_estado, op_cantidad_asignada, op_comentario) 
+                     op_fecha_fin, op_estado, op_cantidad_asignada, op_cantidad_completada,
+                     op_comentario, op_modulo_id, op_fecha_creacion) 
                     VALUES 
                     (:op_id_pd, :op_operador_asignado, :op_id_proceso, :op_fecha_inicio,
-                     :op_fecha_fin, :op_estado, :op_cantidad_asignada, :op_comentario)";
+                     :op_fecha_fin, :op_estado, :op_cantidad_asignada, :op_cantidad_completada,
+                     :op_comentario, :op_modulo_id, NOW())";
             
             $stmt = $this->conn->prepare($query);
             
@@ -77,13 +81,15 @@ class OrdenProduccion {
             $stmt->bindValue(':op_fecha_fin', $data['op_fecha_fin'] ?? null);
             $stmt->bindValue(':op_estado', $data['op_estado'] ?? 'Pendiente');
             $stmt->bindValue(':op_cantidad_asignada', $data['op_cantidad_asignada']);
+            $stmt->bindValue(':op_cantidad_completada', $data['op_cantidad_completada'] ?? 0);
             $stmt->bindValue(':op_comentario', $data['op_comentario'] ?? null);
+            $stmt->bindValue(':op_modulo_id', $data['op_modulo_id'] ?? null);
             
             $stmt->execute();
             return $this->conn->lastInsertId();
         } catch (PDOException $e) {
             error_log("Error en OrdenProduccion::create: " . $e->getMessage());
-            throw new Exception("Error al crear la orden de producción", 0, $e);
+            throw new Exception("Error al crear la orden de producción: " . $e->getMessage(), 0, $e);
         }
     }
 
@@ -97,7 +103,9 @@ class OrdenProduccion {
                         op_estado = :op_estado,
                         op_cantidad_asignada = :op_cantidad_asignada,
                         op_cantidad_completada = :op_cantidad_completada,
-                        op_comentario = :op_comentario
+                        op_comentario = :op_comentario,
+                        op_modulo_id = :op_modulo_id,
+                        op_fecha_modificacion = NOW()
                     WHERE id = :id";
             
             $stmt = $this->conn->prepare($query);
@@ -112,11 +120,12 @@ class OrdenProduccion {
             $stmt->bindValue(':op_cantidad_asignada', $data['op_cantidad_asignada']);
             $stmt->bindValue(':op_cantidad_completada', $data['op_cantidad_completada'] ?? 0);
             $stmt->bindValue(':op_comentario', $data['op_comentario'] ?? null);
+            $stmt->bindValue(':op_modulo_id', $data['op_modulo_id'] ?? null);
             
             return $stmt->execute();
         } catch (PDOException $e) {
             error_log("Error en OrdenProduccion::update: " . $e->getMessage());
-            throw new Exception("Error al actualizar la orden de producción", 0, $e);
+            throw new Exception("Error al actualizar la orden de producción: " . $e->getMessage(), 0, $e);
         }
     }
 
@@ -138,12 +147,17 @@ class OrdenProduccion {
                     u.usuario_nombre, u.usuario_apellido,
                     pp.pp_nombre,
                     pd.pd_item,
-                    i.item_numero, i.item_nombre
+                    i.item_numero, i.item_nombre,
+                    p.po_numero,
+                    m.modulo_codigo,
+                    DATE_FORMAT(op.op_fecha_modificacion, '%Y-%m-%d %H:%i:%s') as op_fecha_modificacion_formatted
                     FROM " . $this->table_name . " op
                     LEFT JOIN usuarios u ON op.op_operador_asignado = u.id
                     LEFT JOIN procesos_produccion pp ON op.op_id_proceso = pp.id
                     LEFT JOIN po_detalle pd ON op.op_id_pd = pd.id
                     LEFT JOIN items i ON pd.pd_item = i.id
+                    LEFT JOIN po p ON pd.pd_id_po = p.id
+                    LEFT JOIN modulos m ON op.op_modulo_id = m.id
                     WHERE 1=1";
             
             $params = [];
@@ -171,6 +185,11 @@ class OrdenProduccion {
             if (!empty($filters['fecha_fin'])) {
                 $query .= " AND op.op_fecha_fin <= :fecha_fin";
                 $params[':fecha_fin'] = $filters['fecha_fin'];
+            }
+            
+            if (!empty($filters['po_numero'])) {
+                $query .= " AND p.po_numero LIKE :po_numero";
+                $params[':po_numero'] = "%" . $filters['po_numero'] . "%";
             }
 
             $query .= " ORDER BY op.id DESC";
@@ -207,12 +226,11 @@ class OrdenProduccion {
             $stmt = $this->conn->prepare($query);
             
             // Bind de los valores
+            $stmt->bindValue(':id', $data['id']);
             $stmt->bindValue(':op_cantidad_completada', $data['op_cantidad_completada']);
             $stmt->bindValue(':op_estado', $data['op_estado']);
-            $stmt->bindValue(':op_comentario', $data['op_comentario']);
-            $stmt->bindValue(':id', $data['id']);
+            $stmt->bindValue(':op_comentario', $data['op_comentario'] ?? null);
             
-            // Bind de fecha_fin si existe
             if (isset($data['op_fecha_fin'])) {
                 $stmt->bindValue(':op_fecha_fin', $data['op_fecha_fin']);
             }
@@ -220,7 +238,50 @@ class OrdenProduccion {
             return $stmt->execute();
         } catch (PDOException $e) {
             error_log("Error en OrdenProduccion::updateProgress: " . $e->getMessage());
-            throw new Exception("Error al actualizar el progreso de la orden de producción", 0, $e);
+            throw new Exception("Error al actualizar el progreso de la orden", 0, $e);
+        }
+    }
+
+    // Actualizar el estado de aprobación de una orden
+    public function updateAprobacion($data) {
+        try {
+            $query = "UPDATE " . $this->table_name . " 
+                    SET op_usuario_aprobacion = :op_usuario_aprobacion,
+                        op_fecha_aprobacion = :op_fecha_aprobacion,
+                        op_estado_aprobacion = :op_estado_aprobacion";
+            
+            // Añadir motivo de rechazo si se proporciona
+            if (isset($data['op_motivo_rechazo'])) {
+                $query .= ", op_motivo_rechazo = :op_motivo_rechazo";
+            }
+            
+            // Añadir comentario si se proporciona
+            if (isset($data['op_comentario'])) {
+                $query .= ", op_comentario = :op_comentario";
+            }
+            
+            $query .= " WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            // Bind de los valores
+            $stmt->bindValue(':id', $data['id']);
+            $stmt->bindValue(':op_usuario_aprobacion', $data['op_usuario_aprobacion']);
+            $stmt->bindValue(':op_fecha_aprobacion', $data['op_fecha_aprobacion']);
+            $stmt->bindValue(':op_estado_aprobacion', $data['op_estado_aprobacion']);
+            
+            if (isset($data['op_motivo_rechazo'])) {
+                $stmt->bindValue(':op_motivo_rechazo', $data['op_motivo_rechazo']);
+            }
+            
+            if (isset($data['op_comentario'])) {
+                $stmt->bindValue(':op_comentario', $data['op_comentario']);
+            }
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error en OrdenProduccion::updateAprobacion: " . $e->getMessage());
+            throw new Exception("Error al actualizar el estado de aprobación de la orden", 0, $e);
         }
     }
 
@@ -232,13 +293,15 @@ class OrdenProduccion {
                     pp.pp_nombre,
                     pd.pd_item,
                     i.item_numero, i.item_nombre,
-                    po.po_numero
+                    po.po_numero,
+                    m.modulo_codigo
                     FROM " . $this->table_name . " op
                     LEFT JOIN usuarios u ON op.op_operador_asignado = u.id
                     LEFT JOIN procesos_produccion pp ON op.op_id_proceso = pp.id
                     LEFT JOIN po_detalle pd ON op.op_id_pd = pd.id
                     LEFT JOIN items i ON pd.pd_item = i.id
                     LEFT JOIN po po ON pd.pd_id_po = po.id
+                    LEFT JOIN modulos m ON op.op_modulo_id = m.id
                     WHERE 1=1";
             
             $params = [];

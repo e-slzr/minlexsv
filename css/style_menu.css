@@ -246,18 +246,20 @@
 }
 
 .dropdown-toggle::after {
-    content: '\f105'; /* Ícono de flecha a la derecha */
+    content: '\f054'; /* Ícono de flecha chevron-right */
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
     position: absolute;
     right: 15px;
     top: 50%;
     transform: translateY(-50%);
+    font-size: 0.8rem;
     transition: transform 0.3s ease;
 }
 
 .dropdown-toggle[aria-expanded="true"]::after {
-    transform: translateY(-50%) rotate(90deg);
+    content: '\f078'; /* Ícono de flecha chevron-down */
+    transform: translateY(-50%);
 }
 
 .dropdown-toggle[aria-expanded="true"] li {

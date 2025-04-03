@@ -1,12 +1,12 @@
 :root {
-    --primary-bg: #212529;
-    --primary-text: #f8f9fa;
-    --primary-accent: #0d6efd;
+    --primary-bg: #ffffff;
+    --primary-text: #212529;
+    --primary-accent: #000000;
     --error-color: #dc3545;
 }
 
 body {
-    background: linear-gradient(135deg, var(--primary-bg) 0%, #1a1d20 100%);
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     min-height: 100vh;
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -23,12 +23,12 @@ body {
 }
 
 .login-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 16px;
     padding: 2.5rem;
     backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .login-brand {
@@ -63,8 +63,8 @@ body {
 }
 
 .login-form .form-control {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     color: var(--primary-text);
     padding: 0.75rem 1rem;
@@ -73,19 +73,19 @@ body {
 }
 
 .login-form .form-control:focus {
-    background: rgba(255, 255, 255, 0.1);
+    background: #ffffff;
     border-color: var(--primary-accent);
-    box-shadow: none;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
     outline: none;
 }
 
 .login-form .form-control::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(33, 37, 41, 0.5);
 }
 
 .login-btn {
     background: var(--primary-accent);
-    color: var(--primary-text);
+    color: white;
     border: none;
     border-radius: 8px;
     padding: 0.75rem;
@@ -115,7 +115,7 @@ body {
 .alert-error {
     background: rgba(220, 53, 69, 0.1);
     border: 1px solid rgba(220, 53, 69, 0.2);
-    color: #ff6b6b;
+    color: #dc3545;
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 1.5rem;

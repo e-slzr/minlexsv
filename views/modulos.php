@@ -73,7 +73,9 @@ $modulos = $moduloController->getModulos();
                             <th>Tipo</th>
                             <th>Descripción</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
+                            <th>Fecha Creación</th>
+                            <th>Última Modificación</th>
+                            <th>Opciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -87,17 +89,21 @@ $modulos = $moduloController->getModulos();
                                     <?php echo htmlspecialchars($modulo['modulo_estado']); ?>
                                 </span>
                             </td>
+                            <td><?php echo date('d/m/Y H:i', strtotime($modulo['modulo_creacion'])); ?></td>
+                            <td><?php echo date('d/m/Y H:i', strtotime($modulo['modulo_modificacion'])); ?></td>
                             <td>
                                 <button class="btn btn-sm btn-primary editar-modulo" 
                                         data-id="<?php echo $modulo['id']; ?>"
                                         data-codigo="<?php echo htmlspecialchars($modulo['modulo_codigo']); ?>"
                                         data-tipo="<?php echo htmlspecialchars($modulo['modulo_tipo']); ?>"
-                                        data-descripcion="<?php echo htmlspecialchars($modulo['modulo_descripcion'] ?? ''); ?>">
+                                        data-descripcion="<?php echo htmlspecialchars($modulo['modulo_descripcion'] ?? ''); ?>"
+                                        data-estado="<?php echo htmlspecialchars($modulo['modulo_estado']); ?>"
+                                        data-ultima-modificacion="<?php echo date('d/m/Y H:i', strtotime($modulo['modulo_modificacion'])); ?>" title="Editar modulo">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="btn btn-sm <?php echo $modulo['modulo_estado'] === 'Activo' ? 'btn-danger' : 'btn-success'; ?> toggle-estado"
                                         data-id="<?php echo $modulo['id']; ?>"
-                                        data-estado="<?php echo $modulo['modulo_estado']; ?>">
+                                        data-estado="<?php echo $modulo['modulo_estado']; ?>" title="Cambiar estado">
                                     <i class="fas <?php echo $modulo['modulo_estado'] === 'Activo' ? 'fa-times' : 'fa-check'; ?>"></i>
                                 </button>
                             </td>
@@ -110,7 +116,7 @@ $modulos = $moduloController->getModulos();
 
         <!-- Modal Nuevo Módulo -->
         <div class="modal fade" id="nuevoModuloModal" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog" style="width: 700px;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Nuevo Módulo</h5>
@@ -142,8 +148,8 @@ $modulos = $moduloController->getModulos();
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" id="guardarModulo">Guardar</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-dark" id="guardarModulo">Guardar</button>
                     </div>
                 </div>
             </div>
@@ -151,7 +157,7 @@ $modulos = $moduloController->getModulos();
 
         <!-- Modal Editar Módulo -->
         <div class="modal fade" id="editarModuloModal" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog" style="width: 700px;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Editar Módulo</h5>
@@ -167,23 +173,40 @@ $modulos = $moduloController->getModulos();
                                     <option value="Corte">Corte</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label for="editar_codigo" class="form-label">Número de Módulo*</label>
-                                <div class="input-group">
-                                    <span class="input-group-text" id="editar-prefijo-modulo">-</span>
-                                    <input type="text" class="form-control" id="editar_codigo" name="codigo" required 
-                                           pattern="\d{2}" maxlength="2" placeholder="01">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="editar_codigo" class="form-label">Número de Módulo*</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="editar-prefijo-modulo">-</span>
+                                        <input type="text" class="form-control" id="editar_codigo" name="codigo" required 
+                                               pattern="\d{2}" maxlength="2" placeholder="01">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="editar_estado" class="form-label">Estado</label>
+                                    <div class="input-group">
+                                        <select class="form-control" id="editar_estado" name="estado" disabled>
+                                            <option value="Activo">Activo</option>
+                                            <option value="Inactivo">Inactivo</option>
+                                        </select>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id="estado_indicador"></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label for="editar_descripcion" class="form-label">Descripción</label>
                                 <textarea class="form-control" id="editar_descripcion" name="descripcion" rows="3"></textarea>
                             </div>
+                            <div class="text-muted mt-3">
+                                <small>Última modificación: <span id="ultima_modificacion">No disponible</span></small>
+                            </div>
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" id="actualizarModulo">Actualizar</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-dark" id="actualizarModulo">Actualizar</button>
                     </div>
                 </div>
             </div>
@@ -193,4 +216,4 @@ $modulos = $moduloController->getModulos();
     <?php include '../components/footer.php'; ?>
     <script src="../js/modulos.js"></script>
 </body>
-</html> 
+</html>

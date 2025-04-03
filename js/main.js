@@ -176,12 +176,22 @@ const handleRoles = {
 
     // Submit form
     initFormSubmit: function() {
-        $('#rolForm').submit(function(e) {
+        $('#userForm').submit(function(e) {
             e.preventDefault();
+            const formData = {
+                action: $('input[name="action"]').val(),
+                id: $('#edit_usuario_id').val(),
+                usuario_alias: $('#create_usuario_usuario').val(),
+                usuario_nombre: $('#create_usuario_nombre').val(),
+                usuario_apellido: $('#create_usuario_apellido').val(),
+                rol_id: $('#create_rol').val(),
+                departamento: $('#create_departamento').val()
+            };
+
             $.ajax({
-                url: '../controllers/RolController.php',
+                url: '../controllers/UsuarioController.php',
                 type: 'POST',
-                data: $(this).serialize(),
+                data: formData,
                 success: function(response) {
                     if (response.success) {
                         location.reload();
@@ -234,21 +244,22 @@ const handleUsuarios = {
 
     // Editar usuario
     initEditUsuario: function() {
-        $('.edit-usuario').click(function() {
+        $('.edit-user').click(function() {
             const id = $(this).data('id');
-            const nombre = $(this).data('nombre');
             const usuario = $(this).data('usuario');
-            const email = $(this).data('email');
-            const rolId = $(this).data('rol-id');
+            const nombre = $(this).data('nombre');
+            const apellido = $(this).data('apellido');
+            const rol = $(this).data('rol');
+            const departamento = $(this).data('departamento');
 
-            $('#usuarioId').val(id);
-            $('#nombre').val(nombre);
-            $('#usuario').val(usuario);
-            $('#email').val(email);
-            $('#rol_id').val(rolId);
-            $('#formAction').val('update');
-            $('#usuarioModalLabel').text('Editar Usuario');
-            $('#password').prop('required', false);
+            $('input[name="action"]').val('update');
+            $('#edit_usuario_id').val(id);
+            $('#create_usuario_usuario').val(usuario);
+            $('#create_usuario_nombre').val(nombre);
+            $('#create_usuario_apellido').val(apellido);
+            $('#create_rol').val(rol);
+            $('#create_departamento').val(departamento);
+            $('#userModalLabel').text('Editar Usuario');
         });
     },
 

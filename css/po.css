@@ -1,0 +1,39 @@
+/* Estilos específicos para PO */
+.select2-container--bootstrap-5 {
+    width: 100% !important;
+}
+
+.select2-container .select2-selection--single {
+    height: 38px;
+}
+
+.select2-container--bootstrap-5 .select2-selection {
+    border-radius: 0.375rem;
+    border-color: #dee2e6;
+}
+
+/* Tabla de detalles */
+.table-details th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.table-details .subtotal {
+    font-weight: 600;
+}
+
+/* Campos disabled */
+.form-control:disabled, 
+.form-control[readonly] {
+    background-color: #f8f9fa;
+    opacity: 0.8;
+}
+
+/* Notas PO */
+.notes-btn {
+    margin-top: 1.5rem;
+}
+
+.notes-content {
+    min-height: 200px;
+}

@@ -16,6 +16,15 @@ class UsuarioController {
             return null;
         }
     }
+    
+    public function getUsuariosActivos() {
+        try {
+            return $this->usuario->getAllActive();
+        } catch (Exception $e) {
+            error_log("Error al obtener usuarios activos: " . $e->getMessage());
+            return null;
+        }
+    }
 
     public function handleRequest() {
         header('Content-Type: application/json');
@@ -66,6 +75,7 @@ class UsuarioController {
                                     'apellido' => $user['usuario_apellido'],
                                     'nombre_completo' => $nombreCompleto,
                                     'usuario' => $user['usuario_usuario'],
+                                    'usuario_alias' => $user['usuario_alias'],
                                     'rol_id' => $user['usuario_rol_id'],
                                     'rol_nombre' => $rolNombre,
                                     'departamento' => $user['usuario_departamento']
@@ -87,6 +97,11 @@ class UsuarioController {
                         break;
 
                     case 'logout':
+                        // Verificar si la sesión está iniciada antes de intentar destruirla
+                        if (session_status() === PHP_SESSION_NONE) {
+                            session_start();
+                        }
+                        
                         // Limpiar y destruir la sesión
                         $_SESSION = array();
                         if (isset($_COOKIE[session_name()])) {
@@ -95,12 +110,13 @@ class UsuarioController {
                         session_destroy();
                         
                         // Redireccionar al login
-                        return ['success' => true, 'message' => 'Sesión cerrada exitosamente'];
+                        echo json_encode(['success' => true, 'message' => 'Sesión cerrada exitosamente', 'redirect' => '../views/login.php']);
+                        exit;
                         break;
 
                     case 'create':
                         try {
-                            $this->usuario->usuario_usuario = $data['usuario'] ?? '';
+                            $this->usuario->usuario_usuario = $data['usuario_usuario'] ?? '';
                             $this->usuario->usuario_nombre = $data['nombre'] ?? '';
                             $this->usuario->usuario_apellido = $data['apellido'] ?? '';
                             $this->usuario->usuario_password = password_hash($data['password'], PASSWORD_DEFAULT);
@@ -110,10 +126,11 @@ class UsuarioController {
                             $this->usuario->estado = 'Activo';
 
                             if ($this->usuario->create($data)) {
-                                return ['success' => true, 'message' => 'Usuario creado exitosamente'];
+                                echo json_encode(['success' => true, 'message' => 'Usuario creado exitosamente']);
                             } else {
-                                return ['success' => false, 'message' => 'Error al crear el usuario'];
+                                echo json_encode(['success' => false, 'message' => 'Error al crear el usuario']);
                             }
+                            exit;
                         } catch (Exception $e) {
                             error_log("Error al crear usuario: " . $e->getMessage());
                             return ['success' => false, 'message' => 'Error al crear el usuario'];
@@ -130,13 +147,43 @@ class UsuarioController {
                             $this->usuario->estado = $data['estado'] === 'Activo' ? 'Inactivo' : 'Activo';
 
                             if ($this->usuario->toggleStatus()) {
-                                return ['success' => true, 'message' => 'Estado actualizado exitosamente'];
+                                echo json_encode(['success' => true, 'message' => 'Estado actualizado exitosamente']);
                             } else {
-                                return ['success' => false, 'message' => 'Error al actualizar el estado'];
+                                echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);
                             }
+                            exit;
                         } catch (Exception $e) {
                             error_log("Error al cambiar estado: " . $e->getMessage());
-                            return ['success' => false, 'message' => 'Error al cambiar el estado'];
+                            echo json_encode(['success' => false, 'message' => 'Error al cambiar el estado: ' . $e->getMessage()]);
+                            exit;
+                        }
+                        break;
+
+                    case 'change_password':
+                        try {
+                            if (empty($data['id'])) {
+                                echo json_encode(['success' => false, 'message' => 'ID de usuario no proporcionado']);
+                                exit;
+                            }
+
+                            if (empty($data['password'])) {
+                                echo json_encode(['success' => false, 'message' => 'La contraseña es requerida']);
+                                exit;
+                            }
+
+                            $this->usuario->id = $data['id'];
+                            $this->usuario->usuario_password = password_hash($data['password'], PASSWORD_DEFAULT);
+
+                            if ($this->usuario->updatePassword()) {
+                                echo json_encode(['success' => true, 'message' => 'Contraseña actualizada exitosamente']);
+                            } else {
+                                echo json_encode(['success' => false, 'message' => 'Error al actualizar la contraseña']);
+                            }
+                            exit;
+                        } catch (Exception $e) {
+                            error_log("Error al cambiar contraseña: " . $e->getMessage());
+                            echo json_encode(['success' => false, 'message' => 'Error al cambiar la contraseña: ' . $e->getMessage()]);
+                            exit;
                         }
                         break;
 
@@ -159,7 +206,7 @@ class UsuarioController {
             }
 
             $this->usuario->id = $data['id'];
-            $this->usuario->usuario_usuario = $data['usuario'] ?? '';
+            $this->usuario->usuario_usuario = $data['usuario_usuario'] ?? '';
             $this->usuario->usuario_nombre = $data['nombre'] ?? '';
             $this->usuario->usuario_apellido = $data['apellido'] ?? '';
             $this->usuario->usuario_rol_id = $data['rol_id'] ?? '';

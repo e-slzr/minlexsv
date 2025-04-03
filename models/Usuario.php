@@ -140,6 +140,7 @@ class Usuario {
     public function getByUsername($username) {
         $query = "SELECT 
                     id,
+                    usuario_alias,
                     usuario_alias as usuario_usuario,
                     usuario_nombre,
                     usuario_apellido,
@@ -163,7 +164,7 @@ class Usuario {
     public function getAll() {
         $query = "SELECT 
                     u.id,
-                    u.usuario_alias as usuario_usuario,
+                    u.usuario_alias as usuario_alias,
                     u.usuario_nombre,
                     u.usuario_apellido,
                     u.usuario_departamento,
@@ -185,6 +186,30 @@ class Usuario {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getAllActive() {
+        $query = "SELECT 
+                    u.id,
+                    u.usuario_alias as usuario_usuario,
+                    u.usuario_nombre,
+                    u.usuario_apellido,
+                    u.usuario_departamento,
+                    u.usuario_rol_id,
+                    u.usuario_modulo_id,
+                    r.rol_nombre,
+                    m.modulo_codigo,
+                    u.estado
+                FROM " . $this->table_name . " u
+                LEFT JOIN roles r ON u.usuario_rol_id = r.id
+                LEFT JOIN modulos m ON u.usuario_modulo_id = m.id
+                WHERE u.estado = 'Activo'
+                ORDER BY u.usuario_nombre ASC, u.usuario_apellido ASC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function toggleStatus() {
         $query = "UPDATE " . $this->table_name . "
                 SET estado = :estado
@@ -193,6 +218,19 @@ class Usuario {
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":estado", $this->estado);
+        $stmt->bindParam(":id", $this->id);
+
+        return $stmt->execute();
+    }
+
+    public function updatePassword() {
+        $query = "UPDATE " . $this->table_name . "
+                SET usuario_password = :usuario_password
+                WHERE id = :id";
+
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bindParam(":usuario_password", $this->usuario_password);
         $stmt->bindParam(":id", $this->id);
 
         return $stmt->execute();

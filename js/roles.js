@@ -1,62 +1,37 @@
 $(document).ready(function() {
-    let currentSort = { column: 'id', direction: 'asc' };
-    let filters = {
-        nombre: '',
-        estado: ''
-    };
-
-    // Event listeners para filtros
-    $('.filtro').on('input change', function() {
-        const id = $(this).attr('id');
-        if (id === 'filtro-nombre') filters.nombre = $(this).val().toLowerCase();
-        if (id === 'filtro-estado') filters.estado = $(this).val();
-        aplicarFiltros();
+    // Asegurarse de que los modales se limpien correctamente al cerrarse
+    $('.modal').on('hidden.bs.modal', function() {
+        // Eliminar cualquier backdrop que pueda haber quedado
+        $('.modal-backdrop').remove();
+        // Eliminar la clase modal-open del body
+        $('body').removeClass('modal-open');
+        // Eliminar el estilo inline que agrega Bootstrap
+        $('body').css('padding-right', '');
     });
 
-    // Limpiar filtros
-    $('#limpiar-filtros').click(function() {
-        $('.filtro').val('');
-        filters = {
-            nombre: '',
-            estado: ''
-        };
-        aplicarFiltros();
-    });
-
-    // Ordenamiento de columnas
-    $('.sortable').click(function() {
-        const column = $(this).data('column');
-        if (currentSort.column === column) {
-            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-        } else {
-            currentSort.column = column;
-            currentSort.direction = 'asc';
-        }
-        
-        // Actualizar iconos de ordenamiento
-        $('.sortable i').removeClass('fa-sort-up fa-sort-down').addClass('fa-sort');
-        $(this).find('i').removeClass('fa-sort')
-            .addClass(currentSort.direction === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
-        
-        aplicarFiltros();
-    });
-
-    // Manejo del modal de edición
-    $('#editarRolModal').on('show.bs.modal', function(event) {
-        const button = $(event.relatedTarget);
-        const id = button.data('id');
-        const nombre = button.data('nombre');
-        const descripcion = button.data('descripcion');
+    // Manejar el modal de edición
+    $('.editar-rol').click(function() {
+        const id = $(this).data('id');
+        const nombre = $(this).data('nombre');
+        const descripcion = $(this).data('descripcion');
 
         $('#editar_id').val(id);
         $('#editar_nombre').val(nombre);
         $('#editar_descripcion').val(descripcion);
     });
 
+    // Filtrado de roles
+    $('#filtro-nombre').on('keyup', function() {
+        const value = $(this).val().toLowerCase();
+        $('table tbody tr').filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+    });
+
     // Validación y envío del formulario nuevo
     $('#guardarNuevoRol').click(function() {
-        const form = $('#nuevoRolForm');
-        const formData = new FormData(form[0]);
+        const form = $('#nuevoRolForm')[0];
+        const formData = new FormData(form);
         
         // Validación básica
         const nombre = $('#nuevo_nombre').val().trim();
@@ -74,16 +49,23 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
-                if (response.success) {
-                    mostrarExito('Rol creado exitosamente');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    mostrarError(response.message || 'Error al crear el rol');
+                try {
+                    const result = typeof response === 'string' ? JSON.parse(response) : response;
+                    if (result.success) {
+                        mostrarConfirmacion('Rol creado exitosamente');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        mostrarError(result.message || 'Error al crear el rol');
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e, response);
+                    mostrarError('Error al procesar la respuesta del servidor');
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.error('Error en la solicitud:', status, error);
                 mostrarError('Error al procesar la solicitud');
             }
         });
@@ -91,8 +73,8 @@ $(document).ready(function() {
 
     // Validación y envío del formulario editar
     $('#guardarEditarRol').click(function() {
-        const form = $('#editarRolForm');
-        const formData = new FormData(form[0]);
+        const form = $('#editarRolForm')[0];
+        const formData = new FormData(form);
         
         // Validación básica
         const nombre = $('#editar_nombre').val().trim();
@@ -110,117 +92,104 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
-                if (response.success) {
-                    mostrarExito('Rol actualizado exitosamente');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    mostrarError(response.message || 'Error al actualizar el rol');
+                try {
+                    const result = typeof response === 'string' ? JSON.parse(response) : response;
+                    if (result.success) {
+                        mostrarConfirmacion('Rol actualizado exitosamente');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        mostrarError(result.message || 'Error al actualizar el rol');
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e, response);
+                    mostrarError('Error al procesar la respuesta del servidor');
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.error('Error en la solicitud:', status, error);
                 mostrarError('Error al procesar la solicitud');
             }
         });
     });
 
     // Manejo de cambio de estado
-    let rolToToggle = null;
-    $('.toggle-status').click(function() {
-        rolToToggle = {
-            id: $(this).data('id'),
-            estado: $(this).data('estado')
-        };
+    $('.toggle-estado').click(function() {
+        const id = $(this).data('id');
+        const estado = $(this).data('estado');
+        const nuevoEstado = estado === 'Activo' ? 'Inactivo' : 'Activo';
+        
+        $('#confirmStatusMessage').text(`¿Está seguro que desea cambiar el estado del rol a ${nuevoEstado}?`);
+        
+        // Guardar los datos para el evento de confirmación
+        $('#confirmStatusChange').data('id', id);
+        $('#confirmStatusChange').data('estado', nuevoEstado);
+        
+        // Mostrar el modal de confirmación
+        const modal = new bootstrap.Modal(document.getElementById('confirmStatusModal'));
+        modal.show();
     });
 
-    $('#confirmStatusBtn').click(function() {
-        if (!rolToToggle) return;
-
+    $('#confirmStatusChange').click(function() {
+        const id = $(this).data('id');
+        const nuevoEstado = $(this).data('estado');
+        
+        if (!id || !nuevoEstado) {
+            mostrarError('Error: No se ha seleccionado un rol para cambiar su estado');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('action', 'toggleStatus');
+        formData.append('id', id);
+        formData.append('estado', nuevoEstado);
+        
         $.ajax({
             url: '../controllers/RolController.php',
             type: 'POST',
-            data: {
-                action: 'toggleStatus',
-                id: rolToToggle.id,
-                estado: rolToToggle.estado
-            },
+            data: formData,
+            processData: false,
+            contentType: false,
             success: function(response) {
-                if (response.success) {
-                    mostrarExito('Estado del rol actualizado exitosamente');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    mostrarError(response.message || 'Error al cambiar el estado del rol');
+                try {
+                    const result = typeof response === 'string' ? JSON.parse(response) : response;
+                    if (result.success) {
+                        mostrarConfirmacion('Estado del rol actualizado exitosamente');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        mostrarError(result.message || 'Error al actualizar el estado del rol');
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e, response);
+                    mostrarError('Error al procesar la respuesta del servidor');
                 }
             },
-            error: function() {
-                mostrarError('Error al cambiar el estado');
+            error: function(xhr, status, error) {
+                console.error('Error en la solicitud:', status, error);
+                mostrarError('Error al procesar la solicitud');
             }
         });
-
-        $('#confirmStatusModal').modal('hide');
+        
+        // Cerrar el modal de confirmación
+        const modal = bootstrap.Modal.getInstance(document.getElementById('confirmStatusModal'));
+        if (modal) {
+            modal.hide();
+        }
     });
 
     // Funciones auxiliares para mostrar mensajes
-    function mostrarExito(mensaje) {
-        $('#successMessage').text(mensaje);
-        $('#successModal').modal('show');
+    function mostrarConfirmacion(mensaje) {
+        $('#confirmationMessage').text(mensaje);
+        const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        modal.show();
     }
 
     function mostrarError(mensaje) {
         $('#errorMessage').text(mensaje);
-        $('#errorModal').modal('show');
-    }
-
-    function aplicarFiltros() {
-        const rows = $('table tbody tr');
-        
-        rows.each(function() {
-            const row = $(this);
-            const nombre = row.find('td:eq(1)').text().toLowerCase();
-            const estado = row.find('td:eq(3) span').text().trim();
-            
-            const matchNombre = !filters.nombre || nombre.includes(filters.nombre);
-            const matchEstado = !filters.estado || estado === filters.estado;
-            
-            if (matchNombre && matchEstado) {
-                row.show();
-            } else {
-                row.hide();
-            }
-        });
-
-        // Ordenar filas
-        const rows_array = rows.get();
-        rows_array.sort(function(a, b) {
-            let aValue, bValue;
-            const columnIndex = {
-                'id': 0,
-                'nombre': 1,
-                'descripcion': 2,
-                'estado': 3
-            }[currentSort.column];
-
-            if (currentSort.column === 'id') {
-                aValue = parseInt($(a).find('td').eq(columnIndex).text());
-                bValue = parseInt($(b).find('td').eq(columnIndex).text());
-            } else if (currentSort.column === 'estado') {
-                aValue = $(a).find('td').eq(columnIndex).find('span').text();
-                bValue = $(b).find('td').eq(columnIndex).find('span').text();
-            } else {
-                aValue = $(a).find('td').eq(columnIndex).text();
-                bValue = $(b).find('td').eq(columnIndex).text();
-            }
-
-            if (currentSort.direction === 'asc') {
-                return aValue > bValue ? 1 : -1;
-            } else {
-                return aValue < bValue ? 1 : -1;
-            }
-        });
-
-        $('table tbody').empty().append(rows_array);
+        const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+        modal.show();
     }
 });

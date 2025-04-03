@@ -6,6 +6,21 @@ document.addEventListener('DOMContentLoaded', function() {
         prefijoSpan.textContent = prefijo;
     }
 
+    // Función para actualizar el indicador de estado
+    function updateStatusIndicator(estado) {
+        const indicador = document.getElementById('estado_indicador');
+        if (indicador) {
+            indicador.className = 'input-group-text';
+            if (estado === 'Activo') {
+                indicador.classList.add('bg-success', 'text-white');
+                indicador.innerHTML = '<i class="fas fa-check"></i>';
+            } else {
+                indicador.classList.add('bg-danger', 'text-white');
+                indicador.innerHTML = '<i class="fas fa-times"></i>';
+            }
+        }
+    }
+
     // Manejar cambio de tipo en el formulario nuevo
     const tipoSelect = document.getElementById('tipo');
     const prefijoSpan = document.getElementById('prefijo-modulo');
@@ -72,6 +87,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const codigo = this.dataset.codigo;
             const tipo = this.dataset.tipo;
             const descripcion = this.dataset.descripcion;
+            const estado = this.dataset.estado;
+            const ultimaModificacion = this.dataset.ultimaModificacion;
 
             document.getElementById('editar_id').value = id;
             document.getElementById('editar_tipo').value = tipo;
@@ -83,6 +100,18 @@ document.addEventListener('DOMContentLoaded', function() {
             editarPrefijoSpan.textContent = tipo === 'Costura' ? 'C-' : 'T-';
             
             document.getElementById('editar_descripcion').value = descripcion || '';
+            
+            // Actualizar el estado
+            if (document.getElementById('editar_estado')) {
+                document.getElementById('editar_estado').value = estado;
+                // Actualizar el indicador de estado
+                updateStatusIndicator(estado);
+            }
+            
+            // Actualizar la fecha de última modificación
+            if (document.getElementById('ultima_modificacion')) {
+                document.getElementById('ultima_modificacion').textContent = ultimaModificacion || 'No disponible';
+            }
 
             const modal = new bootstrap.Modal(document.getElementById('editarModuloModal'));
             modal.show();

@@ -82,7 +82,7 @@ class Rol {
 
     public function isInUse($id) {
         try {
-            $query = "SELECT COUNT(*) FROM usuarios WHERE id_rol = :id";
+            $query = "SELECT COUNT(*) FROM usuarios WHERE usuario_rol_id = :id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();

@@ -11,6 +11,43 @@
     --dark-color: #212529;
 }
 
+/* Estilos específicos de usuarios.php */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 150vw !important;
+    height: 150vh !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    z-index: 1040;
+}
+
+/* Estilos específicos para PO */
+.progress {
+    height: 30px;
+}
+
+.sortable {
+    cursor: pointer;
+}
+
+.page-item.active .page-link {
+    background-color: #212529;
+    border-color: #212529;
+}
+
+.page-link {
+    color: #212529;
+}
+
+.page-link:hover {
+    color: #000;
+}
+
+.filtered-row {
+    display: table-row;
+}
+
 /* Layout principal */
 body {
     min-height: 100vh;
@@ -151,6 +188,15 @@ main {
 }
 
 /* Modales */
+.modal {
+    z-index: 1050;
+}
+
+.modal-dialog {
+    max-width: 90%;
+    margin: 1.75rem auto;
+}
+
 .modal-content {
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -230,10 +276,6 @@ main {
     height: 150vh !important;
     background-color: rgba(0, 0, 0, 0.5) !important;
     z-index: 1040;
-}
-
-.modal {
-    z-index: 1050;
 }
 
 /* dashboard */
