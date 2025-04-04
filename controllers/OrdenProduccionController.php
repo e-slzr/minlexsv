@@ -17,6 +17,22 @@ class OrdenProduccionController {
         $this->ordenProduccion = new OrdenProduccion($this->db);
     }
 
+    // Método privado para obtener órdenes pendientes sin módulo
+    private function _getOrdenesPendientesParaProgramar() {
+        // Llamará al método correspondiente en el modelo
+        return $this->ordenProduccion->findPendientesSinModulo(); // Nombre tentativo
+    }
+
+    // Método privado para asignar módulo masivamente
+    private function _asignarModuloMasivo($ordenesIds, $moduloId) {
+        // Validar datos
+        if (!is_array($ordenesIds) || empty($ordenesIds) || !is_numeric($moduloId)) {
+            throw new Exception("Datos inválidos para la asignación masiva.");
+        }
+        // Llamará al método correspondiente en el modelo
+        return $this->ordenProduccion->updateModuloMasivo($ordenesIds, $moduloId); // Nombre tentativo
+    }
+
     public function handleRequest() {
         header('Content-Type: application/json');
         
@@ -32,7 +48,7 @@ class OrdenProduccionController {
                     exit;
                 }
             }
-            $action = $_REQUEST['action'] ?? '';
+            $action = $_REQUEST['action'] ?? ''; // Usar $_REQUEST para GET o POST
             $response = ['success' => false, 'message' => 'Acción no válida'];
 
             switch ($action) {
@@ -263,6 +279,41 @@ class OrdenProduccionController {
                         'success' => true,
                         'ordenes' => $this->getOrdenesPorModulo($_GET['modulo_id'])
                     ];
+                    break;
+
+                case 'getOrdenesPendientesParaProgramar': // Nueva acción GET
+                    $ordenes = $this->_getOrdenesPendientesParaProgramar();
+                    $response = [
+                        'success' => true,
+                        'ordenes' => $ordenes
+                    ];
+                    break;
+
+                case 'asignarModuloMasivo': // Nueva acción POST
+                    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                        throw new Exception('Método no permitido para esta acción.');
+                    }
+                    $ordenesIds = $_POST['ordenesIds'] ?? null;
+                    $moduloId = $_POST['moduloId'] ?? null;
+
+                    if ($ordenesIds === null || $moduloId === null) {
+                         throw new Exception('Faltan parámetros requeridos (ordenesIds, moduloId).');
+                    }
+
+                    // Asegurarse de que ordenesIds sea un array
+                    if (!is_array($ordenesIds)) {
+                         throw new Exception('El parámetro ordenesIds debe ser un array.');
+                    }
+                    
+                    $result = $this->_asignarModuloMasivo($ordenesIds, $moduloId);
+                    if ($result) {
+                        $response = [
+                            'success' => true,
+                            'message' => 'Módulos asignados correctamente.'
+                        ];
+                    } else {
+                         throw new Exception('Error al asignar módulos.'); // O mensaje más específico del modelo
+                    }
                     break;
 
                 case 'aprobarOrden':

@@ -2,38 +2,63 @@
 require_once '../models/Modulo.php';
 
 class ModuloController {
-    private $modelo;
+    private $moduloModel;
 
     public function __construct() {
-        $this->modelo = new Modulo();
+        $this->moduloModel = new Modulo();
     }
 
+    /**
+     * Obtiene todos los módulos.
+     * @return array Lista de todos los módulos.
+     */
     public function getModulos() {
-        return $this->modelo->read();
+        // El modelo ahora devuelve un array directamente.
+        return $this->moduloModel->read() ?: []; // Asegurar que siempre devuelva array
     }
 
+    /**
+     * Obtiene módulos filtrados por tipo y estado Activo.
+     * @param string $tipo El tipo de módulo ('Costura', 'Corte', etc.).
+     * @return array Lista de módulos filtrados.
+     */
     public function getModulosPorTipo($tipo) {
-        return $this->modelo->readByType($tipo);
+        // El modelo ahora devuelve un array directamente.
+        return $this->moduloModel->readByType($tipo) ?: []; // Asegurar que siempre devuelva array
+    }
+
+    /**
+     * Obtiene todos los módulos activos.
+     * Utilizado para llenar selectores donde solo se deben mostrar módulos operativos.
+     * 
+     * @return array Lista de módulos activos o array vacío si no hay.
+     */
+    public function getModulosActivos() {
+        try {
+            // findByEstado devuelve directamente el array de resultados
+            $modulos = $this->moduloModel->findByEstado('Activo'); 
+            // No necesitamos fetchAll aquí, ya es un array
+            return $modulos ?? []; // Devolver el array o uno vacío si falla
+        } catch (Exception $e) {
+            error_log("Error en ModuloController::getModulosActivos(): " . $e->getMessage());
+            return []; 
+        }
     }
 
     public function crearModulo($datos) {
-        // Decodificar JSON si los datos vienen en ese formato
         if (isset($datos['action']) && $datos['action'] === 'crear') {
             $jsonData = file_get_contents('php://input');
             $datos = json_decode($jsonData, true);
         }
 
-        // Validar datos requeridos
         if (empty($datos['modulo_codigo']) || empty($datos['modulo_tipo'])) {
             return ['success' => false, 'message' => 'El código y tipo son requeridos'];
         }
 
-        // Validar formato del código
         if (!preg_match('/^[CT]-\d{2}$/', $datos['modulo_codigo'])) {
             return ['success' => false, 'message' => 'El código debe tener el formato C-XX o T-XX'];
         }
 
-        // Validar que el tipo coincida con el prefijo del código
         $prefijo = substr($datos['modulo_codigo'], 0, 1);
         $tipoEsperado = ($prefijo === 'C') ? 'Costura' : 'Corte';
         if ($datos['modulo_tipo'] !== $tipoEsperado) {
@@ -46,7 +71,7 @@ class ModuloController {
             'modulo_descripcion' => $datos['modulo_descripcion'] ?? null
         ];
 
-        $resultado = $this->modelo->create($moduloData);
+        $resultado = $this->moduloModel->create($moduloData);
         
         if ($resultado) {
             return ['success' => true, 'message' => 'Módulo creado exitosamente'];
@@ -55,7 +80,6 @@ class ModuloController {
     }
 
     public function actualizarModulo($datos) {
-        // Decodificar JSON si los datos vienen en ese formato
         if (isset($datos['action']) && $datos['action'] === 'actualizar') {
             $jsonData = file_get_contents('php://input');
             $datos = json_decode($jsonData, true);
@@ -69,7 +93,6 @@ class ModuloController {
             return ['success' => false, 'message' => 'El código debe tener el formato C-XX o T-XX'];
         }
 
-        // Validar que el tipo coincida con el prefijo del código
         $prefijo = substr($datos['modulo_codigo'], 0, 1);
         $tipoEsperado = ($prefijo === 'C') ? 'Costura' : 'Corte';
         if ($datos['modulo_tipo'] !== $tipoEsperado) {
@@ -83,7 +106,7 @@ class ModuloController {
             'modulo_descripcion' => $datos['modulo_descripcion'] ?? null
         ];
 
-        $resultado = $this->modelo->update($moduloData);
+        $resultado = $this->moduloModel->update($moduloData);
         
         if ($resultado) {
             return ['success' => true, 'message' => 'Módulo actualizado exitosamente'];
@@ -96,7 +119,7 @@ class ModuloController {
             return ['success' => false, 'message' => 'ID de módulo no proporcionado'];
         }
 
-        $resultado = $this->modelo->toggleStatus($id);
+        $resultado = $this->moduloModel->toggleStatus($id);
         
         if ($resultado) {
             return ['success' => true, 'message' => 'Estado del módulo actualizado exitosamente'];
@@ -104,18 +127,15 @@ class ModuloController {
         return ['success' => false, 'message' => 'Error al actualizar el estado del módulo'];
     }
 
-    public function handleRequest() {
-        header('Content-Type: application/json'); // Aseguramos que la respuesta sea JSON
+    /**
+     * Maneja las solicitudes AJAX para crear, actualizar o cambiar estado.
+     * @param array $datos Datos recibidos (generalmente de JSON decodificado).
+     * @return array Resultado de la operación en formato JSON.
+     */
+    public function handleRequest($datos) {
+        header('Content-Type: application/json'); 
         
         try {
-            // Obtener el contenido JSON raw
-            $jsonData = file_get_contents('php://input');
-            $datos = json_decode($jsonData, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Error al decodificar JSON: ' . json_last_error_msg());
-            }
-
             if (!isset($datos['action'])) {
                 throw new Exception('Acción no especificada');
             }
@@ -136,9 +156,21 @@ class ModuloController {
     }
 }
 
-// Asegurarnos de que solo se procese si se accede directamente al controlador
 if (basename($_SERVER['PHP_SELF']) == 'ModuloController.php') {
     $controller = new ModuloController();
-    echo json_encode($controller->handleRequest());
-    exit(); // Asegurarnos de que no se envíe nada más
-} 
+    $jsonData = file_get_contents('php://input');
+    $datos = json_decode($jsonData, true);
+
+    // Validar si $datos es null después de json_decode (puede pasar si el input está vacío o malformado)
+    if ($datos === null && json_last_error() !== JSON_ERROR_NONE) {
+        echo json_encode(['success' => false, 'message' => 'Error al decodificar JSON: ' . json_last_error_msg()]);
+    } elseif ($datos === null) {
+        // Si el input estaba vacío pero era JSON válido (ej. ""), $datos será null
+        // O si no se envió cuerpo (ej. GET), $jsonData será false y $datos null.
+        // Manejar como 'acción no especificada' o un error específico.
+        echo json_encode(['success' => false, 'message' => 'Solicitud inválida o acción no especificada.']);
+    } else {
+        echo json_encode($controller->handleRequest($datos));
+    }
+    exit(); 
+}

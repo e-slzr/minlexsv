@@ -75,4 +75,39 @@ class Modulo {
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([$id]);
     }
-} 
+
+    /**
+     * Busca módulos por estado.
+     *
+     * @param string $estado El estado por el cual filtrar ('Activo', 'Inactivo', etc.)
+     * @return array Devuelve un array con los módulos encontrados o array vacío en caso de error.
+     */
+    public function findByEstado($estado) {
+        $query = "SELECT id, modulo_codigo, modulo_tipo, modulo_descripcion, modulo_estado 
+                  FROM " . $this->table . " 
+                  WHERE modulo_estado = :estado 
+                  ORDER BY modulo_codigo ASC"; // Cambiado table_name a table
+
+        try {
+            $stmt = $this->conn->prepare($query);
+
+            // Sanitizar (aunque PDO previene SQL injection, es buena práctica)
+            $estado = htmlspecialchars(strip_tags($estado));
+
+            // Bindear valor
+            $stmt->bindParam(':estado', $estado);
+
+            // Ejecutar query
+            if ($stmt->execute()) {
+                return $stmt->fetchAll(PDO::FETCH_ASSOC); // Devolver directamente el array de resultados
+            }
+            
+            // Registrar error si la ejecución falla
+            error_log("Error al ejecutar findByEstado: " . implode(":", $stmt->errorInfo()));
+            return [];
+        } catch (PDOException $e) {
+            error_log("Excepción en findByEstado: " . $e->getMessage());
+            return [];
+        }
+    }
+}

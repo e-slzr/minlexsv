@@ -5,6 +5,11 @@ $(document).ready(function() {
     let recordsPerPage = defaultRecordsPerPage;
     let sortColumn = 'id';
     let sortDirection = 'desc';
+    let selectedOrdenesIds = []; // Para guardar IDs de órdenes a programar
+    let selectedModuloId = null; // Para guardar ID del módulo a asignar
+    let selectedModuloNombre = ''; // Para guardar nombre del módulo
+    let ordenesDisponibles = []; // Para guardar todas las órdenes disponibles
+    let ordenesFiltradas = []; // Para guardar órdenes filtradas por búsqueda
 
     // Solucionar problema de modal backdrop
     $(document).on('hidden.bs.modal', '.modal', function () {
@@ -31,6 +36,278 @@ $(document).ready(function() {
             });
         }
     });
+
+    // --- Nueva Lógica para Programación Masiva ---
+
+    // Función para cargar órdenes pendientes en el modal de programación
+    function loadOrdenesParaProgramar() {
+        const listaContainer = $('#listaOrdenesProgramar');
+        listaContainer.html('<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando órdenes pendientes...</p>');
+        
+        // Limpiar selecciones previas
+        selectedOrdenesIds = [];
+        actualizarContadorSeleccionadas();
+        actualizarListaSeleccionadas();
+        
+        // Limpiar campo de búsqueda
+        $('#buscarOrdenPO').val('');
+
+        $.ajax({
+            url: '../controllers/OrdenProduccionController.php',
+            type: 'GET',
+            data: { action: 'getOrdenesPendientesParaProgramar' },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success && response.ordenes.length > 0) {
+                    ordenesDisponibles = response.ordenes; // Guardar todas las órdenes
+                    ordenesFiltradas = [...ordenesDisponibles]; // Inicializar órdenes filtradas
+                    renderizarOrdenesDisponibles();
+                } else if (response.success && response.ordenes.length === 0) {
+                    listaContainer.html('<p class="text-center text-muted">No hay órdenes pendientes sin módulo asignado.</p>');
+                } else {
+                    listaContainer.html('<p class="text-center text-danger">Error al cargar las órdenes: ' + (response.message || 'Error desconocido') + '</p>');
+                }
+            },
+            error: function() {
+                listaContainer.html('<p class="text-center text-danger">Error de conexión al cargar órdenes.</p>');
+            }
+        });
+    }
+    
+    // Función para renderizar las órdenes disponibles (no seleccionadas)
+    function renderizarOrdenesDisponibles() {
+        const listaContainer = $('#listaOrdenesProgramar');
+        
+        // Filtrar órdenes que NO están seleccionadas
+        const ordenesNoSeleccionadas = ordenesFiltradas.filter(orden => 
+            !selectedOrdenesIds.includes(parseInt(orden.id))
+        );
+        
+        if (ordenesNoSeleccionadas.length === 0) {
+            listaContainer.html('<p class="text-center text-muted">No hay más órdenes disponibles para seleccionar.</p>');
+            return;
+        }
+        
+        let content = '';
+        ordenesNoSeleccionadas.forEach(orden => {
+            content += `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom orden-item" data-orden-id="${orden.id}">
+                    <div class="orden-info">
+                        <strong>ID:</strong> ${orden.id} | 
+                        <strong>PO:</strong> ${orden.po_numero || 'N/A'} | 
+                        <strong>Item:</strong> ${orden.item_numero} - ${orden.item_nombre} | 
+                        <strong>Proceso:</strong> ${orden.pp_nombre}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary btn-agregar-orden" 
+                        data-orden-id="${orden.id}">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            `;
+        });
+        
+        listaContainer.html(content);
+        
+        // Añadir estilo de resaltado al pasar el cursor
+        $('.orden-item').hover(
+            function() { $(this).addClass('bg-light'); },
+            function() { $(this).removeClass('bg-light'); }
+        );
+        
+        // Añadir event listener para los botones de agregar
+        $('.btn-agregar-orden').on('click', function() {
+            const ordenId = parseInt($(this).data('orden-id'));
+            console.log("Agregando orden ID:", ordenId); // Debug
+            
+            // Añadir a seleccionados si no está ya
+            if (!selectedOrdenesIds.includes(ordenId)) {
+                selectedOrdenesIds.push(ordenId);
+                
+                // Actualizar ambas listas inmediatamente
+                actualizarContadorSeleccionadas();
+                actualizarListaSeleccionadas();
+                renderizarOrdenesDisponibles(); // Re-renderizar lista izquierda
+            }
+        });
+    }
+    
+    // Función para actualizar el contador de órdenes seleccionadas
+    function actualizarContadorSeleccionadas() {
+        $('#contadorSeleccionadas').text(selectedOrdenesIds.length);
+    }
+    
+    // Función para actualizar la lista de órdenes seleccionadas
+    function actualizarListaSeleccionadas() {
+        const container = $('#listaOrdenesSeleccionadas');
+        
+        if (selectedOrdenesIds.length === 0) {
+            container.html('<p class="text-center text-muted" id="mensajeNoSeleccionadas">No hay órdenes seleccionadas</p>');
+            return;
+        }
+        
+        let content = '';
+        selectedOrdenesIds.forEach(id => {
+            // Buscar la orden en las órdenes disponibles
+            const orden = ordenesDisponibles.find(o => parseInt(o.id) === id);
+            if (orden) {
+                content += `
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-success bg-opacity-25 rounded orden-seleccionada" data-orden-id="${orden.id}">
+                        <div class="orden-info">
+                            <strong>ID:</strong> ${orden.id} | 
+                            <strong>PO:</strong> ${orden.po_numero || 'N/A'} | 
+                            <strong>Item:</strong> ${orden.item_numero}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-quitar-orden" data-orden-id="${orden.id}">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                    </div>
+                `;
+            }
+        });
+        
+        container.html(content);
+        
+        // Añadir event listener para los botones de quitar
+        $('.btn-quitar-orden').on('click', function() {
+            const ordenId = parseInt($(this).data('orden-id'));
+            console.log("Quitando orden ID:", ordenId); // Debug
+            
+            // Quitar de seleccionados
+            selectedOrdenesIds = selectedOrdenesIds.filter(id => id !== ordenId);
+            
+            // Actualizar ambas listas inmediatamente
+            actualizarContadorSeleccionadas();
+            actualizarListaSeleccionadas();
+            renderizarOrdenesDisponibles(); // Re-renderizar lista izquierda
+        });
+    }
+    
+    // Función para filtrar órdenes por número de PO
+    function filtrarOrdenesPorPO(terminoBusqueda) {
+        if (!terminoBusqueda.trim()) {
+            // Si no hay término de búsqueda, mostrar todas las órdenes
+            ordenesFiltradas = [...ordenesDisponibles];
+        } else {
+            // Filtrar por número de PO
+            ordenesFiltradas = ordenesDisponibles.filter(orden => 
+                (orden.po_numero || '').toLowerCase().includes(terminoBusqueda.toLowerCase())
+            );
+        }
+        
+        renderizarOrdenesDisponibles();
+    }
+
+    // Cargar órdenes cuando se muestra el modal de programación
+    $('#modalProgramarOrdenes').on('show.bs.modal', function() {
+        loadOrdenesParaProgramar();
+        // Limpiar selección anterior
+        $('#selectModuloProgramacion').val('').trigger('change');
+        selectedOrdenesIds = [];
+        actualizarContadorSeleccionadas();
+        actualizarListaSeleccionadas();
+    });
+    
+    // Evento para el campo de búsqueda
+    $('#buscarOrdenPO').on('keyup', function() {
+        const terminoBusqueda = $(this).val();
+        filtrarOrdenesPorPO(terminoBusqueda);
+    });
+    
+    // Botón para seleccionar todas las órdenes
+    $('#btnSeleccionarTodas').on('click', function() {
+        // Seleccionar solo las órdenes que están actualmente visibles (filtradas y no seleccionadas)
+        const ordenesVisibles = ordenesFiltradas.filter(orden => 
+            !selectedOrdenesIds.includes(parseInt(orden.id))
+        );
+        
+        if (ordenesVisibles.length === 0) {
+            alert('No hay órdenes disponibles para seleccionar.');
+            return;
+        }
+        
+        // Añadir IDs de órdenes visibles a seleccionados
+        ordenesVisibles.forEach(orden => {
+            if (!selectedOrdenesIds.includes(parseInt(orden.id))) {
+                selectedOrdenesIds.push(parseInt(orden.id));
+            }
+        });
+        
+        // Actualizar vistas
+        renderizarOrdenesDisponibles();
+        actualizarContadorSeleccionadas();
+        actualizarListaSeleccionadas();
+    });
+    
+    // Botón para limpiar selección
+    $('#btnLimpiarSeleccion').on('click', function() {
+        if (selectedOrdenesIds.length === 0) {
+            alert('No hay órdenes seleccionadas para limpiar.');
+            return;
+        }
+        
+        selectedOrdenesIds = [];
+        renderizarOrdenesDisponibles();
+        actualizarContadorSeleccionadas();
+        actualizarListaSeleccionadas();
+    });
+
+    // Botón para ir al modal de confirmación
+    $('#btnGuardarProgramacion').on('click', function() {
+        selectedModuloId = $('#selectModuloProgramacion').val();
+        selectedModuloNombre = $('#selectModuloProgramacion option:selected').text().trim();
+
+        if (selectedOrdenesIds.length === 0) {
+            alert('Debe seleccionar al menos una orden de producción.');
+            return;
+        }
+
+        if (!selectedModuloId) {
+            alert('Debe seleccionar un módulo para asignar.');
+            return;
+        }
+
+        // Poblar modal de confirmación
+        $('#confirmOrdenesCount').text(selectedOrdenesIds.length);
+        $('#confirmModuloNombre').text(selectedModuloNombre);
+
+        // Ocultar modal de programación y mostrar modal de confirmación
+        $('#modalProgramarOrdenes').modal('hide');
+        $('#modalConfirmarProgramacion').modal('show');
+    });
+
+    // Botón para confirmar y guardar la programación masiva
+    $('#btnConfirmarGuardarProgramacion').on('click', function() {
+        const btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
+
+        $.ajax({
+            url: '../controllers/OrdenProduccionController.php',
+            type: 'POST',
+            data: {
+                action: 'asignarModuloMasivo', // Nueva acción en el controlador
+                ordenesIds: selectedOrdenesIds,
+                moduloId: selectedModuloId
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alert('Órdenes programadas exitosamente.');
+                    $('#modalConfirmarProgramacion').modal('hide');
+                    loadOrdenes(currentPage); // Recargar la tabla
+                } else {
+                    alert('Error al programar las órdenes: ' + (response.message || 'Error desconocido'));
+                }
+            },
+            error: function() {
+                alert('Error de conexión al guardar la programación.');
+            },
+            complete: function() {
+                btn.prop('disabled', false).html('Confirmar');
+            }
+        });
+    });
+
+    // --- Fin de Nueva Lógica ---
 
     // Variables para control de cantidades
     let cantidadTotal = 0;
@@ -556,15 +833,9 @@ $(document).ready(function() {
     function updateEditEstadoBadge(estado) {
         let badgeClass = '';
         switch (estado) {
-            case 'Pendiente':
-                badgeClass = 'bg-warning';
-                break;
-            case 'En proceso':
-                badgeClass = 'bg-primary';
-                break;
-            case 'Completado':
-                badgeClass = 'bg-success';
-                break;
+            case 'Pendiente': badgeClass = 'bg-warning'; break;
+            case 'En proceso': badgeClass = 'bg-primary'; break;
+            case 'Completado': badgeClass = 'bg-success'; break;
         }
         
         $('#editEstadoBadge').html(`<span class="badge ${badgeClass}">${estado}</span>`);
@@ -640,7 +911,6 @@ $(document).ready(function() {
                     loadOrdenes(currentPage);
                 } else {
                     alert('Error al aprobar la orden: ' + (response.message || 'Error desconocido'));
-                    console.error('Error al aprobar orden:', response);
                 }
             },
             error: function(xhr, status, error) {
@@ -699,7 +969,6 @@ $(document).ready(function() {
                     loadOrdenes(currentPage);
                 } else {
                     alert('Error al rechazar la orden: ' + (response.message || 'Error desconocido'));
-                    console.error('Error al rechazar orden:', response);
                 }
             },
             error: function(xhr, status, error) {

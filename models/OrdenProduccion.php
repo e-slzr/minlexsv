@@ -401,4 +401,92 @@ class OrdenProduccion {
             throw new Exception("Error al obtener las órdenes de producción pendientes", 0, $e);
         }
     }
+
+    /**
+     * Busca órdenes de producción pendientes que no tienen un módulo asignado.
+     * Utilizado para poblar el modal de programación masiva.
+     *
+     * @return array Lista de órdenes pendientes sin módulo.
+     */
+    public function findPendientesSinModulo() {
+        try {
+            // Seleccionamos campos clave para identificar la orden en el modal
+            $query = "SELECT op.id, 
+                           p.po_numero, 
+                           i.item_numero, i.item_nombre, 
+                           pp.pp_nombre
+                    FROM " . $this->table_name . " op
+                    LEFT JOIN po_detalle pd ON op.op_id_pd = pd.id
+                    LEFT JOIN po p ON pd.pd_id_po = p.id
+                    LEFT JOIN items i ON pd.pd_item = i.id
+                    LEFT JOIN procesos_produccion pp ON op.op_id_proceso = pp.id
+                    WHERE op.op_estado = 'Pendiente'  -- O el estado relevante
+                      AND op.op_modulo_id IS NULL
+                    ORDER BY op.id ASC"; // O por PO/Item
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en OrdenProduccion::findPendientesSinModulo: " . $e->getMessage());
+            // No lanzamos excepción aquí para que el controlador pueda manejarlo
+            // devolviendo un array vacío y mostrando un error amigable.
+            return []; 
+        }
+    }
+
+    /**
+     * Actualiza el módulo asignado para múltiples órdenes de producción.
+     *
+     * @param array $ordenesIds Array de IDs de las órdenes a actualizar.
+     * @param int $moduloId ID del módulo a asignar.
+     * @return bool True si la actualización fue exitosa, False en caso contrario.
+     */
+    public function updateModuloMasivo($ordenesIds, $moduloId) {
+        if (empty($ordenesIds) || !is_numeric($moduloId)) {
+            error_log("Error en updateModuloMasivo: IDs de orden o ID de módulo inválidos.");
+            return false;
+        }
+
+        // Crear placeholders (?, ?, ?) para la cláusula IN
+        $placeholders = implode(',', array_fill(0, count($ordenesIds), '?'));
+
+        // Query para actualizar el módulo y la fecha de modificación
+        $query = "UPDATE " . $this->table_name . "
+                  SET op_modulo_id = ?, 
+                      op_fecha_modificacion = NOW()
+                  WHERE id IN (" . $placeholders . ")";
+
+        try {
+            $this->conn->beginTransaction();
+            
+            $stmt = $this->conn->prepare($query);
+            
+            // Bindear el ID del módulo
+            $stmt->bindValue(1, $moduloId, PDO::PARAM_INT);
+            
+            // Bindear cada ID de orden
+            $paramIndex = 2; // Empezamos desde el segundo placeholder
+            foreach ($ordenesIds as $id) {
+                $stmt->bindValue($paramIndex++, $id, PDO::PARAM_INT);
+            }
+            
+            $success = $stmt->execute();
+            
+            if ($success) {
+                $this->conn->commit();
+                return true;
+            } else {
+                $this->conn->rollBack();
+                error_log("Error en updateModuloMasivo al ejecutar: " . implode(":", $stmt->errorInfo()));
+                return false;
+            }
+        } catch (PDOException $e) {
+            $this->conn->rollBack();
+            error_log("Excepción en OrdenProduccion::updateModuloMasivo: " . $e->getMessage());
+            // Podríamos querer lanzar la excepción para que el controlador la capture
+            // throw new Exception("Error al actualizar módulos masivamente: " . $e->getMessage(), 0, $e);
+            return false;
+        }
+    }
 }
